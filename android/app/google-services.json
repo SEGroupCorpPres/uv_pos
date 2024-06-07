@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "170801108120",
+    "project_id": "uv-pos",
+    "storage_bucket": "uv-pos.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:170801108120:android:97db596d69365ec2c2aced",
+        "android_client_info": {
+          "package_name": "inc.futuretechnologies.presidentftinc.freelance.flutter.uv_pos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC__Dt8t3Z_PukrTg2r7X39xfy-QRxy6mE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

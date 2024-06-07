@@ -14,6 +14,14 @@ import 'package:uv_pos/features/presentation/widgets/home_menu_item.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+          child: HomeScreen(),
+        )
+      : const MaterialPage(
+          child: HomeScreen(),
+        );
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }

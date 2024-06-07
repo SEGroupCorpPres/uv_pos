@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:uv_pos/features/presentation/pages/home/home_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/sale_report_screen.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uv_pos/app/presentation/pages/auth_flow.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -12,24 +12,26 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        primaryColor: Colors.deepPurpleAccent,
-        iconTheme: const IconThemeData(
-          color: Colors.deepPurple,
-        ),
-        primaryIconTheme: const IconThemeData(
-          color: Colors.deepPurple,
-        ),
-        useMaterial3: true,
-      ),
-      // home: ReportByDatesScreen(),
-      // home: ReportByEmployees(),
-      // home: ReportByCustomers(),
-      home: SaleReportScreen(),
-      // home: ReportsScreen(),
-      // home: StoreListScreen(),
-      // home: const HomeScreen(),
+    return ScreenUtilInit(
+      builder: (context, child) {
+        return MaterialApp(
+          theme: ThemeData(
+            primaryColor: Colors.deepPurpleAccent,
+            iconTheme: const IconThemeData(
+              color: Colors.deepPurple,
+            ),
+            primaryIconTheme: const IconThemeData(
+              color: Colors.deepPurple,
+            ),
+            useMaterial3: true,
+          ),
+          home: child,
+        );
+      },
+      child: const AuthFlow(),
+      // child: RegistrationScreen(),
+      // child: VerifyAuthScreen(verificationId: 'f'),
+      // child: CheckEmailScreen(email: 'artessdu@gmail.com'),
     );
   }
 }

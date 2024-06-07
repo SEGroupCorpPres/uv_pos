@@ -2,10 +2,20 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/auth_bloc.dart';
 import 'package:uv_pos/features/presentation/pages/store/add_edit_store_screen.dart';
 
 class StoreListScreen extends StatefulWidget {
   const StoreListScreen({super.key});
+
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+          child: StoreListScreen(),
+        )
+      : const MaterialPage(
+          child: StoreListScreen(),
+        );
 
   @override
   State<StoreListScreen> createState() => _StoreListScreenState();
@@ -64,7 +74,9 @@ class _StoreListScreenState extends State<StoreListScreen> {
             icon: const Icon(Icons.search),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              BlocProvider.of<AuthBloc>(context).add(AuthLoggedOut());
+            },
             icon: const Icon(Icons.power_settings_new),
           ),
         ],

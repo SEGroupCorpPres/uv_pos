@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:uv_pos/features/presentation/widgets/chart_item.dart';
 import 'package:uv_pos/features/presentation/widgets/chart_name.dart';
+import 'package:uv_pos/features/presentation/widgets/search_dialog.dart';
 import 'package:uv_pos/features/presentation/widgets/search_dialog_field.dart';
 
 class SaleReportScreen extends StatefulWidget {
@@ -101,59 +102,47 @@ class _SaleReportScreenState extends State<SaleReportScreen> {
     );
   }
 
-  List<Widget> actions(BuildContext context) => [
-    Flexible(
-      child: CupertinoDialogAction(
-        onPressed: () => Navigator.pop(context),
-        isDestructiveAction: true,
-        child: const Text('Reset Filter'),
-      ),
-    ),
-    Flexible(
-      child: CupertinoDialogAction(
-        onPressed: () => Navigator.pop(context),
-
-        isDefaultAction: true,
-        child: const Text('Search'),
-      ),
-    ),
-  ];
-
-  Widget _filterDialogWidget(BuildContext context) {
-    return SimpleDialog(
-      children: [
-        Container(
-          width: MediaQuery.sizeOf(context).width * .8,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            children: [
-              SearchDialogField(controller: fromDateController, title: 'From Date:', onTap: () {}),
-              const SizedBox(height: 15),
-              SearchDialogField(controller: toDateController, title: 'To Date:', onTap: () {}),
-              const SizedBox(height: 15),
-              SearchDialogField(
-                controller: employeeController,
-                title: 'Employee:',
-                onTap: () {},
-                isDateField: false,
-              ),
-              const SizedBox(height: 15),
-              SearchDialogField(
-                controller: customerController,
-                title: 'Customer:',
-                onTap: () {},
-                isDateField: false,
-              ),
-            ],
+  List<Widget> _actions(BuildContext context) => [
+        Flexible(
+          child: CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            isDestructiveAction: true,
+            child: const Text('Reset Filter'),
           ),
         ),
+        Flexible(
+          child: CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            isDefaultAction: true,
+            child: const Text('Search'),
+          ),
+        ),
+      ];
+
+  List<Widget> _fieldList(BuildContext context) => [
+        SearchDialogField(controller: fromDateController, title: 'From Date:', onTap: () {}),
         const SizedBox(height: 15),
-        const Divider(indent: 20, endIndent: 20),
-        Row(
-          children: actions(context),
-        )
-      ],
+        SearchDialogField(controller: toDateController, title: 'To Date:', onTap: () {}),
+        const SizedBox(height: 15),
+        SearchDialogField(
+          controller: employeeController,
+          title: 'Employee:',
+          onTap: () {},
+          isDateField: false,
+        ),
+        const SizedBox(height: 15),
+        SearchDialogField(
+          controller: customerController,
+          title: 'Customer:',
+          onTap: () {},
+          isDateField: false,
+        ),
+      ];
+
+  Widget _filterDialogWidget(BuildContext context) {
+    return SearchDialog(
+      fieldList: _fieldList(context),
+      actionList: _actions(context),
     );
-    // return AlertDialog.adaptive(actions: actions);
   }
 }

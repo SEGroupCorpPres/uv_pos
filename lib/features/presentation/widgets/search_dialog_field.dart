@@ -19,7 +19,16 @@ class SearchDialogField extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(flex: 4, child: SizedBox(width:85,child: Text(title,textAlign: TextAlign.right,))),
+        Flexible(
+          flex: 4,
+          child: SizedBox(
+            width: 851,
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
         Flexible(
           flex: 7,
           child: TextField(
