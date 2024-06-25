@@ -1,12 +1,13 @@
 import 'dart:io';
 
+import 'package:flow_builder/flow_builder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:social_auth_buttons/social_auth_buttons.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/auth_bloc.dart';
-import 'package:uv_pos/app/presentation/pages/registration_screen.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+import 'package:uv_pos/features/presentation/pages/home/home_screen.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -28,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'loginFormKey');
-  late AuthBloc authBloc;
+  late AppBloc authBloc;
 
   @override
   void initState() {
@@ -40,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       final email = _loginController.text;
       final password = _passwordController.text;
-      context.read<AuthBloc>().add(AuthLoggedIn(email, password));
+      context.read<AppBloc>().add(AuthLoggedIn(email, password));
     }
   }
 
@@ -56,99 +57,89 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final Size size = MediaQuery.sizeOf(context);
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Card(
         child: Padding(
           padding: const EdgeInsets.all(20.0).r,
           child: Form(
             key: _formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: 150.h),
-                const Text(
-                  'UV POS',
-                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
-                ),
-                StoreTextField(
-                  hintText: 'Email address or Phone number',
-                  icon: Icons.phone,
-                  textEditingController: _loginController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10.h),
-                StoreTextField(
-                  textEditingController: _passwordController,
-                  hintText: 'Password',
-                  icon: Icons.lock,
-                  isPassword: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-                TextButton(
-                  onPressed: () {
-                    _login();
-                    // Navigator.push(
-                    //   context,
-                    //   Platform.isIOS
-                    //       ? CupertinoPageRoute(
-                    //           builder: (_) => const StoreListScreen(),
-                    //         )
-                    //       : MaterialPageRoute(
-                    //           builder: (_) => const StoreListScreen(),
-                    //         ),
-                    // );
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    minimumSize: Size(size.width, 40.h),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: 150.h),
+                  const Text(
+                    'UV POS',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
                   ),
-                  child: Text(
-                    'Login',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15.sp,
+                  StoreTextField(
+                    hintText: 'Email address or Phone number',
+                    icon: Icons.phone,
+                    textEditingController: _loginController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10.h),
+                  StoreTextField(
+                    textEditingController: _passwordController,
+                    hintText: 'Password',
+                    icon: Icons.lock,
+                    isPassword: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      BlocProvider.of<AppBloc>(context).add(
+                        NavigateToHomeScreen(),
+                      );
+                      // _login();
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      minimumSize: Size(size.width, 40.h),
+                    ),
+                    child: Text(
+                      'Login',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15.sp,
+                      ),
                     ),
                   ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      Platform.isIOS
-                          ? CupertinoPageRoute(
-                              builder: (_) => const RegistrationScreen(),
-                            )
-                          : MaterialPageRoute(
-                              builder: (_) => const RegistrationScreen(),
-                            ),
-                    );
-                  },
-                  child: const Text('Register', style: TextStyle(color: Colors.blue)),
-                ),
-                const Text('Or'),
-                SizedBox(
-                  height: 10.h,
-                ),
-                GoogleAuthButton(
-                  borderRadius: 30.r,
-                  borderColor: Colors.transparent,
-                  onPressed: () {
-                    BlocProvider.of<AuthBloc>(context).add(
-                      AuthGoogleSignInRequested(),
-                    );
-                  },
-                  darkMode: false,
-                ),
-              ],
+                  TextButton(
+                    onPressed: () {
+                      BlocProvider.of<AppBloc>(context).add(
+                        NavigateToRegistrationScreen(),
+                      );
+                    },
+                    child: const Text('Register', style: TextStyle(color: Colors.blue)),
+                  ),
+                  const Text('Or'),
+                  SizedBox(
+                    height: 10.h,
+                  ),
+                  GoogleAuthButton(
+                    borderRadius: 30.r,
+                    borderColor: Colors.transparent,
+                    onPressed: () {
+                      BlocProvider.of<AppBloc>(context).add(
+                        AuthGoogleSignInRequested(),
+                      );
+                    },
+                    darkMode: false,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/presentation/widgets/chart_item.dart';
 import 'package:uv_pos/features/presentation/widgets/chart_name.dart';
 import 'package:uv_pos/features/presentation/widgets/search_dialog.dart';
@@ -7,7 +11,13 @@ import 'package:uv_pos/features/presentation/widgets/search_dialog_field.dart';
 
 class SaleReportScreen extends StatefulWidget {
   const SaleReportScreen({super.key});
-
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+    child: SaleReportScreen(),
+  )
+      : const MaterialPage(
+    child: SaleReportScreen(),
+  );
   @override
   State<SaleReportScreen> createState() => _SaleReportScreenState();
 }
@@ -44,7 +54,9 @@ class _SaleReportScreenState extends State<SaleReportScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToReportsScreen(),
+          ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
         title: const Text('Sale Report'),

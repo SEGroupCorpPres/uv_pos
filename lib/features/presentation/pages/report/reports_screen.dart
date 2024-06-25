@@ -2,13 +2,19 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:uv_pos/features/presentation/pages/report/report_by_customers_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/report_by_dates_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/report_by_employees_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/sale_report_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
+
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+          child: ReportsScreen(),
+        )
+      : const MaterialPage(
+          child: ReportsScreen(),
+        );
 
   @override
   State<ReportsScreen> createState() => _ReportsScreenState();
@@ -21,7 +27,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToHomeScreen(),
+          ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
         title: const Text('Reports'),
@@ -37,48 +45,20 @@ class _ReportsScreenState extends State<ReportsScreen> {
               onTap: () {
                 switch (item) {
                   case 1:
-                    Navigator.push(
-                      context,
-                      Platform.isIOS
-                          ? CupertinoPageRoute(
-                              builder: (_) => const ReportByCustomers(),
-                            )
-                          : MaterialPageRoute(
-                              builder: (_) => const ReportByCustomers(),
-                            ),
+                    BlocProvider.of<AppBloc>(context).add(
+                      NavigateToReportByCustomersScreen(),
                     );
                   case 2:
-                    Navigator.push(
-                      context,
-                      Platform.isIOS
-                          ? CupertinoPageRoute(
-                              builder: (_) => const ReportByEmployees(),
-                            )
-                          : MaterialPageRoute(
-                              builder: (_) => const ReportByEmployees(),
-                            ),
+                    BlocProvider.of<AppBloc>(context).add(
+                      NavigateToReportByEmployeeScreen(),
                     );
                   case 3:
-                    Navigator.push(
-                      context,
-                      Platform.isIOS
-                          ? CupertinoPageRoute(
-                              builder: (_) => const ReportByDatesScreen(),
-                            )
-                          : MaterialPageRoute(
-                              builder: (_) => const ReportByDatesScreen(),
-                            ),
+                    BlocProvider.of<AppBloc>(context).add(
+                      NavigateToReportByDatesScreen(),
                     );
                   default:
-                    Navigator.push(
-                      context,
-                      Platform.isIOS
-                          ? CupertinoPageRoute(
-                              builder: (_) => const SaleReportScreen(),
-                            )
-                          : MaterialPageRoute(
-                              builder: (_) => const SaleReportScreen(),
-                            ),
+                    BlocProvider.of<AppBloc>(context).add(
+                      NavigateToSaleReportScreen(),
                     );
                 }
               },

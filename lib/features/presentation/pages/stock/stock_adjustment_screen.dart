@@ -1,10 +1,20 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
 
 class StockAdjustmentScreen extends StatefulWidget {
   const StockAdjustmentScreen({super.key});
-
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+    child: StockAdjustmentScreen(),
+  )
+      : const MaterialPage(
+    child: StockAdjustmentScreen(),
+  );
   @override
   State<StockAdjustmentScreen> createState() => _StockAdjustmentScreenState();
 }
@@ -54,14 +64,18 @@ class _StockAdjustmentScreenState extends State<StockAdjustmentScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToStockScreen(),
+          ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
         title: const Text('Stock Adjustment'),
         centerTitle: false,
         actions: [
           TextButton.icon(
-            onPressed: () {},
+            onPressed: () => BlocProvider.of<AppBloc>(context).add(
+      NavigateToStockScreen(),
+    ),
             icon: const Icon(Icons.save),
             label: const Text('Submit'),
           ),

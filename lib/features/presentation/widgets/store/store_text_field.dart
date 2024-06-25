@@ -8,6 +8,7 @@ class StoreTextField extends StatelessWidget {
     this.textEditingController,
     this.isPassword = false,
     this.validator,
+    this.onTap
   });
 
   final String hintText;
@@ -15,6 +16,7 @@ class StoreTextField extends StatelessWidget {
   final bool isPassword;
   final TextEditingController? textEditingController;
   final String? Function(String?)? validator;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +39,7 @@ class StoreTextField extends StatelessWidget {
             margin: const EdgeInsets.symmetric(vertical: 5),
             height: 65,
             child: TextFormField(
+              onTap: onTap,
               controller: textEditingController,
               obscureText: isPassword,
               validator: validator,

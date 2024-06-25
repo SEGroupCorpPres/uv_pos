@@ -2,11 +2,19 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/presentation/pages/stock/stock_adjustment_screen.dart';
 
 class StocksScreen extends StatefulWidget {
   const StocksScreen({super.key});
-
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+    child: StocksScreen(),
+  )
+      : const MaterialPage(
+    child: StocksScreen(),
+  );
   @override
   State<StocksScreen> createState() => _StocksScreenState();
 }
@@ -19,7 +27,9 @@ class _StocksScreenState extends State<StocksScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToHomeScreen(),
+          ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
         title: const Text('Stocks (0/0)'),
@@ -35,15 +45,8 @@ class _StocksScreenState extends State<StocksScreen> {
         child: Text('No record found'),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-          context,
-          Platform.isIOS
-              ? CupertinoPageRoute(
-                  builder: (_) => const StockAdjustmentScreen(),
-                )
-              : MaterialPageRoute(
-                  builder: (_) => const StockAdjustmentScreen(),
-                ),
+        onPressed: () => BlocProvider.of<AppBloc>(context).add(
+          NavigateToStockAdjustmentScreen(),
         ),
         child: const Icon(Icons.swap_horiz),
       ),

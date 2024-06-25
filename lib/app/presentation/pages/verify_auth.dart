@@ -1,12 +1,23 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:otp_text_field_v2/otp_field_v2.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/auth_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 
 class VerifyAuthScreen extends StatefulWidget {
   final String verificationId;
+  // static Page page() => Platform.isIOS
+  //     ? const CupertinoPage(
+  //   child: VerifyAuthScreen(verificationId: verificationId),
+  // )
+  //     : const MaterialPage(
+  //   child: VerifyAuthScreen(verificationId: verificationId),
+  // );
+
 
   const VerifyAuthScreen({super.key, required this.verificationId});
 
@@ -42,7 +53,7 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
       body: Card(
         child: Padding(
           padding: const EdgeInsets.all(20.0).r,
-          child: BlocBuilder<AuthBloc, AuthState>(
+          child: BlocBuilder<AppBloc, AppState>(
             builder: (context, state) {
               return Form(
                 key: _formKey,
@@ -67,7 +78,6 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
                       ],
                     ),
                     SizedBox(height: 10.h),
-
                     OTPTextFieldV2(
                       controller: otpController,
                       length: 6,
@@ -91,7 +101,7 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
                         }
                         if (_formKey.currentState!.validate()) {
                           final otp = otpCode;
-                          BlocProvider.of<AuthBloc>(context).add(
+                          BlocProvider.of<AppBloc>(context).add(
                             AuthPhoneOTPVerified(widget.verificationId, otp),
                           );
                         }
@@ -107,34 +117,9 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
                           textAlign: TextAlign.left,
                         ),
                         const Spacer(),
-                        TextButton(onPressed: (){}, child: const Text('Resend'))
+                        TextButton(onPressed: () {}, child: const Text('Resend'))
                       ],
                     ),
-                    // TextButton(
-                    //   onPressed: () {
-                    //     Navigator.push(
-                    //       context,
-                    //       Platform.isIOS
-                    //           ? CupertinoPageRoute(
-                    //               builder: (_) => const StoreListScreen(),
-                    //             )
-                    //           : MaterialPageRoute(
-                    //               builder: (_) => const StoreListScreen(),
-                    //             ),
-                    //     );
-                    //   },
-                    //   style: TextButton.styleFrom(
-                    //     backgroundColor: Colors.blue,
-                    //     minimumSize: Size(size.width, 40),
-                    //   ),
-                    //   child: const Text(
-                    //     'Login',
-                    //     style: TextStyle(
-                    //       color: Colors.white,
-                    //       fontSize: 15,
-                    //     ),
-                    //   ),
-                    // ),
                   ],
                 ),
               );

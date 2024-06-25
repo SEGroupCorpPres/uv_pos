@@ -2,19 +2,27 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/local/models/wrap_button_model.dart';
 import 'package:uv_pos/features/presentation/widgets/search_dialog.dart';
 import 'package:uv_pos/features/presentation/widgets/search_dialog_field.dart';
 
-class ReportByEmployees extends StatefulWidget {
-  const ReportByEmployees({super.key});
-
+class ReportByEmployeesScreen extends StatefulWidget {
+  const ReportByEmployeesScreen({super.key});
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+    child: ReportByEmployeesScreen(),
+  )
+      : const MaterialPage(
+    child: ReportByEmployeesScreen(),
+  );
   @override
-  State<ReportByEmployees> createState() => _ReportByEmployeesState();
+  State<ReportByEmployeesScreen> createState() => _ReportByEmployeesScreenState();
 }
 
-class _ReportByEmployeesState extends State<ReportByEmployees> {
+class _ReportByEmployeesScreenState extends State<ReportByEmployeesScreen> {
   late TextEditingController fromDateController;
   late TextEditingController toDateController;
   late TextEditingController searchController;
@@ -52,7 +60,9 @@ class _ReportByEmployeesState extends State<ReportByEmployees> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToReportsScreen(),
+          ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
         title: const Text('Report by Employees'),

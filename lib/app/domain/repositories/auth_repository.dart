@@ -13,25 +13,25 @@ class AuthenticationRepository {
       : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance;
 
-  Future<User?> getUser() async {
+  Future<UserModel?> getUser() async {
     final firebaseUser = _firebaseAuth.currentUser;
     if (firebaseUser == null) {
       return null;
     }
-
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.setString('uid', firebaseUser.uid);
     // Fetch additional user data from Firestore if needed
     final userDoc = await _firestore.collection('users').doc(firebaseUser.uid).get();
     if (userDoc.exists) {
-      return User.fromMap(userDoc.data()!);
+      return UserModel.fromMap(userDoc.data()!);
     } else {
       // Create a basic User instance from FirebaseUser
-      return User(
+      return UserModel(
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: firebaseUser.displayName,
         phoneNumber: firebaseUser.phoneNumber,
         photoUrl: firebaseUser.photoURL,
-        stores: const [], // Initialize with an empty list if no additional data
       );
     }
   }
@@ -59,13 +59,12 @@ class AuthenticationRepository {
         if (user != null && user.emailVerified) {
           // Once the user is verified, store their data in Firestore
 // Create a user document in Firestore
-          User userModel = User(
+          UserModel userModel = UserModel(
             uid: user.uid,
             displayName: name,
             email: email,
             password: password,
             phoneNumber: phoneNumber,
-            stores: [], // Assuming a new user has no stores initially
           );
           // Write user document to Firestore
           await _firestore.collection('users').doc(user.uid).set(userModel.toMap()).onError(
@@ -94,7 +93,7 @@ class AuthenticationRepository {
     }
   }
 
-  Future<void> updateUser(User user) async {
+  Future<void> updateUser(UserModel user) async {
     await _firestore.collection('users').doc(user.uid).set(
           user.toMap(),
           SetOptions(merge: true),
@@ -106,7 +105,7 @@ class AuthenticationRepository {
     await GoogleSignIn().signOut();
   }
 
-  Future<User> signInWithEmail(String email, String password) async {
+  Future<UserModel> signInWithEmail(String email, String password) async {
     final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
@@ -114,10 +113,10 @@ class AuthenticationRepository {
 
     // Fetch additional user data from Firestore if needed
     final user = await getUser();
-    return user ?? User.fromFirebaseUser(userCredential);
+    return user ?? UserModel.fromFirebaseUser(userCredential);
   }
 
-  Future<User> signInWithGoogle() async {
+  Future<UserModel> signInWithGoogle() async {
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
       throw Exception("Google sign-in aborted");
@@ -131,7 +130,7 @@ class AuthenticationRepository {
 
     // Fetch additional user data from Firestore if needed
     final user = await getUser();
-    return user ?? User.fromFirebaseUser(userCredential);
+    return user ?? UserModel.fromFirebaseUser(userCredential);
   }
 
   Future<void> verifyPhoneNumber(
@@ -152,7 +151,7 @@ class AuthenticationRepository {
     );
   }
 
-  Future<User> verifyOTP(String verificationId, String smsCode) async {
+  Future<UserModel> verifyOTP(String verificationId, String smsCode) async {
     final credential = firebase_auth.PhoneAuthProvider.credential(
       verificationId: verificationId,
       smsCode: smsCode,
@@ -161,6 +160,6 @@ class AuthenticationRepository {
 
     // Fetch additional user data from Firestore if needed
     final user = await getUser();
-    return user ?? User.fromFirebaseUser(userCredential);
+    return user ?? UserModel.fromFirebaseUser(userCredential);
   }
 }

@@ -2,13 +2,23 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/local/models/wrap_button_model.dart';
 import 'package:uv_pos/features/presentation/widgets/search_dialog.dart';
 import 'package:uv_pos/features/presentation/widgets/search_dialog_field.dart';
 
 class ReportByDatesScreen extends StatefulWidget {
   const ReportByDatesScreen({super.key});
+
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+          child: ReportByDatesScreen(),
+        )
+      : const MaterialPage(
+          child: ReportByDatesScreen(),
+        );
 
   @override
   State<ReportByDatesScreen> createState() => _ReportByDatesScreenState();
@@ -52,7 +62,9 @@ class _ReportByDatesScreenState extends State<ReportByDatesScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToReportsScreen(),
+          ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
         title: const Text('Report by Dates'),

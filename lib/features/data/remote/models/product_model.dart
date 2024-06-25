@@ -10,6 +10,7 @@ class ProductModel extends Equatable {
   final String inStock;
   final int notifyQuantity;
   final String image;
+  final String storeId;
 
   const ProductModel({
     required this.id,
@@ -21,6 +22,7 @@ class ProductModel extends Equatable {
     required this.inStock,
     required this.notifyQuantity,
     required this.image,
+    required this.storeId,
   });
 
   @override
@@ -35,6 +37,7 @@ class ProductModel extends Equatable {
         inStock,
         notifyQuantity,
         image,
+        storeId,
       ];
 
   factory ProductModel.fromMap(Map<String, dynamic> data) {
@@ -48,6 +51,7 @@ class ProductModel extends Equatable {
       inStock: data['in_stock'],
       notifyQuantity: data['notify_quantity'],
       image: data['image'],
+      storeId: data['store_id'],
     );
   }
 
@@ -63,6 +67,7 @@ class ProductModel extends Equatable {
       'in_stock': inStock,
       'notify_quantity': notifyQuantity,
       'image': image,
+      'store_id': storeId,
     };
   }
 }

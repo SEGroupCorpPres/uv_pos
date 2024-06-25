@@ -1,9 +1,20 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
-
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+    child: SettingsScreen(),
+  )
+      : const MaterialPage(
+    child: SettingsScreen(),
+  );
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
@@ -54,14 +65,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToHomeScreen(),
+          ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
         title: const Text('Settings'),
         centerTitle: false,
         actions: [
           TextButton.icon(
-            onPressed: () {},
+            onPressed: () => BlocProvider.of<AppBloc>(context).add(
+      NavigateToHomeScreen(),
+    ),
             icon: const Icon(Icons.save),
             label: const Text('Save'),
           ),

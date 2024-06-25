@@ -2,16 +2,27 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/presentation/pages/product/create_product_screen.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+    child: ProductListScreen(),
+  )
+      : const MaterialPage(
+    child: ProductListScreen(),
+  );
 
   @override
   State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
+  late ProductModel? productModel;
   List<Map<String, dynamic>> productList = [
     {
       'name': 'Product 1',
@@ -46,7 +57,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToHomeScreen(),
+          ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
         title: const Text('Product List (0/0)'),
@@ -102,15 +115,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-          context,
-          Platform.isIOS
-              ? CupertinoPageRoute(
-                  builder: (_) => const CreateProductScreen(),
-                )
-              : MaterialPageRoute(
-                  builder: (_) => const CreateProductScreen(),
-                ),
+        onPressed: () =>BlocProvider.of<AppBloc>(context).add(
+          const NavigateToCreateProductScreen(),
         ),
         child: const Icon(Icons.add),
       ),

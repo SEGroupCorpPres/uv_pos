@@ -10,7 +10,7 @@ class UserRepository {
       : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance;
 
-  Future<User?> getUser() async {
+  Future<UserModel?> getUser() async {
     final firebaseUser = _firebaseAuth.currentUser;
     if (firebaseUser == null) {
       return null;
@@ -19,21 +19,20 @@ class UserRepository {
     // Fetch additional user data from Firestore if needed
     final userDoc = await _firestore.collection('users').doc(firebaseUser.uid).get();
     if (userDoc.exists) {
-      return User.fromMap(userDoc.data()!);
+      return UserModel.fromMap(userDoc.data()!);
     } else {
       // Create a basic User instance from FirebaseUser
-      return User(
+      return UserModel(
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: firebaseUser.displayName,
         phoneNumber: firebaseUser.phoneNumber,
         photoUrl: firebaseUser.photoURL,
-        stores: const [], // Initialize with an empty list if no additional data
       );
     }
   }
 
-  Future<void> updateUser(User user) async {
+  Future<void> updateUser(UserModel user) async {
     await _firestore.collection('users').doc(user.uid).set(user.toMap(), SetOptions(merge: true));
   }
 }
