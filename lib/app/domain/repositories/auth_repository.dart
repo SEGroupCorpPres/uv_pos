@@ -18,8 +18,7 @@ class AuthenticationRepository {
     if (firebaseUser == null) {
       return null;
     }
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    preferences.setString('uid', firebaseUser.uid);
+    saveUID(firebaseUser.uid);
     // Fetch additional user data from Firestore if needed
     final userDoc = await _firestore.collection('users').doc(firebaseUser.uid).get();
     if (userDoc.exists) {
@@ -106,14 +105,27 @@ class AuthenticationRepository {
   }
 
   Future<UserModel> signInWithEmail(String email, String password) async {
-    final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    // try {
+      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    // Fetch additional user data from Firestore if needed
-    final user = await getUser();
-    return user ?? UserModel.fromFirebaseUser(userCredential);
+      // Fetch additional user data from Firestore if needed
+      final user = await getUser();
+      await saveUID(UserModel.fromFirebaseUser(userCredential).uid);
+      return user ?? UserModel.fromFirebaseUser(userCredential);
+    // } on firebase_auth.FirebaseAuthException catch (e) {
+    //   if (e.code == 'user-not-found') {
+    //     print('No user found for that email.');
+    //     rethrow;
+    //   } else if (e.code == 'wrong-password') {
+    //     print('Wrong password provided for that user.');
+    //     rethrow;
+    //   }
+    // } catch (e){
+    //   rethrow;
+    // }
   }
 
   Future<UserModel> signInWithGoogle() async {
@@ -130,6 +142,8 @@ class AuthenticationRepository {
 
     // Fetch additional user data from Firestore if needed
     final user = await getUser();
+    await saveUID(UserModel.fromFirebaseUser(userCredential).uid);
+
     return user ?? UserModel.fromFirebaseUser(userCredential);
   }
 
@@ -161,5 +175,10 @@ class AuthenticationRepository {
     // Fetch additional user data from Firestore if needed
     final user = await getUser();
     return user ?? UserModel.fromFirebaseUser(userCredential);
+  }
+
+  Future<void> saveUID(String uid) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.setString('uid', uid);
   }
 }

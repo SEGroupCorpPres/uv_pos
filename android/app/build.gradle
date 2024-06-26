@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     // START: FlutterFire Configuration
     id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
+//    id 'com.google.firebase.crashlytics'
     // END: FlutterFire Configuration
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -42,7 +42,7 @@ android {
         applicationId = "inc.futuretechnologies.presidentftinc.freelance.flutter.uv_pos"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = 21
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
@@ -61,7 +61,12 @@ android {
         // Use this dependency to bundle the model with your app
         implementation 'com.google.mlkit:barcode-scanning:17.2.0'
         // Use this dependency to use the dynamically downloaded model in Google Play Services
+        implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
+        implementation("com.google.firebase:firebase-analytics")
+        implementation 'com.google.firebase:firebase-auth'
+        implementation 'com.google.firebase:firebase-firestore'
         implementation 'com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0'
+        implementation 'com.google.android.gms:play-services-location:21.3.0'
     }
 
 

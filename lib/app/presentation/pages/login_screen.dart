@@ -99,10 +99,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      BlocProvider.of<AppBloc>(context).add(
-                        NavigateToHomeScreen(),
-                      );
-                      // _login();
+                      // BlocProvider.of<AppBloc>(context).add(
+                      //   NavigateToHomeScreen(),
+                      // );
+                      _login();
                     },
                     style: TextButton.styleFrom(
                       backgroundColor: Colors.blue,

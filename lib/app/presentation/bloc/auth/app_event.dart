@@ -90,7 +90,7 @@ class NavigateToCreateProductScreen extends AppEvent {
   final bool? isEdit;
   final StoreModel? store;
 
-  const NavigateToCreateProductScreen( [
+  const NavigateToCreateProductScreen([
     this.product,
     this.barcode,
     this.isEdit,
@@ -120,6 +120,10 @@ class NavigateToStockScreen extends AppEvent {}
 
 class NavigateToStockAdjustmentScreen extends AppEvent {}
 
-class NavigateToAddEditStoreScreen extends AppEvent {}
+class NavigateToAddEditStoreScreen extends AppEvent {
+  final StoreModel? storeModel;
+
+  const NavigateToAddEditStoreScreen([this.storeModel]);
+}
 
 class NavigateToStoreListScreen extends AppEvent {}

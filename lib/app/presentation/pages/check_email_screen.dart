@@ -2,8 +2,9 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:uv_pos/app/presentation/pages/login_screen.dart';
 
 class CheckEmailScreen extends StatelessWidget {
   final String email;
@@ -37,14 +38,8 @@ class CheckEmailScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pushReplacement(
-                  Platform.isIOS
-                      ? CupertinoPageRoute(
-                          builder: (_) => const LoginScreen(),
-                        )
-                      : MaterialPageRoute(
-                          builder: (_) => const LoginScreen(),
-                        ),
+                BlocProvider.of<AppBloc>(context).add(
+                  NavigateToLoginScreen(),
                 );
               },
               child: const Text('Return to Login'),

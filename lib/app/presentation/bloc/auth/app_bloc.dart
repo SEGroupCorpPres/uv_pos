@@ -320,6 +320,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.addEditStoreScreen,
+        store: event.storeModel,
       ),
     );
   }

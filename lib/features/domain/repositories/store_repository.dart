@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/foundation.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/data/remote/models/user_model.dart';
 
 class StoreRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;
@@ -13,13 +12,11 @@ class StoreRepository {
       : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance;
 
-  Future<void> createStore(StoreModel storeModel) async {
-    final createdDate = Timestamp.now();
-
+  Future<String> createStore(StoreModel storeModel) async {
 // Create a store document in Firestore
     try {
       // Write store document to Firestore
-      await storesReference.doc(createdDate.microsecondsSinceEpoch.toString()).set(storeModel.toMap()).onError(
+      await storesReference.doc(storeModel.id).set(storeModel.toMap()).onError(
         (e, _) {
           if (kDebugMode) {
             print("Error writing document: $e");
@@ -29,6 +26,7 @@ class StoreRepository {
       if (kDebugMode) {
         print('Store created successfully!');
       }
+      return storeModel.id;
     } on FirebaseException catch (e) {
       // Handle Firestore exceptions
       throw Exception('Error creating store: ${e.message}');
@@ -82,4 +80,30 @@ class StoreRepository {
       throw Exception('Error updating store: $e');
     }
   }
+
+  Future<void> deleteStore(String storeId) async {
+    try {
+      await _firestore.collection('stores').doc(storeId).delete();
+    } catch (e) {
+      rethrow;
+    }
+  }
+  // Send an image in a chat
+  // static Future<void> sendChatImage(UserModel userModel, File file) async {
+  //   final String ext = file.path.split('.').last;
+  //   final Reference reference = _firebaseStorage.ref().child('images/${getConversationId(userModel.id!)}/${DateTime.now().millisecondsSinceEpoch}.$ext');
+  //   try {
+  //     // Upload image to Firebase Storage
+  //     await reference.putFile(file, SettableMetadata(contentType: 'image/$ext')).then(
+  //           (p0) => log('Data Transferred: ${p0.bytesTransferred / 1000} kb'),
+  //     );
+  //     // Get image URL and send it as a message
+  //     final String imageUrl = await reference.getDownloadURL();
+  //     await sendMessage(userModel, imageUrl, Type.image);
+  //   } on FirebaseException catch (e) {
+  //     return;
+  //   } catch (e) {
+  //     return;
+  //   }
+  // }
 }

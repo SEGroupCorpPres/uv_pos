@@ -1,14 +1,17 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/core/helpers/image_helper.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
+import 'package:uv_pos/features/presentation/bloc/store/store_bloc.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_button.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
 import 'package:uv_pos/generated/assets.dart';
@@ -49,9 +52,11 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   File? _image;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'createEditStoreFormKey');
   final ImageHelper imageHelper = ImageHelper();
+  String uid = '';
 
   @override
   void initState() {
+    getUID();
     _storeNameTextEditingController = TextEditingController(text: widget.storeNameTextEditingController ?? '');
     _storeDescriptionTextEditingController = TextEditingController(text: widget.storeDescriptionTextEditingController ?? '');
     _storePhoneTextEditingController = TextEditingController(text: widget.storePhoneTextEditingController ?? '');
@@ -104,6 +109,12 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
     }
   }
 
+  Future<void> getUID() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    uid = sharedPreferences.getString('uid')!;
+    print('UID ------> $uid');
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -132,9 +143,20 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
         centerTitle: false,
         actions: [
           TextButton.icon(
-            onPressed: () => BlocProvider.of<AppBloc>(context).add(
-              NavigateToStoreListScreen(),
-            ),
+            onPressed: () {
+              if (_formKey.currentState?.validate() ?? false) {
+                final createdDate = Timestamp.now();
+                final store = StoreModel(
+                  id: createdDate.microsecondsSinceEpoch.toString(),
+                  uid: uid,
+                  name: _storeNameTextEditingController.text,
+                  description: _storeDescriptionTextEditingController.text,
+                  phone: _storePhoneTextEditingController.text,
+                  address: _storeAddressTextEditingController.text,
+                );
+                context.read<StoreBloc>().add( CreateStoreEvent(store, _image));
+              }
+            },
             icon: const Icon(Icons.save),
             label: const Text(
               'Save',
@@ -142,59 +164,95 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
           ),
         ],
       ),
-      body: BlocBuilder<AppBloc, AppState>(
-        builder: (context, state) {
-          StoreModel? store;
-          if (state.isEdit) {
-            if (state.store != null) {
-              store = state.store;
+      body: SingleChildScrollView(
+        child: BlocBuilder<AppBloc, AppState>(
+          builder: (context, appState) {
+            StoreModel? store;
+            if (appState.isEdit) {
+              if (appState.store != null) {
+                store = appState.store;
+              }
             }
-          }
-          _storeNameTextEditingController.text = store?.name ?? '';
-          _storeDescriptionTextEditingController.text = store?.description ?? '';
-          _storePhoneTextEditingController.text = store?.phone ?? '';
-          _storeAddressTextEditingController.text = store?.address ?? '';
+            _storeNameTextEditingController.text = store?.name ?? '';
+            _storeDescriptionTextEditingController.text = store?.description ?? '';
+            _storePhoneTextEditingController.text = store?.phone ?? '';
+            _storeAddressTextEditingController.text = store?.address ?? '';
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
-            child: Column(
-              children: [
-                Form(
-                  key: _formKey,
+            return BlocConsumer<StoreBloc, StoreState>(
+              listener: (context, state) {
+                if (state is StoreCreated) {
+                  // Navigate back or show a success message when the store is created
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Store created successfully')));
+                  BlocProvider.of<AppBloc>(context).add(
+                    NavigateToStoreListScreen(),
+                  );
+                } else if (state is StoreError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
+                }
+              },
+              builder: (context, state) {
+                if (state is StoreCreating) {
+                  return const Center(child: CircularProgressIndicator.adaptive());
+                }
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
                   child: Column(
                     children: [
-                      StoreTextField(
-                        hintText: 'Store Name',
-                        icon: Icons.text_fields,
-                        textEditingController: _storeNameTextEditingController,
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            StoreTextField(
+                              hintText: 'Store Name',
+                              icon: Icons.text_fields,
+                              textEditingController: _storeNameTextEditingController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a name';
+                                }
+                                return null;
+                              },
+                            ),
+                            StoreTextField(
+                              hintText: 'Store Description',
+                              icon: Icons.description,
+                              textEditingController: _storeDescriptionTextEditingController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a description';
+                                }
+                                return null;
+                              },
+                            ),
+                            StoreTextField(
+                              hintText: 'Store Phone',
+                              icon: Icons.phone,
+                              textEditingController: _storePhoneTextEditingController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a phone number';
+                                }
+                                return null;
+                              },
+                            ),
+                            StoreTextField(
+                              hintText: 'Store Address',
+                              icon: Icons.location_on,
+                              textEditingController: _storeAddressTextEditingController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a address';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                      StoreTextField(
-                        hintText: 'Store Description',
-                        icon: Icons.description,
-                        textEditingController: _storeDescriptionTextEditingController,
-                      ),
-                      StoreTextField(
-                        hintText: 'Store Phone',
-                        icon: Icons.phone,
-                        textEditingController: _storePhoneTextEditingController,
-                      ),
-                      StoreTextField(
-                        hintText: 'Store Address',
-                        icon: Icons.location_on,
-                        textEditingController: _storeAddressTextEditingController,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: size.width,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                      const SizedBox(height: 20),
+                      Row(
                         children: [
-                          !state.isEdit
+                          !appState.isEdit
                               ? Center(
                                   child: Container(
                                     width: 150.r,
@@ -217,51 +275,42 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                                   height: 150.r,
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
-                                      image: NetworkImage(store!.imageUrl),
+                                      image: NetworkImage(store!.imageUrl!),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
                                 ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            width: size.width,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                StoreButton(
-                                  title: 'Pick an Image',
-                                  icon: Icons.image,
-                                  onPressed: () {
-                                    Platform.isIOS ? _cupertinoStyleGalleryImageUpload() : _uploadingAPictureFromTheGalleryInMaterialStyle();
-                                  },
-                                ),
-                                StoreButton(
-                                  title: 'Take a Photo',
-                                  icon: Icons.camera_alt,
-                                  onPressed: () {
-                                    Platform.isIOS ? _cupertinoStyleCameraCapture() : _takingAPictureWithACameraInMaterialStyle();
-                                  },
-                                ),
-                              ],
-                            ),
+                          const SizedBox(width: 30),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              StoreButton(
+                                title: 'Pick an Image',
+                                icon: Icons.image,
+                                onPressed: () {
+                                  Platform.isIOS ? _cupertinoStyleGalleryImageUpload() : _uploadingAPictureFromTheGalleryInMaterialStyle();
+                                },
+                              ),
+                              StoreButton(
+                                title: 'Take a Photo',
+                                icon: Icons.camera_alt,
+                                onPressed: () {
+                                  Platform.isIOS ? _cupertinoStyleCameraCapture() : _takingAPictureWithACameraInMaterialStyle();
+                                },
+                              ),
+                              // StoreButton(title: 'Pick an Image', icon: Icons.image, onPressed: () {}),
+                              // StoreButton(title: 'Take a Photo', icon: Icons.camera_alt, onPressed: () {}),
+                            ],
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 30),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        StoreButton(title: 'Pick an Image', icon: Icons.image, onPressed: () {}),
-                        StoreButton(title: 'Take a Photo', icon: Icons.camera_alt, onPressed: () {}),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

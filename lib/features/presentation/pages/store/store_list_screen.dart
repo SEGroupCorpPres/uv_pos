@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:animated_search_bar/animated_search_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/domain/repositories/store_repository.dart';
-import 'package:uv_pos/features/presentation/pages/store/add_edit_store_screen.dart';
+import 'package:uv_pos/features/presentation/bloc/store/store_bloc.dart';
+import 'package:uv_pos/features/presentation/bloc/store/store_cubit.dart';
 
 class StoreListScreen extends StatefulWidget {
   const StoreListScreen({super.key});
@@ -25,6 +27,7 @@ class StoreListScreen extends StatefulWidget {
 }
 
 class _StoreListScreenState extends State<StoreListScreen> {
+  final TextEditingController _searchController = TextEditingController();
   final StoreRepository storeRepository = StoreRepository();
 
   //
@@ -80,16 +83,39 @@ class _StoreListScreenState extends State<StoreListScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Store List'),
+        title: AnimatedSearchBar(
+          label: "Store list",
+          controller: _searchController,
+          onChanged: (value) {
+            _searchList.clear();
+            for (var i in _list) {
+              if (i.name.toLowerCase().contains(value.toLowerCase())) {
+                _searchList.add(i);
+              }
+              setState(() {
+                _searchList;
+                _isSearching = true;
+              });
+            }
+          },
+          labelStyle: const TextStyle(fontSize: 16),
+          searchStyle: const TextStyle(color: Colors.white),
+          cursorColor: Colors.white,
+          textInputAction: TextInputAction.done,
+          searchDecoration: const InputDecoration(
+            hintText: 'Search',
+            alignLabelWithHint: true,
+            fillColor: Colors.white,
+            focusColor: Colors.white,
+            hintStyle: TextStyle(color: Colors.white70),
+            border: InputBorder.none,
+          ),
+        ),
         centerTitle: false,
         actions: [
           IconButton(
             onPressed: () {},
             icon: const Icon(Icons.autorenew),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search),
           ),
           IconButton(
             onPressed: () {
@@ -101,67 +127,88 @@ class _StoreListScreenState extends State<StoreListScreen> {
       ),
       body: SafeArea(
         child: BlocBuilder<AppBloc, AppState>(
-          builder: (context, state) {
-            return ListView.builder(
-              itemCount: storeList.length,
-              itemBuilder: (context, item) {
-                final storeItemName = storeList[item]['name'];
-                final storeItemPhone = storeList[item]['phone'];
-                final storeItemImage = storeList[item]['phone'];
-                final storeItemAddress = storeList[item]['address'];
-                final storeItemDescription = storeList[item]['description'];
-                return CupertinoListTile(
-                  leadingSize: 60,
-                  leading: Container(
-                    width: 50,
-                    height: 50,
-                    color: Colors.redAccent,
-                  ),
-                  title: RichText(
-                    text: TextSpan(
-                      text: '$storeItemName',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black),
-                      children: const [
-                        TextSpan(
-                          text: '(Store Owner)',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.blueAccent),
-                        ),
-                      ],
-                    ),
-                  ),
-                  subtitle: Text(
-                    '$storeItemPhone',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black),
-                  ),
-                  trailing: IconButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      Platform.isIOS
-                          ? CupertinoPageRoute(
-                              builder: (_) => AddEditStoreScreen(
-                                storeNameTextEditingController: storeItemName,
-                                storeDescriptionTextEditingController: storeItemDescription,
-                                storePhoneTextEditingController: storeItemPhone,
-                                storeAddressTextEditingController: storeItemAddress,
-                                storeImage: storeItemImage,
-                              ),
-                            )
-                          : MaterialPageRoute(
-                              builder: (_) => AddEditStoreScreen(
-                                storeNameTextEditingController: storeItemName,
-                                storeDescriptionTextEditingController: storeItemDescription,
-                                storePhoneTextEditingController: storeItemPhone,
-                                storeAddressTextEditingController: storeItemAddress,
-                                storeImage: storeItemImage,
-                              ),
+          builder: (context, appState) {
+            return BlocBuilder<StoreBloc, StoreState>(
+              builder: (context, state) {
+                List<StoreModel> _storeList = [];
+                if (state is StoresByUIDLoaded) {
+                  _list = state.stores!;
+                  _storeList = _isSearching ? _searchList : _list;
+                  _storeList.sort((a, b) => b.name.compareTo(a.name));
+                  return ListView.builder(
+                    itemCount: _storeList.length,
+                    
+                    itemBuilder: (context, item) {
+                      final storeItemId = _storeList[item].id;
+                      final storeItemName = _storeList[item].name;
+                      final storeItemPhone = _storeList[item].phone;
+                      final storeItemImage = _storeList[item].imageUrl;
+                      final storeItemAddress = _storeList[item].address;
+                      final storeItemDescription = _storeList[item].description;
+                      return CupertinoListTile(
+                        onTap: () => BlocProvider.of<AppBloc>(context)..add(NavigateToHomeScreen()),
+                        leadingSize: 60,
+                        leading: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(storeItemImage!),
+                              fit: BoxFit.cover,
                             ),
-                    ),
-                    icon: const Icon(
-                      Icons.edit,
-                      color: Colors.black,
-                    ),
-                  ),
-                );
+                          ),
+                        ),
+                        title: RichText(
+                          text: TextSpan(
+                            text: storeItemName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                            children: const [
+                              TextSpan(
+                                text: '(Store Owner)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blueAccent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        subtitle: Text(
+                          storeItemPhone,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                        trailing: IconButton(
+                          onPressed: () => BlocProvider.of<AppBloc>(context).add(
+                            NavigateToAddEditStoreScreen(_list[item]),
+                          ),
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Colors.black,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                } else if (state is StoreNotFound) {
+                  return const Center(
+                    child: Text('No record found'),
+                  );
+                } else if (state is StoreLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator.adaptive(),
+                  );
+                } else {
+                  return Container();
+                }
               },
             );
           },
@@ -169,7 +216,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => BlocProvider.of<AppBloc>(context).add(
-          NavigateToAddEditStoreScreen(),
+          const NavigateToAddEditStoreScreen(),
         ),
         child: const Icon(Icons.add),
       ),
