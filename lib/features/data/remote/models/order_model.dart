@@ -24,10 +24,10 @@ class OrderModel extends Equatable {
   factory OrderModel.fromMap(Map<String, dynamic> data) {
     return OrderModel(
       id: data['id'],
-      customerId: data['customerId'],
-      productList: (data['productList'] as List<dynamic>).map((item) => ProductModel.fromMap(item)).toList(),
-      totalAmount: data['totalAmount'],
-      orderDate: DateTime.parse(data['orderDate']),
+      customerId: data['customer_id'],
+      productList: (data['product_list'] as List<dynamic>).map((item) => ProductModel.fromMap(item)).toList(),
+      totalAmount: data['total_amount'],
+      orderDate: DateTime.parse(data['order_date']),
     );
   }
 
@@ -35,10 +35,26 @@ class OrderModel extends Equatable {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'customerId': customerId,
-      'productList': productList.map((product) => product.toMap()).toList(),
-      'totalAmount': totalAmount,
-      'orderDate': orderDate.toIso8601String(),
+      'customer_id': customerId,
+      'product_list': productList.map((product) => product.toMap()).toList(),
+      'total_amount': totalAmount,
+      'order_date': orderDate.toIso8601String(),
     };
+  }
+
+  OrderModel copyWith({
+    String? id,
+    String? customerId,
+    List<ProductModel>? productList,
+    double? totalAmount,
+    DateTime? orderDate,
+  }) {
+    return OrderModel(
+      id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
+      productList: productList ?? this.productList,
+      totalAmount: totalAmount ?? this.totalAmount,
+      orderDate: orderDate ?? this.orderDate,
+    );
   }
 }

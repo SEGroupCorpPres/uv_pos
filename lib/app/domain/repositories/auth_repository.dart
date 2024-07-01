@@ -5,26 +5,31 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uv_pos/features/data/remote/models/user_model.dart';
 
+// Repository for handling user authentication and data
 class AuthenticationRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
 
+  // Initialize with Firebase instances
   AuthenticationRepository({firebase_auth.FirebaseAuth? firebaseAuth, FirebaseFirestore? firestore})
       : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance;
 
+  // Get the currently logged-in user
   Future<UserModel?> getUser() async {
     final firebaseUser = _firebaseAuth.currentUser;
     if (firebaseUser == null) {
       return null;
     }
+    // Store UID locally
+    // Fetch additional user data from Firestore
     saveUID(firebaseUser.uid);
     // Fetch additional user data from Firestore if needed
     final userDoc = await _firestore.collection('users').doc(firebaseUser.uid).get();
     if (userDoc.exists) {
       return UserModel.fromMap(userDoc.data()!);
     } else {
-      // Create a basic User instance from FirebaseUser
+      // Create a basic User instance if no Firestore data exists
       return UserModel(
         uid: firebaseUser.uid,
         email: firebaseUser.email,
@@ -35,12 +40,14 @@ class AuthenticationRepository {
     }
   }
 
+  // Create a new user account with email and password
   Future<void> createUser(String email, String password, String phoneNumber, String name) async {
     final registrationDate = Timestamp.now();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     // Create user with email and password
 
     try {
+      // Create user in Firebase Authentication
       firebase_auth.UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -51,13 +58,13 @@ class AuthenticationRepository {
       if (user == null) {
         throw Exception('User registration failed');
       }
-// Send verification email
+      // Send verification email
       await user.sendEmailVerification();
       // Listen to the auth state changes to handle email verification
       _firebaseAuth.authStateChanges().listen((user) async {
         if (user != null && user.emailVerified) {
           // Once the user is verified, store their data in Firestore
-// Create a user document in Firestore
+          // Create a user document in Firestore
           UserModel userModel = UserModel(
             uid: user.uid,
             displayName: name,
@@ -92,29 +99,32 @@ class AuthenticationRepository {
     }
   }
 
+  // Update user information in Firestore
   Future<void> updateUser(UserModel user) async {
     await _firestore.collection('users').doc(user.uid).set(
           user.toMap(),
-          SetOptions(merge: true),
+          SetOptions(merge: true), // Merge with existing data
         );
   }
 
+  // Sign the user out
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
     await GoogleSignIn().signOut();
   }
 
+  // Sign in with email and password
   Future<UserModel> signInWithEmail(String email, String password) async {
     // try {
-      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+    final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
 
-      // Fetch additional user data from Firestore if needed
-      final user = await getUser();
-      await saveUID(UserModel.fromFirebaseUser(userCredential).uid);
-      return user ?? UserModel.fromFirebaseUser(userCredential);
+    // Fetchuser data and store UID
+    final user = await getUser();
+    await saveUID(UserModel.fromFirebaseUser(userCredential).uid);
+    return user ?? UserModel.fromFirebaseUser(userCredential);
     // } on firebase_auth.FirebaseAuthException catch (e) {
     //   if (e.code == 'user-not-found') {
     //     print('No user found for that email.');
@@ -128,6 +138,7 @@ class AuthenticationRepository {
     // }
   }
 
+  // Sign in with Google
   Future<UserModel> signInWithGoogle() async {
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
@@ -140,13 +151,14 @@ class AuthenticationRepository {
     );
     final userCredential = await _firebaseAuth.signInWithCredential(credential);
 
-    // Fetch additional user data from Firestore if needed
+    // Fetch user data and store UID
     final user = await getUser();
     await saveUID(UserModel.fromFirebaseUser(userCredential).uid);
 
     return user ?? UserModel.fromFirebaseUser(userCredential);
   }
 
+  // Initiate phone number verification
   Future<void> verifyPhoneNumber(
     String phoneNumber,
     Duration timeout, {
@@ -165,6 +177,7 @@ class AuthenticationRepository {
     );
   }
 
+  // Verify OTP code for phone authentication
   Future<UserModel> verifyOTP(String verificationId, String smsCode) async {
     final credential = firebase_auth.PhoneAuthProvider.credential(
       verificationId: verificationId,
@@ -172,11 +185,12 @@ class AuthenticationRepository {
     );
     final userCredential = await _firebaseAuth.signInWithCredential(credential);
 
-    // Fetch additional user data from Firestore if needed
+    // Fetch user data
     final user = await getUser();
     return user ?? UserModel.fromFirebaseUser(userCredential);
   }
 
+  // Save the user's UID in shared preferences
   Future<void> saveUID(String uid) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.setString('uid', uid);

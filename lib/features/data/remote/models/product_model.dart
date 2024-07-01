@@ -9,7 +9,7 @@ class ProductModel extends Equatable {
   final double cost;
   final String inStock;
   final int notifyQuantity;
-  final String image;
+  final String? image;
   final String storeId;
 
   const ProductModel({
@@ -21,7 +21,7 @@ class ProductModel extends Equatable {
     required this.cost,
     required this.inStock,
     required this.notifyQuantity,
-    required this.image,
+     this.image,
     required this.storeId,
   });
 
@@ -69,5 +69,31 @@ class ProductModel extends Equatable {
       'image': image,
       'store_id': storeId,
     };
+  }
+
+  ProductModel copyWith({
+    String? id,
+    String? name,
+    String? barCode,
+    String? description,
+    double? price,
+    double? cost,
+    String? inStock,
+    int? notifyQuantity,
+    String? image,
+    String? storeId,
+  }) {
+    return ProductModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      barCode: barCode ?? this.barCode,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      cost: cost ?? this.cost,
+      inStock: inStock ?? this.inStock,
+      notifyQuantity: notifyQuantity ?? this.notifyQuantity,
+      image: image ?? this.image,
+      storeId: storeId ?? this.storeId,
+    );
   }
 }

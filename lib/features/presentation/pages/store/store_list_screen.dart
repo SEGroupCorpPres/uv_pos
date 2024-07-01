@@ -9,7 +9,6 @@ import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/domain/repositories/store_repository.dart';
 import 'package:uv_pos/features/presentation/bloc/store/store_bloc.dart';
-import 'package:uv_pos/features/presentation/bloc/store/store_cubit.dart';
 
 class StoreListScreen extends StatefulWidget {
   const StoreListScreen({super.key});
@@ -99,22 +98,21 @@ class _StoreListScreenState extends State<StoreListScreen> {
             }
           },
           labelStyle: const TextStyle(fontSize: 16),
-          searchStyle: const TextStyle(color: Colors.white),
-          cursorColor: Colors.white,
+          cursorColor: Colors.black,
           textInputAction: TextInputAction.done,
           searchDecoration: const InputDecoration(
             hintText: 'Search',
             alignLabelWithHint: true,
             fillColor: Colors.white,
             focusColor: Colors.white,
-            hintStyle: TextStyle(color: Colors.white70),
+            hintStyle: TextStyle(color: Colors.black),
             border: InputBorder.none,
           ),
         ),
         centerTitle: false,
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () => BlocProvider.of<StoreBloc>(context).add(LoadStoresEvent()),
             icon: const Icon(Icons.autorenew),
           ),
           IconButton(
@@ -127,31 +125,33 @@ class _StoreListScreenState extends State<StoreListScreen> {
       ),
       body: SafeArea(
         child: BlocBuilder<AppBloc, AppState>(
+          buildWhen: (appPrev, appCurrent) => appPrev.user == appCurrent.user,
           builder: (context, appState) {
             return BlocBuilder<StoreBloc, StoreState>(
+              buildWhen: (prev, current) => prev != current,
               builder: (context, state) {
-                List<StoreModel> _storeList = [];
+                List<StoreModel> storeList = [];
                 if (state is StoresByUIDLoaded) {
                   _list = state.stores!;
-                  _storeList = _isSearching ? _searchList : _list;
-                  _storeList.sort((a, b) => b.name.compareTo(a.name));
+                  storeList = _isSearching ? _searchList : _list;
+                  storeList.sort((a, b) => b.name.compareTo(a.name));
                   return ListView.builder(
-                    itemCount: _storeList.length,
-                    
+                    itemCount: storeList.length,
                     itemBuilder: (context, item) {
-                      final storeItemId = _storeList[item].id;
-                      final storeItemName = _storeList[item].name;
-                      final storeItemPhone = _storeList[item].phone;
-                      final storeItemImage = _storeList[item].imageUrl;
-                      final storeItemAddress = _storeList[item].address;
-                      final storeItemDescription = _storeList[item].description;
+                      final storeItemId = storeList[item].id;
+                      final storeItemName = storeList[item].name;
+                      final storeItemPhone = storeList[item].phone;
+                      final storeItemImage = storeList[item].imageUrl;
+                      final storeItemAddress = storeList[item].address;
+                      final storeItemDescription = storeList[item].description;
                       return CupertinoListTile(
-                        onTap: () => BlocProvider.of<AppBloc>(context)..add(NavigateToHomeScreen()),
+                        onTap: () => BlocProvider.of<AppBloc>(context)..add(NavigateToHomeScreen(storeList[item])),
                         leadingSize: 60,
                         leading: Container(
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
                             image: DecorationImage(
                               image: NetworkImage(storeItemImage!),
                               fit: BoxFit.cover,
@@ -168,9 +168,9 @@ class _StoreListScreenState extends State<StoreListScreen> {
                             ),
                             children: const [
                               TextSpan(
-                                text: '(Store Owner)',
+                                text: '  (Store Owner)',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.blueAccent,
                                 ),
@@ -188,7 +188,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
                         ),
                         trailing: IconButton(
                           onPressed: () => BlocProvider.of<AppBloc>(context).add(
-                            NavigateToAddEditStoreScreen(_list[item]),
+                            NavigateToAddEditStoreScreen(_list[item], true),
                           ),
                           icon: const Icon(
                             Icons.edit,
@@ -206,8 +206,16 @@ class _StoreListScreenState extends State<StoreListScreen> {
                   return const Center(
                     child: CircularProgressIndicator.adaptive(),
                   );
+                } else if (state is StoreError) {
+                  print('no state');
+                  return const Center(
+                    child: Text('Error'),
+                  );
                 } else {
-                  return Container();
+                  BlocProvider.of<StoreBloc>(context).add(LoadStoresEvent());
+                  return const Center(
+                    child: Text('Nothing'),
+                  );
                 }
               },
             );

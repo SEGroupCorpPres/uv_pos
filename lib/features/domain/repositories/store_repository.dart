@@ -51,8 +51,7 @@ class StoreRepository {
 
   Future<List<StoreModel>> getStoresByUserId() async {
     try {
-      QuerySnapshot querySnapshot = await _firestore
-          .collection('stores')
+      QuerySnapshot querySnapshot = await storesReference
           .where(
             'uid',
             isEqualTo: _firebaseAuth.currentUser!.uid,
@@ -73,7 +72,7 @@ class StoreRepository {
 
   Future<void> updateStore(StoreModel store) async {
     try {
-      await _firestore.collection('stores').doc(store.id).update(
+      await storesReference.doc(store.id).update(
             store.toMap(),
           );
     } catch (e) {
@@ -83,27 +82,9 @@ class StoreRepository {
 
   Future<void> deleteStore(String storeId) async {
     try {
-      await _firestore.collection('stores').doc(storeId).delete();
+      await storesReference.doc(storeId).delete();
     } catch (e) {
       rethrow;
     }
   }
-  // Send an image in a chat
-  // static Future<void> sendChatImage(UserModel userModel, File file) async {
-  //   final String ext = file.path.split('.').last;
-  //   final Reference reference = _firebaseStorage.ref().child('images/${getConversationId(userModel.id!)}/${DateTime.now().millisecondsSinceEpoch}.$ext');
-  //   try {
-  //     // Upload image to Firebase Storage
-  //     await reference.putFile(file, SettableMetadata(contentType: 'image/$ext')).then(
-  //           (p0) => log('Data Transferred: ${p0.bytesTransferred / 1000} kb'),
-  //     );
-  //     // Get image URL and send it as a message
-  //     final String imageUrl = await reference.getDownloadURL();
-  //     await sendMessage(userModel, imageUrl, Type.image);
-  //   } on FirebaseException catch (e) {
-  //     return;
-  //   } catch (e) {
-  //     return;
-  //   }
-  // }
 }

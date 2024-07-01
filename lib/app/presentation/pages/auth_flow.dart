@@ -13,7 +13,7 @@ import 'package:uv_pos/features/presentation/pages/order/order_list_screen.dart'
 import 'package:uv_pos/features/presentation/pages/printer/add_printers_screen.dart';
 import 'package:uv_pos/features/presentation/pages/printer/printers_screen.dart';
 import 'package:uv_pos/features/presentation/pages/product/barcode_scanner_screen.dart';
-import 'package:uv_pos/features/presentation/pages/product/create_product_screen.dart';
+import 'package:uv_pos/features/presentation/pages/product/create_edit_product_screen.dart';
 import 'package:uv_pos/features/presentation/pages/product/product_list_screen.dart';
 import 'package:uv_pos/features/presentation/pages/report/report_by_customers_screen.dart';
 import 'package:uv_pos/features/presentation/pages/report/report_by_dates_screen.dart';
@@ -96,71 +96,3 @@ List<Page> onGenerateAuthPages(AppState state, List<Page> pages) {
   }
 }
 
-// class AuthRouter extends StatelessWidget {
-//   const AuthRouter({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return BlocListener<AuthBloc, AuthState>(
-//       listener: (context, state) {
-//         if (state is AuthUnauthenticated) {
-//           Navigator.of(context).pushReplacement(
-//             Platform.isIOS
-//                 ? CupertinoPageRoute(
-//                     builder: (_) => const LoginScreen(),
-//                   )
-//                 : MaterialPageRoute(
-//                     builder: (_) => const LoginScreen(),
-//                   ),
-//           );
-//         } else if (state is AuthAuthenticated) {
-//           Navigator.of(context).pushReplacement(
-//             Platform.isIOS
-//                 ? CupertinoPageRoute(
-//                     builder: (_) => const StoreListScreen(),
-//                   )
-//                 : MaterialPageRoute(
-//                     builder: (_) => const StoreListScreen(),
-//                   ),
-//           );
-//         } else if (state is AuthLoading) {
-//           Navigator.of(context).pushReplacement(
-//             Platform.isIOS
-//                 ? CupertinoPageRoute(
-//                     builder: (_) => const LoadingScreen(),
-//                   )
-//                 : MaterialPageRoute(
-//                     builder: (_) => const LoadingScreen(),
-//                   ),
-//           );
-//         } else if (state is AuthCodeSent) {
-//           Navigator.of(context).pushReplacement(
-//             Platform.isIOS
-//                 ? CupertinoPageRoute(
-//                     builder: (_) => VerifyAuthScreen(verificationId: state.verificationId),
-//                   )
-//                 : MaterialPageRoute(
-//                     builder: (_) => VerifyAuthScreen(verificationId: state.verificationId),
-//                   ),
-//           );
-//         } else if (state is AuthEmailVerification) {
-//           // Navigate to a screen that instructs the user to check their email
-//           Navigator.of(context).pushReplacement(
-//             Platform.isIOS
-//                 ? CupertinoPageRoute(
-//                     builder: (_) => CheckEmailScreen(email: state.email),
-//                   )
-//                 : MaterialPageRoute(
-//                     builder: (_) => CheckEmailScreen(email: state.email),
-//                   ),
-//           );
-//         }
-//       },
-//       child: const Scaffold(
-//         body: Center(
-//           child: CircularProgressIndicator.adaptive(), // Initial loading screen
-//         ),
-//       ),
-//     );
-//   }
-// }

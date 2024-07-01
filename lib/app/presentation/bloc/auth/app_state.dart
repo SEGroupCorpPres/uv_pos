@@ -39,6 +39,7 @@ class AppState extends Equatable {
   final String? barcode;
   final ProductModel? product;
   final StoreModel? store;
+  final OrderModel? order;
 
   final bool isEdit;
 
@@ -52,6 +53,7 @@ class AppState extends Equatable {
     this.errorMessage,
     this.product,
     this.store,
+    this.order,
     this.isEdit = false,
   });
 
@@ -64,6 +66,7 @@ class AppState extends Equatable {
     String? barcode,
     ProductModel? product,
     StoreModel? store,
+    OrderModel? order,
     bool? isEdit,
     String? errorMessage,
   }) {
@@ -75,6 +78,7 @@ class AppState extends Equatable {
       otp: otp ?? this.otp,
       product: product ?? this.product,
       store: store ?? this.store,
+      order: order ?? this.order,
       barcode: barcode ?? this.barcode,
       isEdit: isEdit ?? this.isEdit,
       errorMessage: errorMessage ?? this.errorMessage,

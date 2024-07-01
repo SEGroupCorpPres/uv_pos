@@ -1,85 +1,86 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/foundation.dart';
+import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/data/remote/models/user_model.dart';
 
 class OrderRepository {
-  final firebase_auth.FirebaseAuth _firebaseAuth;
-  final FirebaseFirestore _firestore;
-  CollectionReference storesReference = FirebaseFirestore.instance.collection('stores');
+  CollectionReference ordersReference = FirebaseFirestore.instance.collection('orders');
 
-  OrderRepository({firebase_auth.FirebaseAuth? firebaseAuth, FirebaseFirestore? firestore})
-      : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+  OrderRepository();
 
-  Future<void> createStore(StoreModel storeModel, UserModel userModel) async {
-    final createdDate = Timestamp.now();
-
-// Create a store document in Firestore
+  Future<String> createOrder(OrderModel orderModel) async {
+// Create a Order document in Firestore
     try {
-      // Write store document to Firestore
-      await storesReference.doc(createdDate.microsecondsSinceEpoch.toString()).set(storeModel.toMap()).onError(
-            (e, _) {
+      // Write Order document to Firestore
+      await ordersReference.doc(orderModel.id).set(orderModel.toMap()).onError(
+        (e, _) {
           if (kDebugMode) {
             print("Error writing document: $e");
           }
         },
       );
       if (kDebugMode) {
-        print('Store created successfully!');
+        print('Order created successfully!');
       }
+      return orderModel.id;
     } on FirebaseException catch (e) {
       // Handle Firestore exceptions
-      throw Exception('Error creating store: ${e.message}');
+      throw Exception('Error creating Order: ${e.message}');
     } catch (e) {
       // Handle other exceptions
       throw Exception('An unknown error occurred: $e');
     }
   }
 
-  Future<StoreModel?> getStoreById(String id) async {
+  Future<OrderModel?> getOrderById(OrderModel order) async {
     try {
-      DocumentSnapshot documentSnapshot = await storesReference.doc(id).get();
+      DocumentSnapshot documentSnapshot = await ordersReference.doc(order.id).get();
       if (documentSnapshot.exists) {
-        return StoreModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
+        return OrderModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
       } else {
         return null; // Handle the case where the document does not exist
       }
     } catch (e) {
-      throw Exception('Error fetching store: $e');
+      throw Exception('Error fetching Order: $e');
     }
   }
 
-  Future<List<StoreModel>> getStoresByUserId() async {
+  Future<List<OrderModel>> getOrdersByStoreId(StoreModel store) async {
     try {
-      QuerySnapshot querySnapshot = await _firestore
-          .collection('stores')
+      QuerySnapshot querySnapshot = await ordersReference
           .where(
-        'uid',
-        isEqualTo: _firebaseAuth.currentUser!.uid,
-      )
+            'store_id',
+            isEqualTo: store.id,
+          )
           .get();
 
-      List<StoreModel> stores = querySnapshot.docs.map(
-            (doc) {
-          return StoreModel.fromMap(doc.data() as Map<String, dynamic>);
+      List<OrderModel> orders = querySnapshot.docs.map(
+        (doc) {
+          return OrderModel.fromMap(doc.data() as Map<String, dynamic>);
         },
       ).toList();
 
-      return stores;
+      return orders;
     } catch (e) {
-      throw Exception('Error fetching stores: $e');
+      throw Exception('Error fetching Orders: $e');
     }
   }
 
-  Future<void> updateStore(StoreModel store) async {
+  Future<void> updateOrder(OrderModel order) async {
     try {
-      await _firestore.collection('stores').doc(store.id).update(
-        store.toMap(),
-      );
+      await ordersReference.doc(order.id).update(
+            order.toMap(),
+          );
     } catch (e) {
-      throw Exception('Error updating store: $e');
+      throw Exception('Error updating Order: $e');
+    }
+  }
+
+  Future<void> deleteOrder(String orderId) async {
+    try {
+      await ordersReference.doc(orderId).delete();
+    } catch (e) {
+      rethrow;
     }
   }
 }

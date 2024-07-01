@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uv_pos/app/domain/repositories/auth_repository.dart';
+import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/data/remote/models/user_model.dart';
@@ -188,6 +189,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.homeScreen,
+        store: event.store,
       ),
     );
   }
@@ -196,6 +198,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.orderListScreen,
+        store: event.store,
       ),
     );
   }
@@ -240,6 +243,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.productListScreen,
+        store: event.store,
       ),
     );
   }
@@ -288,6 +292,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.saleScreen,
+        store: event.store,
       ),
     );
   }
@@ -320,7 +325,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.addEditStoreScreen,
-        store: event.storeModel,
+        store: event.store,
+        isEdit: event.isEdit,
       ),
     );
   }

@@ -76,9 +76,25 @@ class NavigateToRegistrationScreen extends AppEvent {}
 
 class NavigateToLoginScreen extends AppEvent {}
 
-class NavigateToHomeScreen extends AppEvent {}
+class NavigateToHomeScreen extends AppEvent {
+  final StoreModel? store;
 
-class NavigateToOrderListScreen extends AppEvent {}
+  const NavigateToHomeScreen([this.store]);
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [store];
+}
+
+class NavigateToOrderListScreen extends AppEvent {
+  final StoreModel? store;
+
+  const NavigateToOrderListScreen(this.store);
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [store];
+}
 
 class NavigateToAddPrintersScreen extends AppEvent {}
 
@@ -93,14 +109,26 @@ class NavigateToCreateProductScreen extends AppEvent {
   const NavigateToCreateProductScreen([
     this.product,
     this.barcode,
-    this.isEdit,
+    this.isEdit = false,
     this.store,
   ]);
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [product, barcode, store, isEdit];
 }
 
 class NavigateToBarcodeScannerScreen extends AppEvent {}
 
-class NavigateToProductListScreen extends AppEvent {}
+class NavigateToProductListScreen extends AppEvent {
+  final StoreModel? store;
+
+  const NavigateToProductListScreen(this.store);
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [store];
+}
 
 class NavigateToReportByCustomersScreen extends AppEvent {}
 
@@ -112,7 +140,15 @@ class NavigateToSaleReportScreen extends AppEvent {}
 
 class NavigateToReportsScreen extends AppEvent {}
 
-class NavigateToSaleScreen extends AppEvent {}
+class NavigateToSaleScreen extends AppEvent {
+  final StoreModel? store;
+
+  const NavigateToSaleScreen(this.store);
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [store];
+}
 
 class NavigateToSettingsScreen extends AppEvent {}
 
@@ -121,9 +157,17 @@ class NavigateToStockScreen extends AppEvent {}
 class NavigateToStockAdjustmentScreen extends AppEvent {}
 
 class NavigateToAddEditStoreScreen extends AppEvent {
-  final StoreModel? storeModel;
+  final StoreModel? store;
+  final bool? isEdit;
 
-  const NavigateToAddEditStoreScreen([this.storeModel]);
+  const NavigateToAddEditStoreScreen([
+    this.store,
+    this.isEdit = false,
+  ]);
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [store, isEdit];
 }
 
 class NavigateToStoreListScreen extends AppEvent {}

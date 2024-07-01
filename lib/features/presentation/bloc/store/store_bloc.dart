@@ -59,8 +59,11 @@ class StoreBloc extends Bloc<StoreEvent, StoreState> {
       }
       final storeId = await _storeRepository.createStore(storeModel!);
       final createdStore = await _storeRepository.getStoreById(storeId);
+      final stores = await _storeRepository.getStoresByUserId();
+
       if (createdStore != null) {
         emit(StoreCreated(store: createdStore));
+        emit(StoresByUIDLoaded(stores: stores));
       } else {
         emit(const StoreError(error: 'Failed to create store.'));
       }
@@ -80,8 +83,11 @@ class StoreBloc extends Bloc<StoreEvent, StoreState> {
       }
       await _storeRepository.updateStore(storeModel!);
       final updatedStore = await _storeRepository.getStoreById(storeModel.id);
+      final stores = await _storeRepository.getStoresByUserId();
+
       if (updatedStore != null) {
         emit(StoreUpdated(store: updatedStore));
+        emit(StoresByUIDLoaded(stores: stores));
       } else {
         emit(StoreNotFound());
       }
@@ -94,7 +100,10 @@ class StoreBloc extends Bloc<StoreEvent, StoreState> {
     try {
       emit(StoreDeleting());
       await _storeRepository.deleteStore(event.storeId);
+      final stores = await _storeRepository.getStoresByUserId();
+
       emit(StoreDeleted());
+      emit(StoresByUIDLoaded(stores: stores));
     } catch (e) {
       emit(StoreError(error: e.toString()));
     }

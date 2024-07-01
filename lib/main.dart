@@ -5,7 +5,11 @@ import 'package:uv_pos/app/app.dart';
 import 'package:uv_pos/app/domain/repositories/auth_repository.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/core/observer/bloc_observer.dart';
+import 'package:uv_pos/features/domain/repositories/order_repository.dart';
+import 'package:uv_pos/features/domain/repositories/product_repository.dart';
 import 'package:uv_pos/features/domain/repositories/store_repository.dart';
+import 'package:uv_pos/features/presentation/bloc/order/order_bloc.dart';
+import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
 import 'package:uv_pos/firebase_options.dart';
 
 import 'features/presentation/bloc/store/store_bloc.dart';
@@ -19,6 +23,8 @@ Future<void> main() async {
 
   final AuthenticationRepository authenticationRepository = AuthenticationRepository();
   final StoreRepository storeRepository = StoreRepository();
+  final ProductRepository productRepository = ProductRepository();
+  final OrderRepository orderRepository = OrderRepository();
   runApp(
     MultiBlocProvider(
       providers: [
@@ -29,7 +35,22 @@ Future<void> main() async {
             ),
         ),
         BlocProvider(
-          create: (context) => StoreBloc(storeRepository)..add(LoadStoresEvent()),
+          create: (context) => StoreBloc(storeRepository)
+            ..add(
+              LoadStoresEvent(),
+            ),
+        ),
+        BlocProvider(
+          create: (context) => ProductBloc(productRepository)
+            ..add(
+              const LoadProductsEvent(),
+            ),
+        ),
+        BlocProvider(
+          create: (context) => OrderBloc(orderRepository)
+            ..add(
+              const LoadOrdersEvent(),
+            ),
         ),
       ],
       child: const App(),

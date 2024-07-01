@@ -8,12 +8,11 @@ class ProductRepository {
 
   ProductRepository();
 
-  Future<void> createProduct(ProductModel productModel, StoreModel storeModel) async {
-    final createdDate = Timestamp.now();
+  Future<String> createProduct(ProductModel productModel, StoreModel storeModel) async {
 // Create a Product document in Firestore
     try {
       // Write Product document to Firestore
-      await productsReference.doc(createdDate.microsecondsSinceEpoch.toString()).set(productModel.toMap()).onError(
+      await productsReference.doc(productModel.id).set(productModel.toMap()).onError(
         (e, _) {
           if (kDebugMode) {
             print("Error writing document: $e");
@@ -23,6 +22,7 @@ class ProductRepository {
       if (kDebugMode) {
         print('Product created successfully!');
       }
+      return productModel.id;
     } on FirebaseException catch (e) {
       // Handle Firestore exceptions
       throw Exception('Error creating product: ${e.message}');
@@ -45,7 +45,7 @@ class ProductRepository {
     }
   }
 
-  Future<List<ProductModel>> getSProductByUserId(StoreModel storeModel) async {
+  Future<List<ProductModel>> getProductsByStoreId(StoreModel storeModel) async {
     try {
       QuerySnapshot querySnapshot = await productsReference
           .where(
@@ -66,13 +66,21 @@ class ProductRepository {
     }
   }
 
-  Future<void> updateProduct(ProductModel productModel) async {
+  Future<void> updateProduct(ProductModel product) async {
     try {
-      productsReference.doc(productModel.id).update(
-            productModel.toMap(),
+      productsReference.doc(product.id).update(
+            product.toMap(),
           );
     } catch (e) {
       throw Exception('Error updating product: $e');
+    }
+  }
+
+  Future<void> deleteProduct(String productId) async {
+    try {
+      await productsReference.doc(productId).delete();
+    } catch (e) {
+      rethrow;
     }
   }
 }

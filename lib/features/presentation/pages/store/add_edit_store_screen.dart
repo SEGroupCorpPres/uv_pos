@@ -19,18 +19,7 @@ import 'package:uv_pos/generated/assets.dart';
 class AddEditStoreScreen extends StatefulWidget {
   const AddEditStoreScreen({
     super.key,
-    this.storeNameTextEditingController,
-    this.storeDescriptionTextEditingController,
-    this.storePhoneTextEditingController,
-    this.storeAddressTextEditingController,
-    this.storeImage,
   });
-
-  final String? storeNameTextEditingController;
-  final String? storeDescriptionTextEditingController;
-  final String? storePhoneTextEditingController;
-  final String? storeAddressTextEditingController;
-  final String? storeImage;
 
   static Page page() => Platform.isIOS
       ? const CupertinoPage(
@@ -51,16 +40,17 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   late TextEditingController _storeAddressTextEditingController;
   File? _image;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'createEditStoreFormKey');
+  bool _isEdit = false;
   final ImageHelper imageHelper = ImageHelper();
   String uid = '';
 
   @override
   void initState() {
     getUID();
-    _storeNameTextEditingController = TextEditingController(text: widget.storeNameTextEditingController ?? '');
-    _storeDescriptionTextEditingController = TextEditingController(text: widget.storeDescriptionTextEditingController ?? '');
-    _storePhoneTextEditingController = TextEditingController(text: widget.storePhoneTextEditingController ?? '');
-    _storeAddressTextEditingController = TextEditingController(text: widget.storeAddressTextEditingController ?? '');
+    _storeNameTextEditingController = TextEditingController();
+    _storeDescriptionTextEditingController = TextEditingController();
+    _storePhoneTextEditingController = TextEditingController();
+    _storeAddressTextEditingController = TextEditingController();
     // TODO: implement initState
     super.initState();
   }
@@ -112,7 +102,6 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   Future<void> getUID() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     uid = sharedPreferences.getString('uid')!;
-    print('UID ------> $uid');
   }
 
   @override
@@ -127,7 +116,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.sizeOf(context);
+    MediaQuery.sizeOf(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -154,7 +143,11 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                   phone: _storePhoneTextEditingController.text,
                   address: _storeAddressTextEditingController.text,
                 );
-                context.read<StoreBloc>().add( CreateStoreEvent(store, _image));
+                if (!_isEdit) {
+                  context.read<StoreBloc>().add(CreateStoreEvent(store, _image));
+                } else {
+                  context.read<StoreBloc>().add(UpdateStoreEvent(store, _image));
+                }
               }
             },
             icon: const Icon(Icons.save),
@@ -169,6 +162,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
           builder: (context, appState) {
             StoreModel? store;
             if (appState.isEdit) {
+              _isEdit = true;
               if (appState.store != null) {
                 store = appState.store;
               }
@@ -183,6 +177,12 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                 if (state is StoreCreated) {
                   // Navigate back or show a success message when the store is created
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Store created successfully')));
+                  BlocProvider.of<AppBloc>(context).add(
+                    NavigateToStoreListScreen(),
+                  );
+                } else if (state is StoreUpdated) {
+                  // Navigate back or show a success message when the store is updated
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Store updated successfully')));
                   BlocProvider.of<AppBloc>(context).add(
                     NavigateToStoreListScreen(),
                   );
@@ -260,6 +260,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                                     margin: EdgeInsets.symmetric(vertical: 30.r),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10.r),
+                                      clipBehavior: Clip.hardEdge,
                                       child: _image == null
                                           ? Image.asset(Assets.imagesImageBg)
                                           : Image.file(
@@ -298,8 +299,6 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                                   Platform.isIOS ? _cupertinoStyleCameraCapture() : _takingAPictureWithACameraInMaterialStyle();
                                 },
                               ),
-                              // StoreButton(title: 'Pick an Image', icon: Icons.image, onPressed: () {}),
-                              // StoreButton(title: 'Take a Photo', icon: Icons.camera_alt, onPressed: () {}),
                             ],
                           ),
                         ],
