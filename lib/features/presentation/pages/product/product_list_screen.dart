@@ -4,6 +4,7 @@ import 'package:animated_search_bar/animated_search_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -30,32 +31,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
   late StoreModel? store;
   final List<ProductModel> _searchList = [];
   bool _isSearching = false;
-  List<Map<String, dynamic>> productList = [
-    {
-      'name': 'Product 1',
-      'price': 1.1,
-      'quantity': 1,
-      'image': 'Image 1',
-    },
-    {
-      'name': 'Product 2',
-      'price': 2.2,
-      'quantity': 2,
-      'image': 'Image 2',
-    },
-    {
-      'name': 'Product 3',
-      'price': 3.3,
-      'quantity': 3,
-      'image': 'Image 3',
-    },
-    {
-      'name': 'Product 4',
-      'price': 4.4,
-      'quantity': 4,
-      'image': 'Image 4',
-    },
-  ];
 
   @override
   void initState() {
@@ -72,6 +47,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, appState) {
         if (appState.store != null) {
@@ -100,7 +76,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     });
                   }
                 },
-                labelStyle: const TextStyle(fontSize: 16),
+                labelStyle: TextStyle(fontSize: 16.sp),
                 cursorColor: Colors.black,
                 textInputAction: TextInputAction.done,
                 searchDecoration: const InputDecoration(
@@ -115,12 +91,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
               centerTitle: false,
               actions: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(store));
+                  },
                   icon: const Icon(Icons.sync_problem),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.search),
                 ),
               ],
             ),
@@ -131,65 +105,88 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     child: CircularProgressIndicator.adaptive(),
                   );
                 } else if (state is ProductsByStoreIdLoaded) {
-                  products = state.products!;
-                  List<ProductModel> productList = [];
-                  productList = _isSearching ? _searchList : products;
-                  productList.sort((a, b) => b.name.compareTo(a.name));
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                    itemCount: productList.length,
-                    itemBuilder: (context, item) {
-                      final String name = productList[item].name;
-                      final double price = productList[item].price;
-                      final int qty = productList[item].notifyQuantity;
-                      final String image = productList[item].image!;
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.yellowAccent,
-                              borderRadius: BorderRadius.circular(20),
-                              image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
+                  if (state.products != null) {
+                    products = state.products!;
+                    List<ProductModel> productList = [];
+                    productList = _isSearching ? _searchList : products;
+                    productList.sort((a, b) => b.name.compareTo(a.name));
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20).r,
+                      itemCount: productList.length,
+                      itemBuilder: (context, item) {
+                        final String name = productList[item].name;
+                        final double price = productList[item].price;
+                        final int qty = productList[item].quantity;
+                        final String? image = productList[item].image;
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            image != null
+                                ? Container(
+                                    width: 120.r,
+                                    height: 120.r,
+                                    decoration: BoxDecoration(
+                                      color: Colors.yellowAccent,
+                                      borderRadius: BorderRadius.circular(20),
+                                      image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 10).h,
+                                  )
+                                : Container(
+                                    width: 120.r,
+                                    height: 120.r,
+                                    decoration: BoxDecoration(
+                                      color: Colors.yellowAccent,
+                                      borderRadius: BorderRadius.circular(20).r,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 10).h,
+                                    alignment: Alignment.center,
+                                    child: const Text('No image'),
+                                  ),
+                            SizedBox(width: 15.w),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: size.width * .5,
+                                  child: Text(
+                                    'Nomi: $name',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    softWrap: true,
+                                  ),
+                                ),
+                                Text(
+                                  'Price: ${price.ceil()} UZS',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  'Quantity: $qty dona',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            margin: const EdgeInsets.only(bottom: 10),
-                          ),
-                          const SizedBox(width: 20),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                'Price: \$$price',
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                'Quantity: $qty',
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                          ],
+                        );
+                      },
+                    );
+                  } else {
+                    return const Center(
+                      child: Text('No record found'),
+                    );
+                  }
                 } else if (state is ProductNotFound) {
                   return const Center(
                     child: Text('No record found'),

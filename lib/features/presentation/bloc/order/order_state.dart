@@ -21,10 +21,10 @@ class OrderByIdLoaded extends OrderState {
   List<Object?> get props => [order];
 }
 
-class OrdersByStoreIDLoaded extends OrderState {
+class OrdersFromDateByStoreIDLoaded extends OrderState {
   final List<OrderModel>? orders;
 
-  const OrdersByStoreIDLoaded({required this.orders});
+  const OrdersFromDateByStoreIDLoaded({required this.orders});
 
   @override
   List<Object?> get props => [orders];
@@ -66,3 +66,13 @@ class OrderUpdated extends OrderState {
 class OrderDeleting extends OrderState {}
 
 class OrderDeleted extends OrderState {}
+class ProductAddToOrder extends OrderState{
+  final List<ProductModel> products;
+
+  const ProductAddToOrder( this.products);
+  @override
+  // TODO: implement props
+  List<Object?> get props => [products];
+}
+
+

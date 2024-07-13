@@ -10,8 +10,9 @@ abstract class OrderEvent extends Equatable {
 
 class LoadOrdersEvent extends OrderEvent {
   final StoreModel? store;
+  final String? date;
 
-  const LoadOrdersEvent([this.store]);
+  const LoadOrdersEvent([this.store, this.date]);
   @override
   // TODO: implement props
   List<Object?> get props => [store];
@@ -38,31 +39,57 @@ class UpdateOrderEvent extends OrderEvent {
   List<Object?> get props => [order, store];
 }
 
+
 class DeleteOrderEvent extends OrderEvent {
-  final String orderId;
+  final OrderModel order;
   final StoreModel store;
 
 
-  const DeleteOrderEvent(this.orderId, this.store);
+  const DeleteOrderEvent(this.order, this.store);
 
   @override
-  List<Object?> get props => [orderId, store];
+  List<Object?> get props => [order, store];
 }
 
 class FetchOrderByIdEvent extends OrderEvent {
   final OrderModel order;
+  final String date;
 
-  const FetchOrderByIdEvent(this.order);
+  const FetchOrderByIdEvent(this.order, this.date);
 
   @override
-  List<Object?> get props => [order];
+  List<Object?> get props => [order, date];
 }
 
-// class FetchOrderByUIDEvent extends OrderEvent {
-//   final String uid;
-//
-//   const FetchOrderByUIDEvent(this.uid);
-//
-//   @override
-//   List<Object?> get props => [uid];
-// }
+class AddProduct extends OrderEvent {
+  final ProductModel product;
+
+  const AddProduct(this.product);
+
+  @override
+  List<Object?> get props => [product];
+}
+
+class RemoveProduct extends OrderEvent {
+  final String productId;
+
+  const RemoveProduct(this.productId);
+
+  @override
+  List<Object?> get props => [productId];
+}
+
+class UpdateOrderProductQuantity extends OrderEvent {
+  final String productId;
+  final int quantity;
+
+  const UpdateOrderProductQuantity({
+    required this.productId,
+    required this.quantity,
+  });
+
+  @override
+  List<Object?> get props => [productId, quantity];
+}
+
+class ClearProductList extends OrderEvent {}

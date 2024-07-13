@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'store_model.dart';
 
 class UserModel extends Equatable {
   final String uid;

@@ -534,6 +534,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.2.1"
+  flutter_sticky_header:
+    dependency: transitive
+    description:
+      name: flutter_sticky_header
+      sha256: "017f398fbb45a589e01491861ca20eb6570a763fd9f3888165a978e11248c709"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.5"
   flutter_svg:
     dependency: transitive
     description:
@@ -680,6 +688,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "13.1.0"
+  grouped_list:
+    dependency: "direct main"
+    description:
+      name: grouped_list
+      sha256: c52551bc17699e304634d4653b824a1aa7c6b1d3a2c1a0da1a80839f867353fb
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.0"
   hex:
     dependency: transitive
     description:
@@ -816,6 +832,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1+1"
+  infinite_grouped_list:
+    dependency: "direct main"
+    description:
+      name: infinite_grouped_list
+      sha256: "3ced8ab999371479ab21d613c059f446d3a7db5a59c7d55f2427ba1e38c4434d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.6"
   intl:
     dependency: "direct main"
     description:
@@ -864,6 +888,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
+  lint:
+    dependency: transitive
+    description:
+      name: lint
+      sha256: d758a5211fce7fd3f5e316f804daefecdc34c7e53559716125e6da7388ae8565
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
   lints:
     dependency: transitive
     description:
@@ -1429,6 +1461,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.4.0"
+  value_layout_builder:
+    dependency: transitive
+    description:
+      name: value_layout_builder
+      sha256: "98202ec1807e94ac72725b7f0d15027afde513c55c69ff3f41bcfccb950831bc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1"
   vector_graphics:
     dependency: transitive
     description:

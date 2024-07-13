@@ -8,21 +8,16 @@ class OrderRepository {
 
   OrderRepository();
 
-  Future<String> createOrder(OrderModel orderModel) async {
+  Future<String> createOrder(OrderModel order) async {
+    final orderDateFormatted = _formatDate(order.orderDate);
 // Create a Order document in Firestore
     try {
       // Write Order document to Firestore
-      await ordersReference.doc(orderModel.id).set(orderModel.toMap()).onError(
-        (e, _) {
-          if (kDebugMode) {
-            print("Error writing document: $e");
-          }
-        },
-      );
+      await ordersReference.doc(orderDateFormatted).collection('daily_orders').add(order.toMap());
       if (kDebugMode) {
         print('Order created successfully!');
       }
-      return orderModel.id;
+      return order.id;
     } on FirebaseException catch (e) {
       // Handle Firestore exceptions
       throw Exception('Error creating Order: ${e.message}');
@@ -33,8 +28,9 @@ class OrderRepository {
   }
 
   Future<OrderModel?> getOrderById(OrderModel order) async {
+    final orderDateFormatted = _formatDate(order.orderDate);
     try {
-      DocumentSnapshot documentSnapshot = await ordersReference.doc(order.id).get();
+      DocumentSnapshot documentSnapshot = await ordersReference.doc(orderDateFormatted).collection('daily_orders').doc(order.id).get();
       if (documentSnapshot.exists) {
         return OrderModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
       } else {
@@ -45,9 +41,11 @@ class OrderRepository {
     }
   }
 
-  Future<List<OrderModel>> getOrdersByStoreId(StoreModel store) async {
+  Future<List<OrderModel>> getOrdersForDateByStoreId(StoreModel store, String date) async {
     try {
       QuerySnapshot querySnapshot = await ordersReference
+          .doc(date)
+          .collection('daily_orders')
           .where(
             'store_id',
             isEqualTo: store.id,
@@ -66,9 +64,17 @@ class OrderRepository {
     }
   }
 
+  Future<List<OrderModel>> getOrdersForDate(String date) async {
+    final querySnapshot = await ordersReference.doc(date).collection('dailyOrders').get();
+
+    return querySnapshot.docs.map((doc) => OrderModel.fromMap(doc as Map<String, dynamic>)).toList();
+  }
+
   Future<void> updateOrder(OrderModel order) async {
+    final orderDateFormatted = _formatDate(order.orderDate);
+
     try {
-      await ordersReference.doc(order.id).update(
+      await ordersReference.doc(orderDateFormatted).collection('daily_orders').doc(order.id).update(
             order.toMap(),
           );
     } catch (e) {
@@ -76,11 +82,20 @@ class OrderRepository {
     }
   }
 
-  Future<void> deleteOrder(String orderId) async {
+  Future<void> deleteOrder(String orderId, DateTime orderDate) async {
+    final orderDateFormatted = _formatDate(orderDate);
+
     try {
-      await ordersReference.doc(orderId).delete();
+      await ordersReference.doc(orderDateFormatted).collection('daily_orders').doc(orderId).delete();
     } catch (e) {
       rethrow;
     }
+  }
+
+  String _formatDate(DateTime date) {
+    final year = date.year.toString();
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 }

@@ -1,13 +1,11 @@
 import 'dart:io';
 
-import 'package:flow_builder/flow_builder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:social_auth_buttons/social_auth_buttons.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/presentation/pages/home/home_screen.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
 
 class LoginScreen extends StatefulWidget {

@@ -21,11 +21,19 @@ class ProductByIdLoaded extends ProductState {
   List<Object?> get props => [product];
 }
 
+class ProductSearchByBarcodeLoaded extends ProductState {
+  final ProductModel product;
+
+  const ProductSearchByBarcodeLoaded({required this.product});
+
+  @override
+  List<Object?> get props => [product];
+}
+
 class ProductsByStoreIdLoaded extends ProductState {
   final List<ProductModel>? products;
 
   const ProductsByStoreIdLoaded({required this.products});
-
 
   @override
   List<Object?> get props => [products];
@@ -64,6 +72,17 @@ class ProductUpdated extends ProductState {
   List<Object?> get props => [product];
 }
 
+class ProductAlreadyCreated extends ProductState {}
+
 class ProductDeleting extends ProductState {}
 
 class ProductDeleted extends ProductState {}
+class OrderProductQuantityUpdate extends ProductState {
+  final List<int> quantities;
+  final int index;
+
+  const OrderProductQuantityUpdate( {required this.quantities, required this.index,});
+  @override
+  // TODO: implement props
+  List<Object?> get props => [quantities, index];
+}

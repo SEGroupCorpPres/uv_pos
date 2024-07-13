@@ -195,7 +195,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                   return const Center(child: CircularProgressIndicator.adaptive());
                 }
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20).r,
                   child: Column(
                     children: [
                       Form(
@@ -281,7 +281,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                                     ),
                                   ),
                                 ),
-                          const SizedBox(width: 30),
+                          SizedBox(width: 30.w),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

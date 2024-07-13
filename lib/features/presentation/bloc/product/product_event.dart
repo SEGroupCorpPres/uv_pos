@@ -61,11 +61,28 @@ class FetchProductByIdEvent extends ProductEvent {
   List<Object?> get props => [product];
 }
 
-// class FetchProductByUIDEvent extends ProductEvent {
-//   final String uid;
-//
-//   const FetchProductByUIDEvent(this.uid);
-//
-//   @override
-//   List<Object?> get props => [uid];
-// }
+class FetchProductByBarcodeEvent extends ProductEvent {
+  final String barcode;
+
+  const FetchProductByBarcodeEvent(
+    this.barcode,
+  );
+
+  @override
+  List<Object?> get props => [
+        barcode,
+      ];
+}
+
+class UpdateProductQuantity extends ProductEvent {
+  final String productId;
+  final int quantity;
+
+  const UpdateProductQuantity({
+    required this.productId,
+    required this.quantity,
+  });
+
+  @override
+  List<Object?> get props => [productId, quantity];
+}

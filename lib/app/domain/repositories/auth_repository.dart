@@ -42,7 +42,6 @@ class AuthenticationRepository {
 
   // Create a new user account with email and password
   Future<void> createUser(String email, String password, String phoneNumber, String name) async {
-    final registrationDate = Timestamp.now();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     // Create user with email and password
 
@@ -83,7 +82,9 @@ class AuthenticationRepository {
           // Optionally, you might want to sign the user out until they verify their email
           await _firebaseAuth.signOut();
           // At this point, notify the user to check their email for verification
-          print("Check your email to verify your account!");
+          if (kDebugMode) {
+            print("Check your email to verify your account!");
+          }
           await prefs.setString('uid', user.uid);
           if (kDebugMode) {
             print('User created successfully!');

@@ -5,12 +5,10 @@ import 'package:uv_pos/features/data/remote/models/store_model.dart';
 
 class StoreRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;
-  final FirebaseFirestore _firestore;
   CollectionReference storesReference = FirebaseFirestore.instance.collection('stores');
 
   StoreRepository({firebase_auth.FirebaseAuth? firebaseAuth, FirebaseFirestore? firestore})
-      : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
 
   Future<String> createStore(StoreModel storeModel) async {
 // Create a store document in Firestore

@@ -37,8 +37,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   late TextEditingController _productDescriptionController;
   late TextEditingController _productPriceController;
   late TextEditingController _productCostController;
-  late TextEditingController _productInStockController;
-  late TextEditingController _productNotifyQtyController;
+  late TextEditingController _productQtyController;
   File? _image;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'createProductFormKey');
   final ImageHelper imageHelper = ImageHelper();
@@ -51,8 +50,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     _productDescriptionController = TextEditingController();
     _productPriceController = TextEditingController();
     _productCostController = TextEditingController();
-    _productInStockController = TextEditingController();
-    _productNotifyQtyController = TextEditingController();
+    _productQtyController = TextEditingController();
     _productNameController = TextEditingController();
     super.initState();
   }
@@ -111,8 +109,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     _productDescriptionController.dispose();
     _productPriceController.dispose();
     _productCostController.dispose();
-    _productInStockController.dispose();
-    _productNotifyQtyController.dispose();
+    _productQtyController.dispose();
     super.dispose();
   }
 
@@ -129,15 +126,16 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           }
           if (appState.product != null) {
             product = appState.product;
-            _productBarcodeController.text = product?.barCode ?? '';
+            _productBarcodeController.text = product?.barcode ?? '';
           }
+        } else if (appState.barcode != null) {
+          _productBarcodeController.text = appState.barcode!;
         }
         _productNameController.text = product?.name ?? '';
         _productDescriptionController.text = product?.description ?? '';
         _productPriceController.text = product?.price.toString() ?? '';
         _productCostController.text = product?.cost.toString() ?? '';
-        _productInStockController.text = product?.inStock ?? '';
-        _productNotifyQtyController.text = product?.notifyQuantity.toString() ?? '';
+        _productQtyController.text = product?.quantity.toString() ?? '';
         return Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: true,
@@ -157,12 +155,11 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                     final product = ProductModel(
                       id: createdDate.microsecondsSinceEpoch.toString(),
                       name: _productNameController.text,
-                      barCode: _productBarcodeController.text,
+                      barcode: _productBarcodeController.text,
                       description: _productDescriptionController.text,
-                      price: _productPriceController.text as double,
-                      cost: _productCostController.text as double,
-                      inStock: _productInStockController.text,
-                      notifyQuantity: _productNotifyQtyController.text as int,
+                      price: double.parse(_productPriceController.text),
+                      cost: double.parse(_productCostController.text),
+                      quantity: int.parse(_productQtyController.text),
                       storeId: store!.id,
                     );
                     if (!appState.isEdit) {
@@ -230,7 +227,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                                     ),
                                   ),
                                 ),
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20.h),
                           SizedBox(
                             width: size.width,
                             child: Column(
@@ -257,7 +254,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 10.w),
                       child: Form(
                         key: _formKey,
                         child: Column(
@@ -302,14 +299,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                               textEditingController: _productCostController,
                             ),
                             StoreTextField(
-                              hintText: 'In Stock',
-                              icon: Icons.add_shopping_cart_outlined,
-                              textEditingController: _productInStockController,
-                            ),
-                            StoreTextField(
-                              hintText: 'Notify Quantity',
+                              hintText: 'Quantity',
                               icon: Icons.notifications,
-                              textEditingController: _productNotifyQtyController,
+                              textEditingController: _productQtyController,
                             ),
                           ],
                         ),

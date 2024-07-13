@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/presentation/pages/printer/add_printers_screen.dart';
-import 'package:uv_pos/features/presentation/pages/printer/add_printers_screen.dart';
-import 'package:uv_pos/features/presentation/pages/stock/stock_adjustment_screen.dart';
 
 class PrintersScreen extends StatefulWidget {
   const PrintersScreen({super.key});
@@ -25,13 +22,12 @@ class PrintersScreen extends StatefulWidget {
 class _PrintersScreenState extends State<PrintersScreen> {
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.sizeOf(context);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
         leading: InkWell(
           onTap: () => BlocProvider.of<AppBloc>(context).add(
-            NavigateToHomeScreen(),
+            const NavigateToHomeScreen(),
           ),
           child: Icon(Icons.adaptive.arrow_back),
         ),

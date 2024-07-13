@@ -23,6 +23,26 @@ class BarcodeScannerScreen extends StatefulWidget {
 }
 
 class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
+  late MobileScannerController scannerController;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    scannerController = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      autoStart: true
+    );
+  }
+
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    scannerController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,7 +58,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
         centerTitle: false,
       ),
       body: MobileScanner(
-        controller: MobileScannerController(detectionSpeed: DetectionSpeed.noDuplicates),
+        controller: scannerController,
         onDetect: (capture) {
           final List<Barcode> barCodes = capture.barcodes;
           if (kDebugMode) {
@@ -48,9 +68,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             NavigateToCreateProductScreen(
               null,
               barCodes.first.rawValue,
-              true,
+              false,
             ),
           );
+          scannerController.stop();
         },
       ),
     );

@@ -28,7 +28,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         automaticallyImplyLeading: true,
         leading: InkWell(
           onTap: () => BlocProvider.of<AppBloc>(context).add(
-            NavigateToHomeScreen(),
+            const NavigateToHomeScreen(),
           ),
           child: Icon(Icons.adaptive.arrow_back),
         ),

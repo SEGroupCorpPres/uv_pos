@@ -47,7 +47,7 @@ Future<void> main() async {
             ),
         ),
         BlocProvider(
-          create: (context) => OrderBloc(orderRepository)
+          create: (context) => OrderBloc(orderRepository, productRepository)
             ..add(
               const LoadOrdersEvent(),
             ),

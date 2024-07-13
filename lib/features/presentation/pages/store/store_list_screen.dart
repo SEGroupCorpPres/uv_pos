@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:animated_search_bar/animated_search_bar.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -34,36 +36,6 @@ class _StoreListScreenState extends State<StoreListScreen> {
   List<StoreModel> _list = [];
   bool _isSearching = false;
   String uid = '';
-  List<Map<String, dynamic>> storeList = [
-    {
-      'name': 'Store 1',
-      'phone': 'Phone 1',
-      'image': 'Image 1',
-      'address': 'Address 1',
-      'description': 'Description 1',
-    },
-    {
-      'name': 'Store 2',
-      'phone': 'Phone 2',
-      'image': 'Image 2',
-      'address': 'Address 2',
-      'description': 'Description 2',
-    },
-    {
-      'name': 'Store 3',
-      'phone': 'Phone 3',
-      'image': 'Image 3',
-      'address': 'Address 3',
-      'description': 'Description 3',
-    },
-    {
-      'name': 'Store 4',
-      'phone': 'Phone 4',
-      'image': 'Image 4',
-      'address': 'Address 4',
-      'description': 'Description 4',
-    },
-  ];
 
   @override
   void initState() {
@@ -97,7 +69,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
               });
             }
           },
-          labelStyle: const TextStyle(fontSize: 16),
+          labelStyle: TextStyle(fontSize: 16.sp),
           cursorColor: Colors.black,
           textInputAction: TextInputAction.done,
           searchDecoration: const InputDecoration(
@@ -138,20 +110,17 @@ class _StoreListScreenState extends State<StoreListScreen> {
                   return ListView.builder(
                     itemCount: storeList.length,
                     itemBuilder: (context, item) {
-                      final storeItemId = storeList[item].id;
                       final storeItemName = storeList[item].name;
                       final storeItemPhone = storeList[item].phone;
                       final storeItemImage = storeList[item].imageUrl;
-                      final storeItemAddress = storeList[item].address;
-                      final storeItemDescription = storeList[item].description;
                       return CupertinoListTile(
                         onTap: () => BlocProvider.of<AppBloc>(context)..add(NavigateToHomeScreen(storeList[item])),
                         leadingSize: 60,
                         leading: Container(
-                          width: 50,
-                          height: 50,
+                          width: 45.r,
+                          height: 45.r,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10).r,
                             image: DecorationImage(
                               image: NetworkImage(storeItemImage!),
                               fit: BoxFit.cover,
@@ -161,16 +130,16 @@ class _StoreListScreenState extends State<StoreListScreen> {
                         title: RichText(
                           text: TextSpan(
                             text: storeItemName,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: TextStyle(
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
                               color: Colors.black,
                             ),
-                            children: const [
+                            children: [
                               TextSpan(
                                 text: '  (Store Owner)',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 14.sp,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.blueAccent,
                                 ),
@@ -180,8 +149,8 @@ class _StoreListScreenState extends State<StoreListScreen> {
                         ),
                         subtitle: Text(
                           storeItemPhone,
-                          style: const TextStyle(
-                            fontSize: 16,
+                          style: TextStyle(
+                            fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.black,
                           ),
@@ -207,7 +176,9 @@ class _StoreListScreenState extends State<StoreListScreen> {
                     child: CircularProgressIndicator.adaptive(),
                   );
                 } else if (state is StoreError) {
-                  print('no state');
+                  if (kDebugMode) {
+                    print('no state');
+                  }
                   return const Center(
                     child: Text('Error'),
                   );

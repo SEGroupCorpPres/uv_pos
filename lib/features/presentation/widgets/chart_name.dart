@@ -15,7 +15,7 @@ class ChartName extends StatelessWidget {
           width: 20,
           color: color,
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Text(title),
       ],
     );

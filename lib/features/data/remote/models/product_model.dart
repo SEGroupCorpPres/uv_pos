@@ -3,25 +3,23 @@ import 'package:equatable/equatable.dart';
 class ProductModel extends Equatable {
   final String id;
   final String name;
-  final String barCode;
+  final String barcode;
   final String description;
   final double price;
   final double cost;
-  final String inStock;
-  final int notifyQuantity;
+  final int quantity;
   final String? image;
   final String storeId;
 
   const ProductModel({
     required this.id,
     required this.name,
-    required this.barCode,
+    required this.barcode,
     required this.description,
     required this.price,
     required this.cost,
-    required this.inStock,
-    required this.notifyQuantity,
-     this.image,
+    required this.quantity,
+    this.image,
     required this.storeId,
   });
 
@@ -30,12 +28,11 @@ class ProductModel extends Equatable {
   List<Object?> get props => [
         id,
         name,
-        barCode,
+        barcode,
         description,
         price,
         cost,
-        inStock,
-        notifyQuantity,
+        quantity,
         image,
         storeId,
       ];
@@ -44,12 +41,11 @@ class ProductModel extends Equatable {
     return ProductModel(
       id: data['id'],
       name: data['name'],
-      barCode: data['bar_code'],
+      barcode: data['bar_code'],
       description: data['description'],
       price: data['price'],
       cost: data['cost'],
-      inStock: data['in_stock'],
-      notifyQuantity: data['notify_quantity'],
+      quantity: data['quantity'],
       image: data['image'],
       storeId: data['store_id'],
     );
@@ -60,12 +56,11 @@ class ProductModel extends Equatable {
     return {
       'id': id,
       'name': name,
-      'bar_code': barCode,
+      'bar_code': barcode,
       'description': description,
       'price': price,
       'cost': cost,
-      'in_stock': inStock,
-      'notify_quantity': notifyQuantity,
+      'quantity': quantity,
       'image': image,
       'store_id': storeId,
     };
@@ -74,24 +69,22 @@ class ProductModel extends Equatable {
   ProductModel copyWith({
     String? id,
     String? name,
-    String? barCode,
+    String? barcode,
     String? description,
     double? price,
     double? cost,
-    String? inStock,
-    int? notifyQuantity,
+    int? quantity,
     String? image,
     String? storeId,
   }) {
     return ProductModel(
       id: id ?? this.id,
       name: name ?? this.name,
-      barCode: barCode ?? this.barCode,
+      barcode: barcode ?? this.barcode,
       description: description ?? this.description,
       price: price ?? this.price,
       cost: cost ?? this.cost,
-      inStock: inStock ?? this.inStock,
-      notifyQuantity: notifyQuantity ?? this.notifyQuantity,
+      quantity: quantity ?? this.quantity,
       image: image ?? this.image,
       storeId: storeId ?? this.storeId,
     );

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uv_pos/core/helpers/image_helper.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
@@ -16,6 +17,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   ProductBloc(this._productRepository) : super(ProductInitial()) {
     on<LoadProductsEvent>(fetchProductList);
     on<FetchProductByIdEvent>(fetchProductById);
+    on<FetchProductByBarcodeEvent>(onFetchProductByBarcode);
     on<CreateProductEvent>(createProduct);
     on<UpdateProductEvent>(updateProduct);
     on<DeleteProductEvent>(deleteProduct);
@@ -24,7 +26,13 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   Future<void> fetchProductList(LoadProductsEvent event, Emitter<ProductState> emit) async {
     try {
       emit(ProductLoading());
+      if (kDebugMode) {
+        print('store is ${event.store}');
+      }
       final products = await _productRepository.getProductsByStoreId(event.store!);
+      if (kDebugMode) {
+        print('first product is $products');
+      }
       if (products.isNotEmpty) {
         emit(ProductsByStoreIdLoaded(products: products));
       } else {
@@ -49,6 +57,27 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     }
   }
 
+  Future<void> onFetchProductByBarcode(FetchProductByBarcodeEvent event, Emitter<ProductState> emit) async {
+    try {
+      emit(ProductLoading());
+      if (kDebugMode) {
+        print(event.barcode);
+      }
+      final product = await _productRepository.getProductByBarcode(event.barcode);
+      if (kDebugMode) {
+        print(product);
+      }
+      if (product != null) {
+        emit(ProductSearchByBarcodeLoaded(product: product));
+        // emit(ProductListUpdated([...state.products, product]));
+      } else {
+        emit(ProductNotFound());
+      }
+    } catch (e) {
+      emit(ProductError(error: e.toString()));
+    }
+  }
+
   Future<void> createProduct(CreateProductEvent event, Emitter<ProductState> emit) async {
     late ProductModel? productModel;
     try {
@@ -57,8 +86,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       if (event.imageFile != null) {
         imageUrl = await ImageHelper().uploadImageToStorage(event.imageFile!, 'products/${event.product.id}.jpg');
         productModel = event.product.copyWith(image: imageUrl);
+      } else {
+        productModel = event.product;
       }
-      await _productRepository.createProduct(productModel!, event.store);
+      await _productRepository.createProduct(productModel, event.store);
       final createdProduct = await _productRepository.getProductById(productModel);
       final products = await _productRepository.getProductsByStoreId(event.store);
 
@@ -96,6 +127,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       emit(ProductError(error: e.toString()));
     }
   }
+
 
   Future<void> deleteProduct(DeleteProductEvent event, Emitter<ProductState> emit) async {
     try {

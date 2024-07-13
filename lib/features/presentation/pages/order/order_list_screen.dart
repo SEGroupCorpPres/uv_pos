@@ -61,7 +61,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
             return const Center(
               child: CircularProgressIndicator.adaptive(),
             );
-          } else if (state is OrdersByStoreIDLoaded) {
+          } else if (state is OrdersFromDateByStoreIDLoaded) {
             List<OrderModel> orders = state.orders!;
             return ListView.builder(
               itemCount: orders.length,

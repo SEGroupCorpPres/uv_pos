@@ -121,7 +121,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(state.copyWith(status: AppStatus.loading));
 
     try {
-      final user = await _authenticationRepository.verifyOTP(event.verificationId, event.otp);
+      await _authenticationRepository.verifyOTP(event.verificationId, event.otp);
       emit(state.copyWith(status: AppStatus.authenticated));
     } catch (e) {
       emit(

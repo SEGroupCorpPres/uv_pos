@@ -66,7 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         automaticallyImplyLeading: true,
         leading: InkWell(
           onTap: () => BlocProvider.of<AppBloc>(context).add(
-            NavigateToHomeScreen(),
+            const NavigateToHomeScreen(),
           ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
@@ -75,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton.icon(
             onPressed: () => BlocProvider.of<AppBloc>(context).add(
-      NavigateToHomeScreen(),
+      const NavigateToHomeScreen(),
     ),
             icon: const Icon(Icons.save),
             label: const Text('Save'),

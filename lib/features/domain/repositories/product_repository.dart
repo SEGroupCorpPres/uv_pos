@@ -66,6 +66,26 @@ class ProductRepository {
     }
   }
 
+  Future<ProductModel?> getProductByBarcode(String barcode) async {
+    try {
+      QuerySnapshot querySnapshot = await productsReference
+          .where(
+            'bar_code',
+            isEqualTo: barcode,
+          )
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return ProductModel.fromMap(querySnapshot.docs.first.data() as Map<String, dynamic>);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      throw Exception('Error fetching products: $e');
+    }
+  }
+
   Future<void> updateProduct(ProductModel product) async {
     try {
       productsReference.doc(product.id).update(
