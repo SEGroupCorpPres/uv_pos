@@ -69,7 +69,6 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       }
       if (product != null) {
         emit(ProductSearchByBarcodeLoaded(product: product));
-        // emit(ProductListUpdated([...state.products, product]));
       } else {
         emit(ProductNotFound());
       }

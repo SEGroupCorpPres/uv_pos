@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
 class SaleProductPrice extends StatelessWidget {
-  const SaleProductPrice({super.key, required this.title, required this.price, this.procedure});
+  const SaleProductPrice({super.key, required this.title, this.price, this.procedure, this.discountingPrice});
 
   final String title;
-  final String price;
+  final String? price;
   final double? procedure;
+  final double? discountingPrice;
 
   @override
   Widget build(BuildContext context) {
+    print('order price is $price');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: Row(
@@ -23,19 +25,19 @@ class SaleProductPrice extends StatelessWidget {
             ),
           ),
           procedure == null
-              ? const Flexible(
+              ? Flexible(
                   fit: FlexFit.tight,
                   child: Text(
-                    '\$0',
-                    style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.w600),
+                    price!,
+                    style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.w600),
                     textAlign: TextAlign.right,
                   ),
                 )
-              : const Flexible(
+              : Flexible(
                   fit: FlexFit.tight,
                   child: Text(
-                    '0%(\$0)',
-                    style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.w600),
+                    '$procedure%(UZS $discountingPrice)',
+                    style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.w600),
                     textAlign: TextAlign.right,
                   ),
                 ),

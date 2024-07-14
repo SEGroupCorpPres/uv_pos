@@ -34,24 +34,9 @@ Future<void> main() async {
               AuthStarted(),
             ),
         ),
-        BlocProvider(
-          create: (context) => StoreBloc(storeRepository)
-            ..add(
-              LoadStoresEvent(),
-            ),
-        ),
-        BlocProvider(
-          create: (context) => ProductBloc(productRepository)
-            ..add(
-              const LoadProductsEvent(),
-            ),
-        ),
-        BlocProvider(
-          create: (context) => OrderBloc(orderRepository, productRepository)
-            ..add(
-              const LoadOrdersEvent(),
-            ),
-        ),
+        BlocProvider(create: (context) => StoreBloc(storeRepository)),
+        BlocProvider(create: (context) => ProductBloc(productRepository)),
+        BlocProvider(create: (context) => OrderBloc(orderRepository, productRepository)),
       ],
       child: const App(),
     ),
