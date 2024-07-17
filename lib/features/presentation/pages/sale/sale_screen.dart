@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
@@ -17,6 +18,7 @@ import 'package:uv_pos/features/presentation/widgets/sale_button.dart';
 import 'package:uv_pos/features/presentation/widgets/sale_product_price.dart';
 import 'package:uv_pos/features/presentation/widgets/scanner_error.dart';
 import 'package:uv_pos/features/presentation/widgets/store/add_product_dialog.dart';
+import 'package:uv_pos/generated/assets.dart';
 
 class SaleScreen extends StatefulWidget {
   const SaleScreen({super.key});
@@ -42,6 +44,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   final TextEditingController _discountController = TextEditingController();
   BlueThermalPrinter bluetoothPrinter = BlueThermalPrinter.instance;
   StreamSubscription<BarcodeCapture>? _subscription;
+  ValueNotifier<bool> isFlat = ValueNotifier<bool>(true);
+  final AudioPlayer _audioPlayer = AudioPlayer();
   bool isProcessing = false;
   bool isScannerRunning = true;
   bool isSearch = false;
@@ -50,7 +54,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   double orderSubTotalAmount = 0;
   double orderTotalAmount = 0;
   double discount = 0;
-  bool isFlat = true;
+
+  // bool isFlat = true;
   int productQty = 1;
 
   List<ProductModel> products = [];
@@ -73,6 +78,11 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     if (!scannerController.value.isRunning) {
       _startScanner();
     }
+  }
+
+  Future<void> _playBeepSound() async {
+    await _audioPlayer.setAsset(Assets.soundsBeep);
+    _audioPlayer.play();
   }
 
   Future<void> _startScanner() async {
@@ -124,10 +134,6 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       if (kDebugMode) {
         print("Scanned Code: $code");
       }
-
-      // setState(() {
-      //   order.add(code);
-      // });
 
       // Simulate some processing delay
       Future.delayed(const Duration(seconds: 1), () {
@@ -196,10 +202,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   void _showDiscountDiaolg(BuildContext context) {
     showAdaptiveDialog(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: false,
       builder: (context) {
         return _enterDiscountDialog(context);
       },
+      useSafeArea: false,
+      traversalEdgeBehavior: TraversalEdgeBehavior.leaveFlutterView,
     );
   }
 
@@ -209,28 +217,44 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  isFlat = true;
-                });
+            ValueListenableBuilder(
+              valueListenable: isFlat,
+              builder: (context, value, child) {
+                return ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: value ? Colors.blue : Colors.white),
+                  onPressed: () {
+                    isFlat.value = true;
+                  },
+                  child: SizedBox(
+                    width: 60.w,
+                    child: Text(
+                      'Flat',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: value ? Colors.white : Colors.deepPurple),
+                    ),
+                  ),
+                );
               },
-              child: SizedBox(
-                width: 60.w,
-                child: const Text('Flat', textAlign: TextAlign.center),
-              ),
             ),
             SizedBox(width: 10.w),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  isFlat = false;
-                });
+            ValueListenableBuilder(
+              valueListenable: isFlat,
+              builder: (context, value, child) {
+                return ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: !value ? Colors.blue : Colors.white),
+                  onPressed: () {
+                    isFlat.value = false;
+                  },
+                  child: SizedBox(
+                    width: 60.w,
+                    child: Text(
+                      'Percentage',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: !value ? Colors.white : Colors.deepPurple),
+                    ),
+                  ),
+                );
               },
-              child: SizedBox(
-                width: 60.w,
-                child: const Text('Percentage', textAlign: TextAlign.center),
-              ),
             ),
           ],
         ),
@@ -301,7 +325,6 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     final Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, appState) {
-        print('appState is $appState');
         return Scaffold(
           resizeToAvoidBottomInset: true,
           appBar: AppBar(
@@ -336,287 +359,195 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
           ),
           body: SafeArea(
             child: Card(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  isScannerRunning
-                      ? SizedBox(
-                          width: size.width,
-                          height: size.height * .3,
-                          child: MobileScanner(
-                            controller: scannerController,
-                            onDetect: (capture) {
-                              final List<Barcode> barCodes = capture.barcodes;
-                              _barcode = barCodes.first;
-                              BlocProvider.of<ProductBloc>(context).add(
-                                FetchProductByBarcodeEvent(barCodes.first.rawValue!),
-                              );
-                            },
-                            errorBuilder: (context, error, child) {
-                              if (kDebugMode) {
-                                print(error);
-                              }
-                              return ScannerErrorWidget(error: error);
-                            },
-                          ),
-                        )
-                      : const SizedBox(),
-                  const SizedBox(height: 5),
-                  BlocConsumer<ProductBloc, ProductState>(
-                    listener: (context, productState) {
-                      print('productState is $productState');
-                      if (productState is ProductNotFound) {
-                        _showAddNewProductDialog(context, _barcode!.rawValue!);
-                      }
-                      if (productState is ProductSearchByBarcodeLoaded) {
-                        print(productState.product);
-                        print('productState is ProductSearchByBarcodeLoaded');
-                        BlocProvider.of<OrderBloc>(context).add(AddProduct(productState.product.copyWith(quantity: 1)));
-                      }
-                    },
-                    builder: (context, productState) {
-                      print(productState);
-                      print(orderSubTotalAmount);
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    isScannerRunning
+                        ? SizedBox(
+                            width: size.width,
+                            height: size.height * .3,
+                            child: MobileScanner(
+                              controller: scannerController,
+                              onDetect: (capture) {
+                                final List<Barcode> barCodes = capture.barcodes;
+                                _barcode = barCodes.first;
+                                _playBeepSound();
 
-                      print(orderTotalAmount);
-                      if (productState is ProductInitial) {
-                        return Container(
-                          decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.black38))),
-                          width: double.infinity,
-                          height: size.height * .23,
-                          child: Column(
-                            children: [
-                              Column(
-                                children: [
-                                  SaleProductPrice(title: 'Sub Total', price: '\$ $orderSubTotalAmount'),
-                                  SaleProductPrice(title: 'Discount', price: '\$ $discount', procedure: 0),
-                                  SaleProductPrice(title: 'Total', price: '\$ $orderTotalAmount '),
+                                BlocProvider.of<ProductBloc>(context).add(
+                                  FetchProductByBarcodeEvent(barCodes.first.rawValue!),
+                                );
+                              },
+                              errorBuilder: (context, error, child) {
+                                if (kDebugMode) {
+                                  print(error);
+                                }
+                                return ScannerErrorWidget(error: error);
+                              },
+                            ),
+                          )
+                        : const SizedBox(),
+                    const SizedBox(height: 5),
+                    BlocListener<ProductBloc, ProductState>(
+                      listener: (context, productState) {
+                        if (productState is ProductNotFound) {
+                          _showAddNewProductDialog(context, _barcode!.rawValue!);
+                        }
+                        if (productState is ProductSearchByBarcodeLoaded) {
+                          BlocProvider.of<OrderBloc>(context).add(AddProduct(productState.product.copyWith(quantity: 1)));
+                        }
+                      },
+                      child: BlocListener<OrderBloc, OrderState>(
+                        listener: (context, orderState) {
+                          if (orderState is ProductAddToOrder) {
+                            products = orderState.products;
+                            orderSubTotalAmount = orderState.products.fold(0, (sum, product) => sum + product.price * product.quantity);
+                            orderTotalAmount = isFlat.value ? orderSubTotalAmount * (1 - discount) : (orderSubTotalAmount * 100) / (discount + 100);
+                          }
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey,
+                                    offset: Offset(0, 0),
+                                    spreadRadius: 1,
+                                    blurRadius: 2,
+                                    blurStyle: BlurStyle.inner,
+                                  ),
                                 ],
                               ),
-                              SizedBox(
-                                width: size.width,
-                                child: Wrap(
-                                  alignment: WrapAlignment.spaceEvenly,
-                                  children: [
-                                    SaleButton(
-                                      title: 'Save',
-                                      onPressed: () {
-                                        scannerController.stop();
-                                      },
-                                      bgColor: Colors.orange,
-                                    ),
-                                    SaleButton(
-                                      title: 'Discount',
-                                      onPressed: () {
-                                        _showDiscountDiaolg(context);
-                                      },
-                                      bgColor: Colors.blue,
-                                    ),
-                                    SaleButton(
-                                      title: 'Clear',
-                                      onPressed: () {
-                                        context.read<OrderBloc>().add(ClearProductList());
-                                      },
-                                      bgColor: Colors.red,
-                                    ),
-                                    SaleButton(
-                                      title: 'Pay',
-                                      onPressed: () {
-                                        OrderModel orderMOdel = OrderModel(
-                                          id: dateTime.microsecondsSinceEpoch.toString(),
-                                          customerId: dateTime.millisecondsSinceEpoch.toString(),
-                                          productList: products,
-                                          totalAmount: orderTotalAmount,
-                                          orderDate: dateTime,
-                                          storeId: appState.store!.id,
-                                        );
-                                        if (kDebugMode) {
-                                          print(scannerController.value.isRunning);
-                                        }
-                                        scannerController.stop();
-                                      },
-                                      bgColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      if (productState is ProductSearchByBarcodeLoaded) {
-                        return BlocConsumer<OrderBloc, OrderState>(
-                          listener: (context, orderState) {
-                            if (orderState is ProductAddToOrder) {}
-                            // TODO: implement listener
-                          },
-                          builder: (context, orderState) {
-                            if (orderState is ProductAddToOrder) {
-                              // products = [];
-                              // orderSubTotalAmount = 0;
-                              // orderTotalAmount = 0;
-                              print('orderState is ProductAddToOrder');
-                              print(orderState.products);
-                              products = orderState.products;
-                              orderSubTotalAmount = orderState.products.fold(0, (sum, product) => sum + product.price * product.quantity);
-                              print(orderSubTotalAmount);
-                              orderTotalAmount = isFlat ? orderSubTotalAmount * (1 - discount) : (orderSubTotalAmount * 100) / (discount + 100);
-                              print(orderTotalAmount);
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.grey,
-                                          offset: Offset(0, 0),
-                                          spreadRadius: 1,
-                                          blurRadius: 2,
-                                          blurStyle: BlurStyle.inner,
-                                        ),
-                                      ],
-                                    ),
-                                    height: isScannerRunning ? size.height * .34 : size.height * .64,
-                                    child: ListView.builder(
-                                      padding: EdgeInsets.zero,
-                                      itemCount: products.length,
-                                      itemBuilder: (context, item) {
-                                        ProductModel product = products[item];
-                                        return CupertinoListTile(
-                                          title: Text(product.name),
-                                          subtitle: Text('${product.quantity} * ${product.price}'),
-                                          trailing: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text('UZS ${product.quantity * product.price}'),
-                                              Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  IconButton(
-                                                    onPressed: () {
-                                                      if (product.quantity > 1) {
-                                                        context.read<OrderBloc>().add(
-                                                              UpdateOrderProductQuantity(
-                                                                productId: product.id,
-                                                                quantity: -1,
-                                                              ),
-                                                            );
-                                                      }
-                                                    },
-                                                    icon: const Icon(Icons.remove),
-                                                  ),
-                                                  Text(product.quantity.toString()),
-                                                  IconButton(
-                                                    onPressed: () {
-                                                      context.read<OrderBloc>().add(
-                                                            UpdateOrderProductQuantity(
-                                                              productId: product.id,
-                                                              quantity: 1,
-                                                            ),
-                                                          );
-                                                    },
-                                                    icon: const Icon(Icons.add),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  Container(
-                                    decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.black38))),
-                                    width: double.infinity,
-                                    height: size.height * .23,
-                                    child: Column(
+                              height: isScannerRunning ? size.height * .34 : size.height * .64,
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemCount: products.length,
+                                itemBuilder: (context, item) {
+                                  ProductModel product = products[item];
+                                  return CupertinoListTile(
+                                    title: Text(product.name),
+                                    subtitle: Text('${product.quantity} * ${product.price}'),
+                                    trailing: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Column(
+                                        Text('UZS ${product.quantity * product.price}'),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            SaleProductPrice(title: 'Sub Total', price: 'UZS $orderSubTotalAmount'),
-                                            SaleProductPrice(
-                                              title: 'Discount',
-                                              procedure: discount,
-                                              discountingPrice: orderSubTotalAmount - orderTotalAmount,
+                                            IconButton(
+                                              onPressed: () {
+                                                if (product.quantity > 1) {
+                                                  context.read<OrderBloc>().add(
+                                                        UpdateOrderProductQuantity(
+                                                          productId: product.id,
+                                                          quantity: -1,
+                                                        ),
+                                                      );
+                                                }
+                                              },
+                                              icon: const Icon(Icons.remove),
                                             ),
-                                            SaleProductPrice(title: 'Total', price: 'UZS $orderTotalAmount '),
+                                            Text(product.quantity.toString()),
+                                            IconButton(
+                                              onPressed: () {
+                                                context.read<OrderBloc>().add(
+                                                      UpdateOrderProductQuantity(
+                                                        productId: product.id,
+                                                        quantity: 1,
+                                                      ),
+                                                    );
+                                              },
+                                              icon: const Icon(Icons.add),
+                                            ),
                                           ],
                                         ),
-                                        SizedBox(
-                                          width: size.width,
-                                          child: Wrap(
-                                            alignment: WrapAlignment.spaceEvenly,
-                                            children: [
-                                              SaleButton(
-                                                title: 'Save',
-                                                onPressed: () {
-                                                  scannerController.stop();
-                                                },
-                                                bgColor: Colors.orange,
-                                              ),
-                                              SaleButton(
-                                                title: 'Discount',
-                                                onPressed: () {
-                                                  _showDiscountDiaolg(context);
-                                                },
-                                                bgColor: Colors.blue,
-                                              ),
-                                              SaleButton(
-                                                title: 'Clear',
-                                                onPressed: () {
-                                                  context.read<OrderBloc>().add(ClearProductList());
-                                                },
-                                                bgColor: Colors.red,
-                                              ),
-                                              SaleButton(
-                                                title: 'Pay',
-                                                onPressed: () {
-                                                  OrderModel orderMOdel = OrderModel(
-                                                    id: dateTime.microsecondsSinceEpoch.toString(),
-                                                    customerId: dateTime.millisecondsSinceEpoch.toString(),
-                                                    productList: products,
-                                                    totalAmount: orderTotalAmount,
-                                                    orderDate: dateTime,
-                                                    storeId: appState.store!.id,
-                                                  );
-                                                  if (kDebugMode) {
-                                                    print(scannerController.value.isRunning);
-                                                  }
-                                                  scannerController.stop();
-                                                },
-                                                bgColor: Colors.green,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
                                       ],
                                     ),
-                                  ),
-                                ],
-                              );
-                            }
-                            return Container();
-                          },
-                        );
-                      } else if (productState is ProductNotFound) {
-                        return Container();
-                      } else {
-                        return Container();
-                      }
-                    },
-                  ),
-                ],
+                                  );
+                                },
+                              ),
+                            ),
+                            buildSaleButtons(size, context, appState),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Container buildSaleButtons(Size size, BuildContext context, AppState appState) {
+    return Container(
+      decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.black38))),
+      width: double.infinity,
+      height: size.height * .23,
+      child: Column(
+        children: [
+          Column(
+            children: [
+              SaleProductPrice(title: 'Sub Total', price: 'UZS $orderSubTotalAmount'),
+              SaleProductPrice(
+                title: 'Discount',
+                procedure: discount,
+                discountingPrice: orderSubTotalAmount - orderTotalAmount,
+              ),
+              SaleProductPrice(title: 'Total', price: 'UZS $orderTotalAmount '),
+            ],
+          ),
+          SizedBox(
+            width: size.width,
+            child: Wrap(
+              alignment: WrapAlignment.spaceEvenly,
+              children: [
+                SaleButton(
+                  title: 'Save',
+                  onPressed: () {
+                    scannerController.stop();
+                  },
+                  bgColor: Colors.orange,
+                ),
+                SaleButton(
+                  title: 'Discount',
+                  onPressed: () {
+                    _showDiscountDiaolg(context);
+                  },
+                  bgColor: Colors.blue,
+                ),
+                SaleButton(
+                  title: 'Clear',
+                  onPressed: () {
+                    context.read<OrderBloc>().add(ClearProductList());
+                  },
+                  bgColor: Colors.red,
+                ),
+                SaleButton(
+                  title: 'Pay',
+                  onPressed: () {
+                    if (kDebugMode) {
+                      print(scannerController.value.isRunning);
+                    }
+                    _playBeepSound();
+                    scannerController.stop();
+                  },
+                  bgColor: Colors.green,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -54,6 +54,7 @@ dependencies:
   flutter_typeahead: ^5.2.0
   searchbar_animation: ^0.0.4
   flutter_sound: ^9.4.19
+  just_audio: ^0.9.39
   pdf:
   path_provider: ^2.1.2
   infinite_grouped_list: ^1.2.6
@@ -164,4 +165,5 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/sounds/
 
