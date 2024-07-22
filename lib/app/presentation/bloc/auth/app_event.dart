@@ -154,7 +154,6 @@ class NavigateToSettingsScreen extends AppEvent {}
 
 class NavigateToStockScreen extends AppEvent {}
 
-class NavigateToStockAdjustmentScreen extends AppEvent {}
 
 class NavigateToAddEditStoreScreen extends AppEvent {
   final StoreModel? store;

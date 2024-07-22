@@ -28,17 +28,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    MediaQuery.sizeOf(context);
+    final Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, appState) {
         BlocProvider.of<StoreBloc>(context).add(FetchStoreByIdEvent(appState.store!));
-        return BlocBuilder<StoreBloc, StoreState>(
-          builder: (context, state) {
-            if (state is StoreLoading) {
-              return const Center(
+        return BlocConsumer<StoreBloc, StoreState>(
+          listener: (context, storeState) {
+            if (storeState is StoreLoading) {
+              const Center(
                 child: CircularProgressIndicator.adaptive(),
               );
-            } else if (state is StoreByIdLoaded) {
+            }
+          },
+          builder: (context, state) {
+            if (state is StoreByIdLoaded) {
               StoreModel store = state.store;
               return Scaffold(
                 appBar: AppBar(

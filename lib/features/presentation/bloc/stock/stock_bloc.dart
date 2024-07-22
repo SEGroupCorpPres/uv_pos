@@ -11,9 +11,9 @@ class StockBloc extends Bloc<StockEvent, StockState> {
 
   StockBloc(this._stockRepository) : super(StockInitial()) {
     on<FetchStockByStoreId>(_onFetchStock);
-    on<AddStockProduct>(_onAddStockProduct);
+    on<AddUpdateStockProduct>(_onAddUpdateStock);
     // on<RemoveStockProduct>(_onRemoveStockProduct);
-    on<UpdateStockQuantity>(_onUpdateStockQuantity);
+    // on<UpdateStockQuantity>(_onUpdateStockQuantity);
   }
 
   void _onFetchStock(FetchStockByStoreId event, Emitter<StockState> emit) async {
@@ -26,12 +26,22 @@ class StockBloc extends Bloc<StockEvent, StockState> {
     }
   }
 
-  void _onAddStockProduct(AddStockProduct event, Emitter<StockState> emit) async {
+  void _onAddUpdateStock(AddUpdateStockProduct event, Emitter<StockState> emit) async {
+    StockModel? stock = await _stockRepository.getStockById(event.stock);
+    if (stock == null) {
+      await _stockRepository.createStock(event.stock);
+    } else {
+      final stockModel = StockModel(
+        id: stock.id,
+        storeId: stock.storeId,
+        qty: stock.qty + event.quantity,
+      );
+      await _stockRepository.updateStock(stockModel);
+    }
     if (state is StockLoaded) {
       final state = this.state as StockLoaded;
       final updatedProducts = List<StockModel>.from(state.stocks)..add(event.stock);
       try {
-        await _stockRepository.createStock(event.stock);
         emit(StockLoaded(updatedProducts));
       } catch (e) {
         emit(StockError('Error adding product: $e'));
@@ -53,30 +63,24 @@ class StockBloc extends Bloc<StockEvent, StockState> {
   //   }
   // }
 
-  void _onUpdateStockQuantity(UpdateStockQuantity event, Emitter<StockState> emit) async {
-    late StockModel stockModel;
-    if (state is StockLoaded) {
-      final state = this.state as StockLoaded;
-      final updateStocks = state.stocks.map(
-        (stock) {
-          if (stock.id == event.productId) {
-            stockModel = StockModel(
-              id: stock.id,
-              storeId: stock.storeId,
-              qty: stock.qty + event.quantity,
-            );
-            return stockModel;
-          } else {
-            return stock;
-          }
-        },
-      ).toList();
-      try {
-        await _stockRepository.updateStock(stockModel);
-        emit(StockLoaded(updateStocks));
-      } catch (e) {
-        emit(StockError('Error updating product quantity: $e'));
-      }
-    }
-  }
+  // void _onUpdateStockQuantity(UpdateStockQuantity event, Emitter<StockState> emit) async {
+  //   late StockModel stockModel;
+  //   if (state is StockLoaded) {
+  //     final state = this.state as StockLoaded;
+  //     final updateStocks = state.stocks.map(
+  //       (stock) {
+  //         if (stock.id == event.productId) {
+  //           return stockModel;
+  //         } else {
+  //           return stock;
+  //         }
+  //       },
+  //     ).toList();
+  //     try {
+  //       emit(StockLoaded(updateStocks));
+  //     } catch (e) {
+  //       emit(StockError('Error updating product quantity: $e'));
+  //     }
+  //   }
+  // }
 }

@@ -7,9 +7,7 @@ class StockRepository {
 
   Future<void> updateStock(StockModel stock) async {
     try {
-      stocksReference.doc(stock.id).update(
-            stock.toMap(),
-          );
+      stocksReference.doc(stock.id).update(stock.toMap());
     } catch (e) {
       throw Exception('Error updating Stock: $e');
     }
@@ -29,6 +27,7 @@ class StockRepository {
       if (kDebugMode) {
         print('Stock created successfully!');
       }
+
       return stockModel.id;
     } on FirebaseException catch (e) {
       // Handle Firestore exceptions
@@ -72,4 +71,7 @@ class StockRepository {
       throw Exception('Error fetching Stocks: $e');
     }
   }
+
 }
+
+

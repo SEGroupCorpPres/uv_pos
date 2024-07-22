@@ -40,7 +40,6 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<NavigateToReportsScreen>(_onNavigateReportsScreen);
     on<NavigateToSaleScreen>(_onNavigateSaleScreen);
     on<NavigateToSettingsScreen>(_onNavigateSettingsScreen);
-    on<NavigateToStockAdjustmentScreen>(_onNavigateStockAdjustmentScreen);
     on<NavigateToStockScreen>(_onNavigateStocksScreen);
     on<NavigateToAddEditStoreScreen>(_onNavigateAddEditStoreScreen);
     on<NavigateToStoreListScreen>(_onNavigateStoreListScreen);
@@ -305,13 +304,6 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     );
   }
 
-  void _onNavigateStockAdjustmentScreen(NavigateToStockAdjustmentScreen event, Emitter<AppState> emit) async {
-    emit(
-      state.copyWith(
-        status: AppStatus.stockAdjustmentScreen,
-      ),
-    );
-  }
 
   void _onNavigateStocksScreen(NavigateToStockScreen event, Emitter<AppState> emit) async {
     emit(

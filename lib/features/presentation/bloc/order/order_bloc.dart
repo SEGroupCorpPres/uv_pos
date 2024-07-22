@@ -20,6 +20,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     on<AddProduct>(_onAddProduct);
     on<RemoveProduct>(_onRemoveProduct);
     on<UpdateOrderProductQuantity>(_onUpdateProductQuantity);
+    on<OrderDiscountedEvent>(_onOrderAmountDiscounting);
     on<ClearProductList>(_onClearProductList);
   }
 
@@ -27,6 +28,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     try {
       emit(OrderLoading());
       final orders = await _orderRepository.getOrdersForDateByStoreId(event.store!, event.date!);
+
       if (orders.isNotEmpty) {
         emit(OrdersFromDateByStoreIDLoaded(orders: orders));
       } else {
@@ -58,7 +60,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       final createdOrder = await _orderRepository.getOrderById(event.order);
       final orders = await _orderRepository.getOrdersForDateByStoreId(
         event.store,
-        event.order.orderDate.toString(),
+        event.order.orderDate,
       );
 
       if (createdOrder != null) {
@@ -80,8 +82,6 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       emit(ProductAddToOrder([event.product]));
     }
   }
-
-
 
   Future<void> _onRemoveProduct(RemoveProduct event, Emitter<OrderState> emit) async {
     if (state is ProductAddToOrder) {
@@ -114,6 +114,15 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     }
   }
 
+  Future<void> _onOrderAmountDiscounting(OrderDiscountedEvent event, Emitter<OrderState> emit) async {
+    emit(
+      OrderDiscountState(
+        discount: event.discount,
+        isFlat: event.isFlat,
+      ),
+    );
+  }
+
   Future<void> updateOrder(UpdateOrderEvent event, Emitter<OrderState> emit) async {
     try {
       emit(OrderUpdating());
@@ -121,7 +130,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       final updatedOrder = await _orderRepository.getOrderById(event.order);
       final orders = await _orderRepository.getOrdersForDateByStoreId(
         event.store,
-        event.order.orderDate.toString(),
+        event.order.orderDate,
       );
 
       if (updatedOrder != null) {
@@ -141,7 +150,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       await _orderRepository.deleteOrder(event.order.id, event.order.orderDate);
       final List<OrderModel> orders = (await _orderRepository.getOrdersForDateByStoreId(
         event.store,
-        event.order.orderDate.toString(),
+        event.order.orderDate,
       ))
           .cast<OrderModel>();
 
@@ -155,5 +164,4 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   Future<void> _onClearProductList(ClearProductList event, Emitter<OrderState> emit) async {
     emit(const ProductAddToOrder([]));
   }
-
 }

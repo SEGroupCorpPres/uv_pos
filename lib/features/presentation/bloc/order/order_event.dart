@@ -10,13 +10,13 @@ abstract class OrderEvent extends Equatable {
 
 class LoadOrdersEvent extends OrderEvent {
   final StoreModel? store;
-  final String? date;
+  final DateTime? date;
 
   const LoadOrdersEvent([this.store, this.date]);
+
   @override
   // TODO: implement props
   List<Object?> get props => [store];
-
 }
 
 class CreateOrderEvent extends OrderEvent {
@@ -39,11 +39,9 @@ class UpdateOrderEvent extends OrderEvent {
   List<Object?> get props => [order, store];
 }
 
-
 class DeleteOrderEvent extends OrderEvent {
   final OrderModel order;
   final StoreModel store;
-
 
   const DeleteOrderEvent(this.order, this.store);
 
@@ -90,6 +88,20 @@ class UpdateOrderProductQuantity extends OrderEvent {
 
   @override
   List<Object?> get props => [productId, quantity];
+}
+
+class OrderDiscountedEvent extends OrderEvent {
+  final double discount;
+  final bool isFlat;
+
+  const OrderDiscountedEvent({
+    required this.discount,
+    required this.isFlat,
+  });
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [discount, isFlat];
 }
 
 class ClearProductList extends OrderEvent {}

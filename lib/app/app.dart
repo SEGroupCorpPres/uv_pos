@@ -29,9 +29,6 @@ class _AppState extends State<App> {
         );
       },
       child: const AuthFlow(),
-      // child: RegistrationScreen(),
-      // child: VerifyAuthScreen(verificationId: 'f'),
-      // child: CheckEmailScreen(email: 'artessdu@gmail.com'),
     );
   }
 }

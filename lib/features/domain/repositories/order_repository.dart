@@ -41,10 +41,13 @@ class OrderRepository {
     }
   }
 
-  Future<List<OrderModel>> getOrdersForDateByStoreId(StoreModel store, String date) async {
+  Future<List<OrderModel>> getOrdersForDateByStoreId(StoreModel store, DateTime date) async {
+    final orderDateFormatted = _formatDate(DateTime(2024, 7, 18));
+    print('formatted order date is ---------> $orderDateFormatted');
+
     try {
       QuerySnapshot querySnapshot = await ordersReference
-          .doc(date)
+          .doc(orderDateFormatted)
           .collection('daily_orders')
           .where(
             'store_id',

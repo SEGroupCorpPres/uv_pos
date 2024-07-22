@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import 'product_model.dart';
 
-class OrderModel extends Equatable {
+class OrderModel extends Equatable implements Comparable<OrderModel> {
   final String id;
   final String customerId;
   final List<ProductModel> productList;
@@ -61,5 +61,11 @@ class OrderModel extends Equatable {
       orderDate: orderDate ?? this.orderDate,
       storeId: storeId ?? this.storeId,
     );
+  }
+
+  @override
+  int compareTo(other) {
+    // TODO: implement compareTo
+    return orderDate.compareTo(other.orderDate);
   }
 }

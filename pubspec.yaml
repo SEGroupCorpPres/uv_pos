@@ -57,7 +57,6 @@ dependencies:
   just_audio: ^0.9.39
   pdf:
   path_provider: ^2.1.2
-  infinite_grouped_list: ^1.2.6
   grouped_list: ^6.0.0
   platform: ^3.1.4
   file: ^7.0.0

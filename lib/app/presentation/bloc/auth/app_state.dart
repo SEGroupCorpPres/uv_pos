@@ -11,7 +11,6 @@ enum AppStatus {
   emailVerification,
   storeListScreen,
   addEditStoreScreen,
-  stockAdjustmentScreen,
   stocksScreen,
   homeScreen,
   orderListScreen,

@@ -20,6 +20,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     on<FetchProductByBarcodeEvent>(onFetchProductByBarcode);
     on<CreateProductEvent>(createProduct);
     on<UpdateProductEvent>(updateProduct);
+    on<UpdateProductQuantity>(updateProductQuantity);
     on<DeleteProductEvent>(deleteProduct);
   }
 
@@ -46,7 +47,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   Future<void> fetchProductById(FetchProductByIdEvent event, Emitter<ProductState> emit) async {
     try {
       emit(ProductLoading());
-      final product = await _productRepository.getProductById(event.product);
+      final product = await _productRepository.getProductById(event.product.id);
       if (product != null) {
         emit(ProductByIdLoaded(product: product));
       } else {
@@ -89,7 +90,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         productModel = event.product;
       }
       await _productRepository.createProduct(productModel, event.store);
-      final createdProduct = await _productRepository.getProductById(productModel);
+      final createdProduct = await _productRepository.getProductById(productModel.id);
       final products = await _productRepository.getProductsByStoreId(event.store);
 
       if (createdProduct != null) {
@@ -113,7 +114,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         productModel = event.product.copyWith(image: imageUrl);
       }
       await _productRepository.updateProduct(productModel!);
-      final updatedProduct = await _productRepository.getProductById(productModel);
+      final updatedProduct = await _productRepository.getProductById(productModel.id);
       final products = await _productRepository.getProductsByStoreId(event.store);
 
       if (updatedProduct != null) {
@@ -127,6 +128,28 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     }
   }
 
+  Future<void> updateProductQuantity(UpdateProductQuantity event, Emitter<ProductState> emit) async {
+    late ProductModel? updatingProduct;
+
+    try {
+      ProductModel? oldProduct = await _productRepository.getProductById(event.product.id);
+      if (oldProduct != null) {
+        updatingProduct = event.product.copyWith(quantity: event.product.quantity - event.quantity);
+      }
+      await _productRepository.updateProduct(updatingProduct!);
+      final updatedProduct = await _productRepository.getProductById(updatingProduct.id);
+      final products = await _productRepository.getProductsByStoreId(event.store);
+
+      if (updatedProduct != null) {
+        emit(ProductUpdated(product: updatedProduct));
+        emit(ProductsByStoreIdLoaded(products: products));
+      } else {
+        emit(ProductNotFound());
+      }
+    } catch (e) {
+      emit(ProductError(error: e.toString()));
+    }
+  }
 
   Future<void> deleteProduct(DeleteProductEvent event, Emitter<ProductState> emit) async {
     try {

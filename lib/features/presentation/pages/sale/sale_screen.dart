@@ -12,8 +12,11 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
+import 'package:uv_pos/features/data/remote/models/stock_model.dart';
+import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/presentation/bloc/order/order_bloc.dart';
 import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
+import 'package:uv_pos/features/presentation/bloc/stock/stock_bloc.dart';
 import 'package:uv_pos/features/presentation/widgets/sale_button.dart';
 import 'package:uv_pos/features/presentation/widgets/sale_product_price.dart';
 import 'package:uv_pos/features/presentation/widgets/scanner_error.dart';
@@ -283,9 +286,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             const SizedBox(width: 20),
             ElevatedButton(
               onPressed: () {
-                setState(() {
-                  discount = double.tryParse(_discountController.text)!;
-                });
+                discount = double.tryParse(_discountController.text)!;
+                context.read<OrderBloc>().add(OrderDiscountedEvent(discount: discount, isFlat: isFlat.value));
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -403,7 +405,40 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                           if (orderState is ProductAddToOrder) {
                             products = orderState.products;
                             orderSubTotalAmount = orderState.products.fold(0, (sum, product) => sum + product.price * product.quantity);
-                            orderTotalAmount = isFlat.value ? orderSubTotalAmount * (1 - discount) : (orderSubTotalAmount * 100) / (discount + 100);
+                            orderTotalAmount = orderSubTotalAmount;
+                          }
+                          if (orderState is OrderCreating) {
+                            const Center(
+                              child: CircularProgressIndicator.adaptive(),
+                            );
+                          }
+                          if (orderState is OrderDiscountState) {
+                            orderTotalAmount = orderState.isFlat ? orderSubTotalAmount - orderState.discount : (1 - orderState.discount / 100) * orderSubTotalAmount;
+                          }
+                          if (orderState is OrderCreated) {
+                            showAdaptiveDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog.adaptive(
+                                  title: const Text(
+                                    'Paying successfully',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.check_circle_outline),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text(
+                                        'Ok',
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
                           }
                         },
                         child: Column(
@@ -492,62 +527,172 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     return Container(
       decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.black38))),
       width: double.infinity,
-      height: size.height * .23,
-      child: Column(
-        children: [
-          Column(
-            children: [
-              SaleProductPrice(title: 'Sub Total', price: 'UZS $orderSubTotalAmount'),
-              SaleProductPrice(
-                title: 'Discount',
-                procedure: discount,
-                discountingPrice: orderSubTotalAmount - orderTotalAmount,
-              ),
-              SaleProductPrice(title: 'Total', price: 'UZS $orderTotalAmount '),
-            ],
-          ),
-          SizedBox(
-            width: size.width,
-            child: Wrap(
-              alignment: WrapAlignment.spaceEvenly,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Column(
               children: [
-                SaleButton(
-                  title: 'Save',
-                  onPressed: () {
-                    scannerController.stop();
-                  },
-                  bgColor: Colors.orange,
-                ),
-                SaleButton(
+                SaleProductPrice(title: 'Sub Total', price: 'UZS $orderSubTotalAmount'),
+                SaleProductPrice(
                   title: 'Discount',
-                  onPressed: () {
-                    _showDiscountDiaolg(context);
-                  },
-                  bgColor: Colors.blue,
+                  procedure: discount,
+                  discountingPrice: orderSubTotalAmount - orderTotalAmount,
                 ),
-                SaleButton(
-                  title: 'Clear',
-                  onPressed: () {
-                    context.read<OrderBloc>().add(ClearProductList());
-                  },
-                  bgColor: Colors.red,
-                ),
-                SaleButton(
-                  title: 'Pay',
-                  onPressed: () {
-                    if (kDebugMode) {
-                      print(scannerController.value.isRunning);
-                    }
-                    _playBeepSound();
-                    scannerController.stop();
-                  },
-                  bgColor: Colors.green,
-                ),
+                SaleProductPrice(title: 'Total', price: 'UZS $orderTotalAmount '),
               ],
             ),
-          ),
-        ],
+            SizedBox(
+              width: size.width,
+              child: Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                children: [
+                  SaleButton(
+                    title: 'Save',
+                    onPressed: () {
+                      scannerController.stop();
+                    },
+                    bgColor: Colors.orange,
+                  ),
+                  SaleButton(
+                    title: 'Discount',
+                    onPressed: () {
+                      _showDiscountDiaolg(context);
+                    },
+                    bgColor: Colors.blue,
+                  ),
+                  SaleButton(
+                    title: 'Clear',
+                    onPressed: () {
+                      context.read<OrderBloc>().add(ClearProductList());
+                    },
+                    bgColor: Colors.red,
+                  ),
+                  SaleButton(
+                    title: 'Pay',
+                    onPressed: () {
+                      _showPayingDialog(context, appState.store!);
+                      if (kDebugMode) {
+                        print(scannerController.value.isRunning);
+                      }
+                      scannerController.stop();
+                    },
+                    bgColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  void _showPayingDialog(BuildContext context, StoreModel store) {
+    showAdaptiveDialog(
+      context: context,
+      builder: (context) {
+        return _buildPayingDialogWidget(
+          context,
+          store,
+        );
+      },
+    );
+  }
+
+  SimpleDialog _buildPayingDialogWidget(BuildContext context, StoreModel? store) {
+    return SimpleDialog(
+      title: Text(
+        '"Gul" MCHJ',
+        textAlign: TextAlign.center,
+        softWrap: true,
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 24.sp,
+        ),
+      ),
+      children: [
+        Column(
+          children: [
+            SaleProductPrice(
+              title: 'Sub Total',
+              price: 'UZS $orderSubTotalAmount',
+              textAlign: TextAlign.start,
+            ),
+            SaleProductPrice(
+              title: 'Discount',
+              procedure: discount,
+              discountingPrice: orderSubTotalAmount - orderTotalAmount,
+              textAlign: TextAlign.start,
+            ),
+            SaleProductPrice(
+              title: 'Total',
+              price: 'UZS $orderTotalAmount ',
+              textAlign: TextAlign.start,
+            ),
+          ],
+        ),
+        SizedBox(
+          height: 250.sp,
+          width: 300.sp,
+          child: ListView.builder(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            itemCount: products.length,
+            itemBuilder: (context, item) {
+              ProductModel product = products[item];
+              return CupertinoListTile(
+                title: Text(product.name),
+                subtitle: Text('${product.quantity} * ${product.price} UZS'),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      product.quantity.toString(),
+                      softWrap: true,
+                    ),
+                    Text('UZS ${product.quantity * product.price}'),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                DateTime createdTime = DateTime.now();
+                OrderModel order = OrderModel(
+                  id: createdTime.microsecondsSinceEpoch.toString(),
+                  customerId: '',
+                  productList: products,
+                  totalAmount: orderTotalAmount,
+                  orderDate: createdTime,
+                  storeId: store!.id,
+                );
+                late StockModel stock;
+                for (var product in products) {
+                  stock = StockModel(id: product.id, storeId: store.id, qty: product.quantity);
+                  context.read<ProductBloc>().add(UpdateProductQuantity(product: product, store: store, quantity: product.quantity));
+                  context.read<StockBloc>().add(AddUpdateStockProduct(product.id, product.quantity, stock: stock));
+                }
+                Navigator.pop(context);
+
+                context.read<OrderBloc>().add(
+                      CreateOrderEvent(order, store),
+                    );
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

@@ -22,7 +22,6 @@ import 'package:uv_pos/features/presentation/pages/report/reports_screen.dart';
 import 'package:uv_pos/features/presentation/pages/report/sale_report_screen.dart';
 import 'package:uv_pos/features/presentation/pages/sale/sale_screen.dart';
 import 'package:uv_pos/features/presentation/pages/setting/settings_screen.dart';
-import 'package:uv_pos/features/presentation/pages/stock/stock_adjustment_screen.dart';
 import 'package:uv_pos/features/presentation/pages/stock/stocks_screen.dart';
 import 'package:uv_pos/features/presentation/pages/store/add_edit_store_screen.dart';
 import 'package:uv_pos/features/presentation/pages/store/store_list_screen.dart';
@@ -83,8 +82,6 @@ List<Page> onGenerateAuthPages(AppState state, List<Page> pages) {
       return [SaleScreen.page()];
     case AppStatus.settingsScreen:
       return [SettingsScreen.page()];
-    case AppStatus.stockAdjustmentScreen:
-      return [StockAdjustmentScreen.page()];
     case AppStatus.stocksScreen:
       return [StocksScreen.page()];
     case AppStatus.addEditStoreScreen:

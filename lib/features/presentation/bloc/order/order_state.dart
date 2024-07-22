@@ -66,6 +66,19 @@ class OrderUpdated extends OrderState {
 class OrderDeleting extends OrderState {}
 
 class OrderDeleted extends OrderState {}
+class OrderDiscountState extends OrderState{
+  final double discount;
+  final bool isFlat;
+
+  const OrderDiscountState({
+    required this.discount,
+    required this.isFlat,
+  });
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [discount, isFlat];
+}
 class ProductAddToOrder extends OrderState{
   final List<ProductModel> products;
 
