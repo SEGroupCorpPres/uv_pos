@@ -32,9 +32,9 @@ class ProductRepository {
     }
   }
 
-  Future<ProductModel?> getProductById(String productID) async {
+  Future<ProductModel?> getProductById(String id) async {
     try {
-      DocumentSnapshot documentSnapshot = await productsReference.doc(productID).get();
+      DocumentSnapshot documentSnapshot = await productsReference.doc(id).get();
       if (documentSnapshot.exists) {
         return ProductModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
       } else {

@@ -41,6 +41,7 @@ class StockRepository {
   Future<StockModel?> getStockById(StockModel stockModel) async {
     try {
       DocumentSnapshot documentSnapshot = await stocksReference.doc(stockModel.id).get();
+
       if (documentSnapshot.exists) {
         return StockModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
       } else {
@@ -62,6 +63,7 @@ class StockRepository {
 
       List<StockModel> stocks = querySnapshot.docs.map(
         (doc) {
+
           return StockModel.fromMap(doc.data() as Map<String, dynamic>);
         },
       ).toList();

@@ -31,17 +31,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, appState) {
-        BlocProvider.of<StoreBloc>(context).add(FetchStoreByIdEvent(appState.store!));
         return BlocConsumer<StoreBloc, StoreState>(
-          listener: (context, storeState) {
-            if (storeState is StoreLoading) {
-              const Center(
+          listener: (context, storeState) {},
+          builder: (context, state) {
+            if (state is StoreLoading) {
+              return const Center(
                 child: CircularProgressIndicator.adaptive(),
               );
-            }
-          },
-          builder: (context, state) {
-            if (state is StoreByIdLoaded) {
+            } else if (state is StoreByIdLoaded) {
               StoreModel store = state.store;
               return Scaffold(
                 appBar: AppBar(
@@ -49,9 +46,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   title: Text('${appState.user!.displayName} (\$0)'),
                   centerTitle: false,
                   actions: [
-                    PopupMenuButton(
-                      itemBuilder: (context) => popupMenuList,
-                    ),
+                    // PopupMenuButton(
+                    //   itemBuilder: (context) => popupMenuList,
+                    // ),
                   ],
                   bottom: PreferredSize(
                     preferredSize: Size(double.infinity, 60.h),

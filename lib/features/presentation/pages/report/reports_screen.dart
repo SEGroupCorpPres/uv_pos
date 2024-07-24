@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+import 'package:uv_pos/features/presentation/bloc/order/order_bloc.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -21,8 +23,23 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
+  String? storeID;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
+  Future<void> getStoreID() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    storeID = preferences.getString('store_id');
+  }
+
   @override
   Widget build(BuildContext context) {
+    getStoreID();
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
@@ -57,9 +74,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       NavigateToReportByDatesScreen(),
                     );
                   default:
+                    print('storeID is  ----------> $storeID');
                     BlocProvider.of<AppBloc>(context).add(
                       NavigateToSaleReportScreen(),
                     );
+                    BlocProvider.of<OrderBloc>(context).add(
+                          LoadOrdersEvent(storeID),
+                        );
                 }
               },
               title: Text(title),

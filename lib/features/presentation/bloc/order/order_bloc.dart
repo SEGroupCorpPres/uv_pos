@@ -26,8 +26,11 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
   Future<void> _fetchOrderList(LoadOrdersEvent event, Emitter<OrderState> emit) async {
     try {
+      print('event.storeID is  ------>  ${event.storeID}');
       emit(OrderLoading());
-      final orders = await _orderRepository.getOrdersForDateByStoreId(event.store!, event.date!);
+      final orders = await _orderRepository.getOrdersForDateByStoreId(event.storeID!, event.date);
+      print('orders is  ------>  $orders');
+
 
       if (orders.isNotEmpty) {
         emit(OrdersFromDateByStoreIDLoaded(orders: orders));
@@ -59,7 +62,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       await _orderRepository.createOrder(event.order);
       final createdOrder = await _orderRepository.getOrderById(event.order);
       final orders = await _orderRepository.getOrdersForDateByStoreId(
-        event.store,
+        event.storeID,
         event.order.orderDate,
       );
 
@@ -129,7 +132,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       await _orderRepository.updateOrder(event.order);
       final updatedOrder = await _orderRepository.getOrderById(event.order);
       final orders = await _orderRepository.getOrdersForDateByStoreId(
-        event.store,
+        event.storeID,
         event.order.orderDate,
       );
 
@@ -149,7 +152,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       emit(OrderDeleting());
       await _orderRepository.deleteOrder(event.order.id, event.order.orderDate);
       final List<OrderModel> orders = (await _orderRepository.getOrdersForDateByStoreId(
-        event.store,
+        event.storeID,
         event.order.orderDate,
       ))
           .cast<OrderModel>();

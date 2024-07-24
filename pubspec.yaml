@@ -73,7 +73,7 @@ dependencies:
   flutter_spinkit: ^5.2.1
 
   # syncfusion
-  syncfusion_flutter_charts: ^25.2.7
+  syncfusion_flutter_charts: ^26.1.42
 
   #Toast
   fluttertoast: ^8.2.6

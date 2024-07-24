@@ -19,6 +19,28 @@ class ReportByCustomersScreen extends StatefulWidget {
 }
 
 class _ReportByCustomersScreenState extends State<ReportByCustomersScreen> {
+  ScrollController _scrollController = ScrollController();
+  DateTime _currentDateTime = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final offset = _scrollController.offset;
+    setState(() {
+      _currentDateTime = DateTime.now().add(Duration(days: offset.toInt()));
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,9 +61,30 @@ class _ReportByCustomersScreenState extends State<ReportByCustomersScreen> {
           )
         ],
       ),
-      body: const Center(
-        child: Text('No record found'),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Current DateTime: $_currentDateTime',
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: 100,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(_currentDateTime.toString()),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
+
+
 }

@@ -47,7 +47,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   Future<void> fetchProductById(FetchProductByIdEvent event, Emitter<ProductState> emit) async {
     try {
       emit(ProductLoading());
-      final product = await _productRepository.getProductById(event.product.id);
+      final product = await _productRepository.getProductById(event.id);
       if (product != null) {
         emit(ProductByIdLoaded(product: product));
       } else {
@@ -134,7 +134,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       ProductModel? oldProduct = await _productRepository.getProductById(event.product.id);
       if (oldProduct != null) {
-        updatingProduct = event.product.copyWith(quantity: event.product.quantity - event.quantity);
+        updatingProduct = event.product.copyWith(quantity: oldProduct.quantity - event.quantity);
       }
       await _productRepository.updateProduct(updatingProduct!);
       final updatedProduct = await _productRepository.getProductById(updatingProduct.id);

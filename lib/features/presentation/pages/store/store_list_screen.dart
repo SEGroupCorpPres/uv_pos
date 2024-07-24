@@ -114,7 +114,12 @@ class _StoreListScreenState extends State<StoreListScreen> {
                       final storeItemPhone = storeList[item].phone;
                       final storeItemImage = storeList[item].imageUrl;
                       return CupertinoListTile(
-                        onTap: () => BlocProvider.of<AppBloc>(context)..add(NavigateToHomeScreen(storeList[item])),
+                        onTap: () async {
+                          BlocProvider.of<AppBloc>(context).add(NavigateToHomeScreen(storeList[item]));
+                          BlocProvider.of<StoreBloc>(context).add(FetchStoreByIdEvent(storeList[item]));
+                          SharedPreferences preferences = await SharedPreferences.getInstance();
+                          await preferences.setString('store_id', storeList[item].id);
+                        },
                         leadingSize: 60,
                         leading: Container(
                           width: 45.r,

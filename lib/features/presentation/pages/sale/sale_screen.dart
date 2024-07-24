@@ -394,9 +394,21 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                     BlocListener<ProductBloc, ProductState>(
                       listener: (context, productState) {
                         if (productState is ProductNotFound) {
-                          _showAddNewProductDialog(context, _barcode!.rawValue!);
+                          _showAddNewProductDialog(
+                            context,
+                            _barcode!.rawValue!,
+                          );
                         }
                         if (productState is ProductSearchByBarcodeLoaded) {
+                          if (productState.product.quantity == 0) {
+                            _showAddNewProductDialog(
+                              context,
+                              productState.product.barcode,
+                              productState.product,
+                              true,
+                              appState.store,
+                            );
+                          }
                           BlocProvider.of<OrderBloc>(context).add(AddProduct(productState.product.copyWith(quantity: 1)));
                         }
                       },
@@ -484,6 +496,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                                           quantity: -1,
                                                         ),
                                                       );
+                                                } else if (product.quantity == 0) {
+                                                  context.read<OrderBloc>().add(RemoveProduct(product.id));
                                                 }
                                               },
                                               icon: const Icon(Icons.remove),
@@ -678,15 +692,16 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 );
                 late StockModel stock;
                 for (var product in products) {
-                  stock = StockModel(id: product.id, storeId: store.id, qty: product.quantity);
+                  stock = StockModel(id: product.id, storeId: store.id, qty: product.quantity, product: product);
                   context.read<ProductBloc>().add(UpdateProductQuantity(product: product, store: store, quantity: product.quantity));
-                  context.read<StockBloc>().add(AddUpdateStockProduct(product.id, product.quantity, stock: stock));
+                  context.read<StockBloc>().add(AddUpdateStockProduct(product.id, product.quantity, product, stock: stock));
                 }
                 Navigator.pop(context);
 
                 context.read<OrderBloc>().add(
-                      CreateOrderEvent(order, store),
+                      CreateOrderEvent(order, store.id),
                     );
+                context.read<OrderBloc>().add(ClearProductList());
               },
               child: const Text('Confirm'),
             ),
@@ -696,11 +711,22 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showAddNewProductDialog(BuildContext context, String barcode) {
+  void _showAddNewProductDialog(
+    BuildContext context,
+    String barcode, [
+    ProductModel? product,
+    bool? isEdit,
+    StoreModel? store,
+  ]) {
     showDialog(
       context: context,
       builder: (context) {
-        return AddProductDialog(barcode: barcode);
+        return AddProductDialog(
+          product: product,
+          barcode: barcode,
+          isEdit: isEdit,
+          store: store,
+        );
       },
     );
   }

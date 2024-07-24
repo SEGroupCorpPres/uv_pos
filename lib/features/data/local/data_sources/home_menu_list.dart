@@ -25,7 +25,7 @@ List<Widget> menuList(BuildContext context, StoreModel store) => [
               );
           context.read<OrderBloc>().add(
                 LoadOrdersEvent(
-                  store,
+                  store.id,
                   orderCreatedTime,
                 ),
               );

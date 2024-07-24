@@ -4,19 +4,22 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/stock_model.dart';
+import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
 import 'package:uv_pos/features/presentation/bloc/stock/stock_bloc.dart';
 
 class StocksScreen extends StatefulWidget {
   const StocksScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: StocksScreen(),
-        )
-      : const MaterialPage(
-          child: StocksScreen(),
-        );
+  static Page page() =>
+      Platform.isIOS
+          ? const CupertinoPage(
+        child: StocksScreen(),
+      )
+          : const MaterialPage(
+        child: StocksScreen(),
+      );
 
   @override
   State<StocksScreen> createState() => _StocksScreenState();
@@ -43,7 +46,8 @@ class _StocksScreenState extends State<StocksScreen> {
         appBar: AppBar(
           automaticallyImplyLeading: true,
           leading: InkWell(
-            onTap: () => context.read<AppBloc>().add(
+            onTap: () =>
+                context.read<AppBloc>().add(
                   const NavigateToHomeScreen(),
                 ),
             child: Icon(Icons.adaptive.arrow_back),
@@ -64,15 +68,17 @@ class _StocksScreenState extends State<StocksScreen> {
                 itemCount: stocks.length,
                 itemBuilder: (context, item) {
                   StockModel stock = stocks[item];
-                  return CupertinoListTile(
-                    title: Text(stock.storeId),
-                    subtitle: Text(
-                      stock.qty.toString(),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                      ),
-                    ),
+                  // context.read<ProductBloc>().add(FetchProductByIdEvent(stock.id));
+                  return  CupertinoListTile(
+                          title: Text(stock.id),
+                          subtitle: Text(
+                            stock.qty.toString(),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 18,
+                            ),
+                          ),
+                          trailing: Text(stock.product.name),
                   );
                 },
               );

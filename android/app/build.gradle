@@ -61,7 +61,7 @@ android {
         // Use this dependency to bundle the model with your app
         implementation 'com.google.mlkit:barcode-scanning:17.2.0'
         // Use this dependency to use the dynamically downloaded model in Google Play Services
-        implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
+        implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
         implementation("com.google.firebase:firebase-analytics")
         implementation 'com.google.firebase:firebase-auth'
         implementation 'com.google.firebase:firebase-firestore'

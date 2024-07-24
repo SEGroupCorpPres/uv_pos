@@ -9,44 +9,44 @@ abstract class OrderEvent extends Equatable {
 }
 
 class LoadOrdersEvent extends OrderEvent {
-  final StoreModel? store;
+  final String? storeID;
   final DateTime? date;
 
-  const LoadOrdersEvent([this.store, this.date]);
+  const LoadOrdersEvent([this.storeID, this.date]);
 
   @override
   // TODO: implement props
-  List<Object?> get props => [store];
+  List<Object?> get props => [storeID];
 }
 
 class CreateOrderEvent extends OrderEvent {
   final OrderModel order;
-  final StoreModel store;
+  final String storeID;
 
-  const CreateOrderEvent(this.order, this.store);
+  const CreateOrderEvent(this.order, this.storeID);
 
   @override
-  List<Object?> get props => [order, store];
+  List<Object?> get props => [order, storeID];
 }
 
 class UpdateOrderEvent extends OrderEvent {
   final OrderModel order;
-  final StoreModel store;
+  final String storeID;
 
-  const UpdateOrderEvent(this.order, this.store);
+  const UpdateOrderEvent(this.order, this.storeID);
 
   @override
-  List<Object?> get props => [order, store];
+  List<Object?> get props => [order, storeID];
 }
 
 class DeleteOrderEvent extends OrderEvent {
   final OrderModel order;
-  final StoreModel store;
+  final String storeID;
 
-  const DeleteOrderEvent(this.order, this.store);
+  const DeleteOrderEvent(this.order, this.storeID);
 
   @override
-  List<Object?> get props => [order, store];
+  List<Object?> get props => [order, storeID];
 }
 
 class FetchOrderByIdEvent extends OrderEvent {

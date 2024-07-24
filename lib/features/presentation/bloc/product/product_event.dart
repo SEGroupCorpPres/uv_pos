@@ -53,12 +53,12 @@ class DeleteProductEvent extends ProductEvent {
 }
 
 class FetchProductByIdEvent extends ProductEvent {
-  final ProductModel product;
+  final String  id;
 
-  const FetchProductByIdEvent(this.product);
+  const FetchProductByIdEvent(this.id);
 
   @override
-  List<Object?> get props => [product];
+  List<Object?> get props => [id];
 }
 
 class FetchProductByBarcodeEvent extends ProductEvent {

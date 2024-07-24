@@ -5,6 +5,8 @@ import 'package:uv_pos/features/data/remote/models/store_model.dart';
 
 class OrderRepository {
   CollectionReference ordersReference = FirebaseFirestore.instance.collection('orders');
+  Query<Map<String, dynamic>>  dailyOrdersReference = FirebaseFirestore.instance.collectionGroup('daily_orders');
+
 
   OrderRepository();
 
@@ -41,19 +43,18 @@ class OrderRepository {
     }
   }
 
-  Future<List<OrderModel>> getOrdersForDateByStoreId(StoreModel store, DateTime date) async {
-    final orderDateFormatted = _formatDate(DateTime(2024, 7, 18));
-    print('formatted order date is ---------> $orderDateFormatted');
+  Future<List<OrderModel>> getOrdersForDateByStoreId(String storeID, DateTime? date) async {
+    // final orderDateFormatted = _formatDate(DateTime(2024, 7, 18));
+
 
     try {
-      QuerySnapshot querySnapshot = await ordersReference
-          .doc(orderDateFormatted)
-          .collection('daily_orders')
+      QuerySnapshot querySnapshot = await dailyOrdersReference
           .where(
             'store_id',
-            isEqualTo: store.id,
+            isEqualTo: storeID,
           )
           .get();
+      print('daily_order date is ---------> ${querySnapshot}');
 
       List<OrderModel> orders = querySnapshot.docs.map(
         (doc) {

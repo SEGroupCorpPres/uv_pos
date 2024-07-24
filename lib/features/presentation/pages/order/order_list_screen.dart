@@ -30,54 +30,65 @@ class OrderListScreen extends StatefulWidget {
 class _OrderListScreenState extends State<OrderListScreen> {
   StoreModel? store;
   final ScrollController _scrollController = ScrollController();
+  double orderTotalAmount = 0;
+  int orderLength = 0;
 
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.sizeOf(context);
     initializeDateFormatting('uz_UZ', null);
 
-    return BlocConsumer<OrderBloc, OrderState>(
-      listener: (context, state) {
-        if (state is OrderLoading) {
-          const Center(
-            child: CircularProgressIndicator.adaptive(),
-          );
-        }
-      },
-      builder: (context, state) {
-        if (state is OrdersFromDateByStoreIDLoaded) {
-          List<OrderModel> orders = state.orders!;
-          double totalAmount = 0;
-          for (var order in orders) {
-            totalAmount += order.totalAmount;
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        leading: InkWell(
+          onTap: () => BlocProvider.of<AppBloc>(context).add(
+            NavigateToHomeScreen(store),
+          ),
+          child: Icon(Icons.adaptive.arrow_back),
+        ),
+        title: Text('Order List (0/${orderLength})'),
+        centerTitle: false,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.qr_code_2),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search),
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size(size.width, 30),
+          child: Text('Orders Total: UZS $orderTotalAmount - Unpaid: UZS 0'),
+        ),
+      ),
+      body: BlocConsumer<OrderBloc, OrderState>(
+        listener: (context, orderState) {
+          if (orderState is OrdersFromDateByStoreIDLoaded) {
+            List<OrderModel> orders = orderState.orders!;
+            // double totalAmount = 0;
+            orderLength = orders.length;
+            for (var order in orders) {
+              orderTotalAmount += order.totalAmount;
+            }
+            setState(() {});
           }
-          return Scaffold(
-            appBar: AppBar(
-              automaticallyImplyLeading: true,
-              leading: InkWell(
-                onTap: () => BlocProvider.of<AppBloc>(context).add(
-                  NavigateToHomeScreen(store),
-                ),
-                child: Icon(Icons.adaptive.arrow_back),
-              ),
-              title: Text('Order List (0/${orders.length})'),
-              centerTitle: false,
-              actions: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.qr_code_2),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.search),
-                ),
-              ],
-              bottom: PreferredSize(
-                preferredSize: Size(size.width, 30),
-                child: Text('Orders Total: UZS $totalAmount - Unpaid: UZS 0'),
-              ),
-            ),
-            body: GroupedListView<OrderModel, DateTime>(
+        },
+        builder: (context, orderState) {
+          if (orderState is OrderLoading) {
+            return const Center(
+              child: CircularProgressIndicator.adaptive(),
+            );
+          } else if (orderState is OrdersFromDateByStoreIDLoaded) {
+            List<OrderModel> orders = orderState.orders!;
+            // double totalAmount = 0;
+            // orderLength = orders.length;
+            // for (var order in orders) {
+            //   orderTotalAmount += order.totalAmount;
+            // }
+            return GroupedListView<OrderModel, DateTime>(
               controller: _scrollController,
               elements: orders,
               groupBy: (OrderModel order) => DateTime(
@@ -112,24 +123,24 @@ class _OrderListScreenState extends State<OrderListScreen> {
               useStickyGroupSeparators: true,
               floatingHeader: true,
               order: GroupedListOrder.ASC, // optional
-            ),
-          );
-        } else if (state is OrderNotFound) {
+            );
+          } else if (orderState is OrderNotFound) {
+            return Container(
+              alignment: Alignment.center,
+              child: const Text('No Record Found'),
+            );
+          } else if (orderState is OrderError) {
+            return Container(
+              alignment: Alignment.center,
+              child: const Text('No Record Found'),
+            );
+          }
           return Container(
             alignment: Alignment.center,
             child: const Text('No Record Found'),
           );
-        } else if (state is OrderError) {
-          return Container(
-            alignment: Alignment.center,
-            child: const Text('No Record Found'),
-          );
-        }
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('No Record Found'),
-        );
-      },
+        },
+      ),
     );
   }
 }

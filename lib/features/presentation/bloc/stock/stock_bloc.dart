@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/stock_model.dart';
 import 'package:uv_pos/features/domain/repositories/stock_repository.dart';
 
@@ -34,6 +35,7 @@ class StockBloc extends Bloc<StockEvent, StockState> {
       final stockModel = StockModel(
         id: stock.id,
         storeId: stock.storeId,
+        product: stock.product,
         qty: stock.qty + event.quantity,
       );
       await _stockRepository.updateStock(stockModel);
