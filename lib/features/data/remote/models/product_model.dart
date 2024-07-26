@@ -89,4 +89,24 @@ class ProductModel extends Equatable {
       storeId: storeId ?? this.storeId,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProductModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          other.name == name &&
+          other.barcode == barcode &&
+          other.description == description &&
+          other.price == price &&
+          other.cost == cost &&
+          other.quantity == quantity &&
+          other.image == image &&
+          other.storeId == storeId;
+
+  @override
+  int get hashCode {
+    return id.hashCode ^ name.hashCode ^ barcode.hashCode ^ description.hashCode ^ price.hashCode ^ cost.hashCode ^ quantity.hashCode ^ image.hashCode ^ storeId.hashCode;
+  }
 }

@@ -66,7 +66,8 @@ class OrderUpdated extends OrderState {
 class OrderDeleting extends OrderState {}
 
 class OrderDeleted extends OrderState {}
-class OrderDiscountState extends OrderState{
+
+class OrderDiscountState extends OrderState {
   final double discount;
   final bool isFlat;
 
@@ -79,13 +80,27 @@ class OrderDiscountState extends OrderState{
   // TODO: implement props
   List<Object?> get props => [discount, isFlat];
 }
-class ProductAddToOrder extends OrderState{
+
+class ProductAddToOrder extends OrderState {
   final List<ProductModel> products;
 
-  const ProductAddToOrder( this.products);
+  const ProductAddToOrder(this.products);
+
   @override
   // TODO: implement props
   List<Object?> get props => [products];
 }
 
+class UpdatedOrderProducts extends OrderState {
+  final int? qty;
+  final List<ProductModel>? products;
 
+  const UpdatedOrderProducts({this.qty, this.products});
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [
+        qty,
+        products,
+      ];
+}

@@ -1,8 +1,9 @@
+import 'dart:developer';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/domain/repositories/order_repository.dart';
 import 'package:uv_pos/features/domain/repositories/product_repository.dart';
 
@@ -30,7 +31,6 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       emit(OrderLoading());
       final orders = await _orderRepository.getOrdersForDateByStoreId(event.storeID!, event.date);
       print('orders is  ------>  $orders');
-
 
       if (orders.isNotEmpty) {
         emit(OrdersFromDateByStoreIDLoaded(orders: orders));
@@ -78,12 +78,34 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   }
 
   Future<void> _onAddProduct(AddProduct event, Emitter<OrderState> emit) async {
-    if (state is ProductAddToOrder) {
-      final state = this.state as ProductAddToOrder;
-      emit(ProductAddToOrder(List.from(state.products)..add(event.product)));
+    final currentState = state;
+    if (currentState is UpdatedOrderProducts) {
+      if (currentState.products != null || currentState.products!.isNotEmpty) {
+        final existingProductIndex = currentState.products!.indexWhere((product) => product.id  == event.product.id);
+        if (existingProductIndex != -1) {
+          final updatedProducts = List<ProductModel>.from(currentState.products!);
+          final existingProduct = updatedProducts[existingProductIndex];
+          updatedProducts[existingProductIndex] = existingProduct.copyWith(quantity: existingProduct.quantity + 1);
+          emit(UpdatedOrderProducts(products: updatedProducts));
+        }
+        else {
+          final updatedProducts = List<ProductModel>.from(currentState.products!)..add(event.product);
+          emit(UpdatedOrderProducts(products: updatedProducts));
+        }
+      } else {
+        final updatedProducts = List<ProductModel>.from(currentState.products!)..add(event.product);
+        emit(UpdatedOrderProducts(products: updatedProducts));
+      }
     } else {
-      emit(ProductAddToOrder([event.product]));
+      emit(UpdatedOrderProducts(products: [event.product]));
     }
+    // if (state is ProductAddToOrder) {
+    //   final state = this.state as ProductAddToOrder;
+    //
+    //   emit(ProductAddToOrder(List.from(state.products)..add(event.product)));
+    // } else {
+    //   emit(ProductAddToOrder([event.product]));
+    // }
   }
 
   Future<void> _onRemoveProduct(RemoveProduct event, Emitter<OrderState> emit) async {
@@ -94,26 +116,30 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   }
 
   Future<void> _onUpdateProductQuantity(UpdateOrderProductQuantity event, Emitter<OrderState> emit) async {
-    if (state is ProductAddToOrder) {
-      final state = this.state as ProductAddToOrder;
-      final updatedProducts = state.products.map(
-        (product) {
-          return product.id == event.productId
-              ? ProductModel(
-                  id: product.id,
-                  name: product.name,
-                  quantity: product.quantity + event.quantity,
-                  price: product.price,
-                  barcode: product.barcode,
-                  description: product.description,
-                  cost: product.cost,
-                  storeId: product.storeId,
-                )
-              : product;
-        },
-      ).toList();
+    log('this is a $event');
 
-      emit(ProductAddToOrder(updatedProducts));
+    try {
+      if (state is UpdatedOrderProducts) {
+        final currentState = state as UpdatedOrderProducts;
+        log('this is a $state');
+        final updatedProducts = currentState.products!.map(
+          (product) {
+            return product.id == event.product.id ? product.copyWith(quantity: event.quantity) : product;
+          },
+        ).toList();
+        for (var product in updatedProducts) {
+          log('$product');
+        }
+        log('$updatedProducts');
+        emit(UpdatedOrderProducts(products: List<ProductModel>.from(updatedProducts)));
+        log('state: $currentState');
+      } else {
+        emit(UpdatedOrderProducts(products: [event.product]));
+        log('else state: $state');
+      }
+    } catch (e) {
+      log(e.toString());
+      rethrow;
     }
   }
 

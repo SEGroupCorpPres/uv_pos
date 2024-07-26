@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
@@ -45,6 +47,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     autoStart: true,
   );
   final TextEditingController _discountController = TextEditingController();
+  final TextEditingController _productQtyController = TextEditingController(text: 1.toString());
   BlueThermalPrinter bluetoothPrinter = BlueThermalPrinter.instance;
   StreamSubscription<BarcodeCapture>? _subscription;
   ValueNotifier<bool> isFlat = ValueNotifier<bool>(true);
@@ -57,6 +60,11 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   double orderSubTotalAmount = 0;
   double orderTotalAmount = 0;
   double discount = 0;
+  NumberFormat formatAmount = NumberFormat.currency(
+    locale: 'en_US',
+    symbol: '\$',
+  );
+  FocusNode _qtyFocusNode = FocusNode();
 
   // bool isFlat = true;
   int productQty = 1;
@@ -214,6 +222,19 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _showChangeProductQtyDiaolg(BuildContext context, ProductModel product) {
+    _qtyFocusNode.requestFocus();
+    showAdaptiveDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return _changeProductQtyDiaolg(context, product);
+      },
+      useSafeArea: false,
+      traversalEdgeBehavior: TraversalEdgeBehavior.leaveFlutterView,
+    );
+  }
+
   Widget _enterDiscountDialog(BuildContext context) {
     return SimpleDialog(
       children: [
@@ -287,7 +308,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             ElevatedButton(
               onPressed: () {
                 discount = double.tryParse(_discountController.text)!;
-                context.read<OrderBloc>().add(OrderDiscountedEvent(discount: discount, isFlat: isFlat.value));
+                BlocProvider.of<OrderBloc>(context).add(OrderDiscountedEvent(discount: discount, isFlat: isFlat.value));
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -302,11 +323,165 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
+  Widget _changeProductQtyDiaolg(BuildContext context, ProductModel product) {
+    return SimpleDialog(
+      title: const Text(
+        'Change Quantity',
+        textAlign: TextAlign.center,
+      ),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: () {
+                if (int.tryParse(_productQtyController.text)! > 1) {
+                  setState(() {
+                    _productQtyController.text = (int.tryParse(_productQtyController.text)! - 1).toString();
+                  });
+                }
+              },
+              icon: const Icon(Icons.remove),
+            ),
+            Container(
+              width: 100.w,
+              padding: const EdgeInsets.all(10.0).r,
+              child: TextField(
+                focusNode: _qtyFocusNode,
+                controller: _productQtyController,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _productQtyController.text = (int.tryParse(_productQtyController.text)! + 1).toString();
+                });
+              },
+              icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 20),
+            ElevatedButton(
+              onPressed: () {
+                if (int.tryParse(_productQtyController.text)! > 1) {
+                  BlocProvider.of<OrderBloc>(context).add(
+                    UpdateOrderProductQuantity(
+                      product: product,
+                      quantity: int.tryParse(_productQtyController.text)!,
+                    ),
+                  );
+                  Navigator.pop(context);
+                } else if (int.tryParse(_productQtyController.text)! == 0) {
+                  BlocProvider.of<OrderBloc>(context).add(RemoveProduct(product.id));
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: const Text(
+                'Confirm',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _productBlocListener(BuildContext context, ProductState productState, List<ProductModel> products, AppState appState) {
+    if (productState is ProductNotFound) {
+      _showAddNewProductDialog(context, _barcode!.rawValue!);
+    }
+    if (productState is ProductSearchByBarcodeLoaded) {
+      if (productState.product.quantity != 0) {
+        if (!containsProduct(products, productState.product)) {
+          BlocProvider.of<OrderBloc>(context).add(
+            AddProduct(productState.product.copyWith(quantity: 1)),
+          );
+        } else {
+          int qty = 0;
+          for (var product in products) {
+            if (product.id == productState.product.id) {
+              qty = product.quantity;
+              break;
+            }
+          }
+          BlocProvider.of<OrderBloc>(context).add(
+            UpdateOrderProductQuantity(
+              product: productState.product,
+              quantity: qty + 1,
+            ),
+          );
+        }
+      } else {
+        _showAddNewProductDialog(
+          context,
+          productState.product.barcode,
+          productState.product,
+          true,
+          appState.store,
+        );
+      }
+    }
+  }
+
+  void _orderBlocListener(BuildContext context, OrderState orderState, List<ProductModel> products, AppState appState) {
+    if (orderState is UpdatedOrderProducts) {
+      if (orderState.products != null || orderState.products!.isNotEmpty) {
+        products = orderState.products!;
+        orderSubTotalAmount = orderState.products!.fold(0, (sum, product) => sum + product.price * product.quantity);
+        orderTotalAmount = orderSubTotalAmount;
+      }
+    }
+    if (orderState is OrderCreating) {
+      const Center(child: CircularProgressIndicator.adaptive());
+    }
+    if (orderState is OrderDiscountState) {
+      orderTotalAmount = orderState.isFlat ? orderSubTotalAmount - orderState.discount : (1 - orderState.discount / 100) * orderSubTotalAmount;
+    }
+    if (orderState is OrderCreated) {
+      showAdaptiveDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog.adaptive(
+            title: const Text('Paying successfully', style: TextStyle(color: Colors.black, fontSize: 20)),
+            icon: const Icon(Icons.check_circle_outline),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Ok'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   void deactivate() {
     // TODO: implement deactivate
     scannerController.stop();
     super.deactivate();
+  }
+
+  bool containsProduct(List<ProductModel> products, ProductModel product) {
+    return products.contains(product);
   }
 
   @override
@@ -392,141 +567,97 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                         : const SizedBox(),
                     const SizedBox(height: 5),
                     BlocListener<ProductBloc, ProductState>(
+                      // listenWhen: (prev, current) => prev == current,
                       listener: (context, productState) {
-                        if (productState is ProductNotFound) {
-                          _showAddNewProductDialog(
-                            context,
-                            _barcode!.rawValue!,
-                          );
-                        }
-                        if (productState is ProductSearchByBarcodeLoaded) {
-                          if (productState.product.quantity == 0) {
-                            _showAddNewProductDialog(
-                              context,
-                              productState.product.barcode,
-                              productState.product,
-                              true,
-                              appState.store,
-                            );
-                          }
-                          BlocProvider.of<OrderBloc>(context).add(AddProduct(productState.product.copyWith(quantity: 1)));
-                        }
+                        _productBlocListener(context, productState, products, appState);
                       },
-                      child: BlocListener<OrderBloc, OrderState>(
-                        listener: (context, orderState) {
-                          if (orderState is ProductAddToOrder) {
-                            products = orderState.products;
-                            orderSubTotalAmount = orderState.products.fold(0, (sum, product) => sum + product.price * product.quantity);
-                            orderTotalAmount = orderSubTotalAmount;
+
+                      child: BlocConsumer<OrderBloc, OrderState>(listener: (context, orderState) {
+                        _orderBlocListener(context, orderState, products, appState);
+                      }, builder: (context, orderState) {
+                        if (orderState is UpdatedOrderProducts || orderState is OrderDiscountState) {
+                          if (orderState is UpdatedOrderProducts) {
+                            List<ProductModel> products = orderState.products ?? [];
+                            log('this is $orderState builder and producs: $products');
                           }
-                          if (orderState is OrderCreating) {
-                            const Center(
-                              child: CircularProgressIndicator.adaptive(),
-                            );
-                          }
-                          if (orderState is OrderDiscountState) {
-                            orderTotalAmount = orderState.isFlat ? orderSubTotalAmount - orderState.discount : (1 - orderState.discount / 100) * orderSubTotalAmount;
-                          }
-                          if (orderState is OrderCreated) {
-                            showAdaptiveDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog.adaptive(
-                                  title: const Text(
-                                    'Paying successfully',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                  icon: const Icon(Icons.check_circle_outline),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text(
-                                        'Ok',
-                                      ),
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey,
+                                      offset: Offset(0, 0),
+                                      spreadRadius: 1,
+                                      blurRadius: 2,
+                                      blurStyle: BlurStyle.inner,
                                     ),
                                   ],
-                                );
-                              },
-                            );
-                          }
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey,
-                                    offset: Offset(0, 0),
-                                    spreadRadius: 1,
-                                    blurRadius: 2,
-                                    blurStyle: BlurStyle.inner,
-                                  ),
-                                ],
-                              ),
-                              height: isScannerRunning ? size.height * .34 : size.height * .64,
-                              child: ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount: products.length,
-                                itemBuilder: (context, item) {
-                                  ProductModel product = products[item];
-                                  return CupertinoListTile(
-                                    title: Text(product.name),
-                                    subtitle: Text('${product.quantity} * ${product.price}'),
-                                    trailing: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text('UZS ${product.quantity * product.price}'),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              onPressed: () {
-                                                if (product.quantity > 1) {
-                                                  context.read<OrderBloc>().add(
-                                                        UpdateOrderProductQuantity(
-                                                          productId: product.id,
-                                                          quantity: -1,
-                                                        ),
-                                                      );
-                                                } else if (product.quantity == 0) {
-                                                  context.read<OrderBloc>().add(RemoveProduct(product.id));
-                                                }
-                                              },
-                                              icon: const Icon(Icons.remove),
-                                            ),
-                                            Text(product.quantity.toString()),
-                                            IconButton(
-                                              onPressed: () {
-                                                context.read<OrderBloc>().add(
-                                                      UpdateOrderProductQuantity(
-                                                        productId: product.id,
-                                                        quantity: 1,
-                                                      ),
-                                                    );
-                                              },
-                                              icon: const Icon(Icons.add),
-                                            ),
-                                          ],
+                                ),
+                                height: isScannerRunning ? size.height * .34 : size.height * .64,
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  itemCount: products.length,
+                                  itemBuilder: (context, item) {
+                                    ProductModel product = products[item];
+                                    return CupertinoListTile(
+                                      onTap: () {
+                                        _showChangeProductQtyDiaolg(context, product);
+                                      },
+                                      leadingSize: 40.r,
+                                      leading: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10),
+                                          color: Colors.grey,
+                                          image: DecorationImage(
+                                            image: product.image != null ? NetworkImage(product.image!) : const AssetImage(Assets.imagesImageBg),
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                  );
-                                },
+                                      ),
+                                      title: Text(
+                                        product.name,
+                                        softWrap: true,
+                                      ),
+                                      subtitle: Text(
+                                        '${product.quantity} x ${formatAmount.format(product.price.toInt())}',
+                                        style: TextStyle(fontSize: 14.sp),
+                                      ),
+                                      trailing: SizedBox(
+                                        height: 32.sp,
+                                        child: Text(
+                                          formatAmount.format((product.quantity * product.price)),
+                                          style: TextStyle(fontSize: 15.sp),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
+                            ],
+                          );
+                        } else {
+                          return Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey,
+                                  offset: Offset(0, 0),
+                                  spreadRadius: 1,
+                                  blurRadius: 2,
+                                  blurStyle: BlurStyle.inner,
+                                ),
+                              ],
                             ),
-                            buildSaleButtons(size, context, appState),
-                          ],
-                        ),
-                      ),
+                            height: isScannerRunning ? size.height * .34 : size.height * .64,
+                          );
+                        }
+                      }),
                     ),
+                    buildSaleButtons(size, context, appState),
                   ],
                 ),
               ),
@@ -577,7 +708,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   SaleButton(
                     title: 'Clear',
                     onPressed: () {
-                      context.read<OrderBloc>().add(ClearProductList());
+                      BlocProvider.of<OrderBloc>(context).add(ClearProductList());
                     },
                     bgColor: Colors.red,
                   ),
@@ -693,15 +824,15 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 late StockModel stock;
                 for (var product in products) {
                   stock = StockModel(id: product.id, storeId: store.id, qty: product.quantity, product: product);
-                  context.read<ProductBloc>().add(UpdateProductQuantity(product: product, store: store, quantity: product.quantity));
-                  context.read<StockBloc>().add(AddUpdateStockProduct(product.id, product.quantity, product, stock: stock));
+                  BlocProvider.of<ProductBloc>(context).add(UpdateProductQuantity(product: product, store: store, quantity: product.quantity));
+                  BlocProvider.of<StockBloc>(context).add(AddUpdateStockProduct(product.id, product.quantity, product, stock: stock));
                 }
                 Navigator.pop(context);
 
-                context.read<OrderBloc>().add(
-                      CreateOrderEvent(order, store.id),
-                    );
-                context.read<OrderBloc>().add(ClearProductList());
+                BlocProvider.of<OrderBloc>(context).add(
+                  CreateOrderEvent(order, store.id),
+                );
+                BlocProvider.of<OrderBloc>(context).add(ClearProductList());
               },
               child: const Text('Confirm'),
             ),

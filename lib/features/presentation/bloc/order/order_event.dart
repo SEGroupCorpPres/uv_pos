@@ -78,16 +78,16 @@ class RemoveProduct extends OrderEvent {
 }
 
 class UpdateOrderProductQuantity extends OrderEvent {
-  final String productId;
+  final ProductModel product;
   final int quantity;
 
   const UpdateOrderProductQuantity({
-    required this.productId,
+    required this.product,
     required this.quantity,
   });
 
   @override
-  List<Object?> get props => [productId, quantity];
+  List<Object?> get props => [product, quantity];
 }
 
 class OrderDiscountedEvent extends OrderEvent {
