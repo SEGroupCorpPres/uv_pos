@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -31,6 +33,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
   late StoreModel? store;
   final List<ProductModel> _searchList = [];
   bool _isSearching = false;
+  NumberFormat formatAmount = NumberFormat.currency(
+    locale: 'en_US',
+    symbol: '\$',
+  );
 
   @override
   void initState() {
@@ -118,67 +124,120 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         final double price = productList[item].price;
                         final int qty = productList[item].quantity;
                         final String? image = productList[item].image;
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            image != null
-                                ? Container(
-                                    width: 120.r,
-                                    height: 120.r,
-                                    decoration: BoxDecoration(
-                                      color: Colors.yellowAccent,
-                                      borderRadius: BorderRadius.circular(20),
-                                      image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
-                                    ),
-                                    margin: const EdgeInsets.only(bottom: 10).h,
-                                  )
-                                : Container(
-                                    width: 120.r,
-                                    height: 120.r,
-                                    decoration: BoxDecoration(
-                                      color: Colors.yellowAccent,
-                                      borderRadius: BorderRadius.circular(20).r,
-                                    ),
-                                    margin: const EdgeInsets.only(bottom: 10).h,
-                                    alignment: Alignment.center,
-                                    child: const Text('No image'),
+                        return Slidable(
+                          // Specify a key if the Slidable is dismissible.
+                          key: const ValueKey(0),
+
+                          // The start action pane is the one at the left or the top side.
+                          startActionPane: ActionPane(
+                            // A motion is a widget used to control how the pane animates.
+                            motion: const ScrollMotion(),
+
+                            // A pane can dismiss the Slidable.
+                            dismissible: DismissiblePane(onDismissed: () {}),
+
+                            // All actions are defined in the children parameter.
+                            children: [
+                              // A SlidableAction can have an icon and/or a label.
+                              SlidableAction(
+                                onPressed: (context) => BlocProvider.of<AppBloc>(context).add(
+                                  NavigateToCreateProductScreen(
+                                    productList[item],
+                                    productList[item].barcode,
+                                    true,
+                                    store,
                                   ),
-                            SizedBox(width: 15.w),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: size.width * .5,
-                                  child: Text(
-                                    'Nomi: $name',
+                                ),
+                                backgroundColor: Colors.orangeAccent,
+                                foregroundColor: Colors.white,
+                                icon: Icons.edit,
+                                label: 'Edit',
+                              ),
+                            ],
+                          ),
+
+                          // The end action pane is the one at the right or the bottom side.
+                          endActionPane: ActionPane(
+                            motion: const ScrollMotion(),
+                            children: [
+                              SlidableAction(
+                                // An action can be bigger than the others.
+                                flex: 2,
+                                onPressed: (context) => BlocProvider.of<ProductBloc>(context).add(
+                                  DeleteProductEvent(productList[item].id, store!),
+                                ),
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                icon: Icons.delete,
+                                label: 'Delete',
+                              ),
+                            ],
+                          ),
+
+                          // The child of the Slidable is what the user sees when the
+                          // component is not dragged.
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              image != null
+                                  ? Container(
+                                      width: 120.r,
+                                      height: 120.r,
+                                      decoration: BoxDecoration(
+                                        color: Colors.yellowAccent,
+                                        borderRadius: BorderRadius.circular(20),
+                                        image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
+                                      ),
+                                      margin: const EdgeInsets.only(bottom: 10).h,
+                                    )
+                                  : Container(
+                                      width: 120.r,
+                                      height: 120.r,
+                                      decoration: BoxDecoration(
+                                        color: Colors.yellowAccent,
+                                        borderRadius: BorderRadius.circular(20).r,
+                                      ),
+                                      margin: const EdgeInsets.only(bottom: 10).h,
+                                      alignment: Alignment.center,
+                                      child: const Text('No image'),
+                                    ),
+                              SizedBox(width: 15.w),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    width: size.width * .5,
+                                    child: Text(
+                                      'Nomi: $name',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 18.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      softWrap: true,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Price: ${formatAmount.format(price)}',
                                     style: TextStyle(
                                       color: Colors.black,
-                                      fontSize: 18.sp,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    softWrap: true,
                                   ),
-                                ),
-                                Text(
-                                  'Price: ${price.ceil()} UZS',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 15.sp,
-                                    fontWeight: FontWeight.w500,
+                                  Text(
+                                    'Quantity: $qty dona',
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  'Quantity: $qty dona',
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         );
                       },
                     );
@@ -206,7 +265,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               onPressed: () => BlocProvider.of<AppBloc>(context).add(
                 NavigateToCreateProductScreen(
                   null,
-                  null,
+                  '',
                   false,
                   store,
                 ),

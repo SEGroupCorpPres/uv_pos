@@ -69,7 +69,7 @@ class OrderRepository {
   }
 
   Future<List<OrderModel>> getOrdersForDate(String date) async {
-    final querySnapshot = await ordersReference.doc(date).collection('dailyOrders').get();
+    final querySnapshot = await ordersReference.doc(date).collection('daily_orders').get();
 
     return querySnapshot.docs.map((doc) => OrderModel.fromMap(doc as Map<String, dynamic>)).toList();
   }

@@ -10,18 +10,19 @@ class SaleProductPrice extends StatelessWidget {
     this.discountingPrice,
     this.textAlign = TextAlign.end,
     this.fontSize = 15,
+    this.fontColor =  Colors.black,
   });
 
   final String title;
   final String? price;
   final double? procedure;
-  final double? discountingPrice;
+  final String? discountingPrice;
   final TextAlign? textAlign;
   final double? fontSize;
+  final Color? fontColor;
 
   @override
   Widget build(BuildContext context) {
-    print('order price is $price');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5).r,
       child: Row(
@@ -30,7 +31,7 @@ class SaleProductPrice extends StatelessWidget {
             fit: FlexFit.tight,
             child: Text(
               title,
-              style: TextStyle(color: Colors.black, fontSize: fontSize!.sp, fontWeight: FontWeight.w600),
+              style: TextStyle(color: fontColor, fontSize: fontSize!.sp, fontWeight: FontWeight.w600),
               textAlign: textAlign,
             ),
           ),
@@ -39,14 +40,14 @@ class SaleProductPrice extends StatelessWidget {
                   fit: FlexFit.tight,
                   child: Text(
                     price!,
-                    style: TextStyle(color: Colors.black, fontSize: fontSize!.sp, fontWeight: FontWeight.w600),
+                    style: TextStyle(color:fontColor, fontSize: fontSize!.sp, fontWeight: FontWeight.w600),
                     textAlign: TextAlign.right,
                   ),
                 )
               : Flexible(
                   fit: FlexFit.tight,
                   child: Text(
-                    '$procedure%(UZS $discountingPrice)',
+                    '$procedure%($discountingPrice)',
                     style: TextStyle(color: Colors.black, fontSize: fontSize!.sp, fontWeight: FontWeight.w600),
                     textAlign: TextAlign.right,
                   ),

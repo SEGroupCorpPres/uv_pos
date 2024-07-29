@@ -22,7 +22,6 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   Bloc.observer = AppBlocObserver();
-
   final AuthenticationRepository authenticationRepository = AuthenticationRepository();
   final StoreRepository storeRepository = StoreRepository();
   final ProductRepository productRepository = ProductRepository();
@@ -32,7 +31,7 @@ Future<void> main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => AppBloc(userRepository: authenticationRepository)..add(AuthStarted() ),
+          create: (context) => AppBloc(userRepository: authenticationRepository)..add(AuthStarted()),
         ),
         BlocProvider(create: (context) => StoreBloc(storeRepository)),
         BlocProvider(create: (context) => ProductBloc(productRepository)),

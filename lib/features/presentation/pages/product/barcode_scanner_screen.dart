@@ -25,6 +25,7 @@ class BarcodeScannerScreen extends StatefulWidget {
 class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   late MobileScannerController scannerController;
 
+
   @override
   void initState() {
     // TODO: implement initState

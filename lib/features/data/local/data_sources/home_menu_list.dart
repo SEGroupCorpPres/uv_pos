@@ -11,18 +11,17 @@ List<Widget> menuList(BuildContext context, StoreModel store) => [
       HomeMenuItem(
         title: 'Sale',
         icon: Icons.shopping_bag,
-        onTap: () => context.read<AppBloc>().add(
-              NavigateToSaleScreen(store),
-            ),
+        onTap: () {
+          context.read<AppBloc>().add(NavigateToSaleScreen(store));
+          context.read<ProductBloc>().add(LoadProductsEvent(store));
+        },
       ),
       HomeMenuItem(
         title: 'Order List',
         icon: Icons.local_grocery_store,
         onTap: () {
           DateTime orderCreatedTime = DateTime.now();
-          context.read<AppBloc>().add(
-                NavigateToOrderListScreen(store),
-              );
+          context.read<AppBloc>().add(NavigateToOrderListScreen(store));
           context.read<OrderBloc>().add(
                 LoadOrdersEvent(
                   store.id,
@@ -35,9 +34,7 @@ List<Widget> menuList(BuildContext context, StoreModel store) => [
         title: 'Product List',
         icon: Icons.list,
         onTap: () {
-          context.read<AppBloc>().add(
-                NavigateToProductListScreen(store),
-              );
+          context.read<AppBloc>().add(NavigateToProductListScreen(store));
           context.read<ProductBloc>().add(LoadProductsEvent(store));
         },
       ),
@@ -51,22 +48,16 @@ List<Widget> menuList(BuildContext context, StoreModel store) => [
       HomeMenuItem(
         title: 'Settings',
         icon: Icons.settings,
-        onTap: () => context.read<AppBloc>().add(
-              NavigateToSettingsScreen(),
-            ),
+        onTap: () => context.read<AppBloc>().add(NavigateToSettingsScreen()),
       ),
       HomeMenuItem(
         title: 'Printers',
         icon: Icons.print,
-        onTap: () => context.read<AppBloc>().add(
-              NavigateToPrintersScreen(),
-            ),
+        onTap: () => context.read<AppBloc>().add(NavigateToPrintersScreen()),
       ),
       HomeMenuItem(
         title: 'Report',
         icon: Icons.show_chart,
-        onTap: () => context.read<AppBloc>().add(
-              NavigateToReportsScreen(),
-            ),
+        onTap: () => context.read<AppBloc>().add(NavigateToReportsScreen()),
       ),
     ];

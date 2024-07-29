@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:uv_pos/app/presentation/pages/auth_flow.dart';
 
@@ -31,4 +32,5 @@ class _AppState extends State<App> {
       child: const AuthFlow(),
     );
   }
+
 }

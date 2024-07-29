@@ -68,10 +68,12 @@ class OrderDeleting extends OrderState {}
 class OrderDeleted extends OrderState {}
 
 class OrderDiscountState extends OrderState {
+  final List<ProductModel>? products;
   final double discount;
   final bool isFlat;
 
   const OrderDiscountState({
+    this.products,
     required this.discount,
     required this.isFlat,
   });

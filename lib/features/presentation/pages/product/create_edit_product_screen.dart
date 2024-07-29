@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,13 +20,14 @@ import 'package:uv_pos/generated/assets.dart';
 class CreateProductScreen extends StatefulWidget {
   const CreateProductScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: CreateProductScreen(),
-        )
-      : const MaterialPage(
-          child: CreateProductScreen(),
-        );
+  static Page page() =>
+      Platform.isIOS
+          ? const CupertinoPage(
+        child: CreateProductScreen(),
+      )
+          : const MaterialPage(
+        child: CreateProductScreen(),
+      );
 
   @override
   State<CreateProductScreen> createState() => _CreateProductScreenState();
@@ -104,12 +106,12 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   @override
   void dispose() {
     // TODO: implement dispose
-    _productNameController.dispose();
-    _productBarcodeController.dispose();
-    _productDescriptionController.dispose();
-    _productPriceController.dispose();
-    _productCostController.dispose();
-    _productQtyController.dispose();
+    // _productNameController.dispose();
+    // _productBarcodeController.dispose();
+    // _productDescriptionController.dispose();
+    // _productPriceController.dispose();
+    // _productCostController.dispose();
+    // _productQtyController.dispose();
     super.dispose();
   }
 
@@ -128,8 +130,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             product = appState.product;
             _productBarcodeController.text = product?.barcode ?? '';
           }
-        } else if (appState.barcode != null) {
-          _productBarcodeController.text = appState.barcode!;
+        } else {
+          log('product barcode is: ${appState.barcode}');
+          _productBarcodeController.text = appState.barcode ?? '';
         }
         _productNameController.text = product?.name ?? '';
         _productDescriptionController.text = product?.description ?? '';
@@ -140,9 +143,12 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           appBar: AppBar(
             automaticallyImplyLeading: true,
             leading: InkWell(
-              onTap: () => BlocProvider.of<AppBloc>(context).add(
-                NavigateToProductListScreen(store),
-              ),
+              onTap: () {
+                BlocProvider.of<AppBloc>(context).add(
+                  NavigateToProductListScreen(store),
+                );
+                BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(store));
+              },
               child: Icon(Icons.adaptive.arrow_back),
             ),
             title: Text(!appState.isEdit ? 'Create Product' : 'Edit Product'),
@@ -151,9 +157,16 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
               TextButton.icon(
                 onPressed: () {
                   if (_formKey.currentState?.validate() ?? false) {
-                    final createdDate = Timestamp.now();
+                    String id = '';
+                    if (!appState.isEdit) {
+                      final createdDate = Timestamp.now();
+
+                      id = createdDate.microsecondsSinceEpoch.toString();
+                    } else {
+                      id = appState.product!.id;
+                    }
                     final product = ProductModel(
-                      id: createdDate.microsecondsSinceEpoch.toString(),
+                      id: id,
                       name: _productNameController.text,
                       barcode: _productBarcodeController.text,
                       description: _productDescriptionController.text,
@@ -177,9 +190,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           resizeToAvoidBottomInset: true,
           body: BlocConsumer<ProductBloc, ProductState>(
             listener: (context, state) {
-              if (state is ProductCreated) {
+              if (state is ProductCreated || state is ProductUpdated) {
                 // Navigate back or show a success message when the product is created
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product created successfully')));
+                ScaffoldMessenger.of(context).showSnackBar( SnackBar(content: Text(!appState.isEdit ? 'Product created successfully' : 'Product updated successfully')));
                 BlocProvider.of<AppBloc>(context).add(
                   NavigateToProductListScreen(store),
                 );
@@ -188,7 +201,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
               }
             },
             builder: (context, state) {
-              if (state is ProductCreating) {
+              if (state is ProductCreating || state is ProductUpdating) {
                 return const Center(child: CircularProgressIndicator.adaptive());
               }
               return SingleChildScrollView(
@@ -201,32 +214,43 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                         children: [
                           !appState.isEdit
                               ? Center(
-                                  child: Container(
-                                    width: 150.r,
-                                    height: 150.r,
-                                    margin: EdgeInsets.symmetric(vertical: 30.r),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10.r),
-                                      child: _image == null
-                                          ? Image.asset(Assets.imagesImageBg)
-                                          : Image.file(
-                                              _image!,
-                                              fit: BoxFit.cover,
-                                              width: 100.r,
-                                            ),
-                                    ),
-                                  ),
-                                )
-                              : Container(
-                                  width: 150.r,
-                                  height: 150.r,
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                      image: NetworkImage(product!.image!),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
+                            child: Container(
+                              width: 150.r,
+                              height: 150.r,
+                              margin: EdgeInsets.symmetric(vertical: 30.r),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10.r),
+                                child: _image == null
+                                    ? Image.asset(Assets.imagesImageBg)
+                                    : Image.file(
+                                  _image!,
+                                  fit: BoxFit.cover,
+                                  width: 100.r,
                                 ),
+                              ),
+                            ),
+                          )
+                              : product!.image != null
+                              ? Container(
+                            width: 150.r,
+                            height: 150.r,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10.r),
+                              image: DecorationImage(
+                                image: NetworkImage(product!.image!),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          )
+                              : Container(
+                            width: 150.r,
+                            height: 150.r,
+                            margin: EdgeInsets.symmetric(vertical: 30.r),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10.r),
+                              child: Image.asset(Assets.imagesImageBg),
+                            ),
+                          ),
                           SizedBox(height: 20.h),
                           SizedBox(
                             width: size.width,
@@ -272,9 +296,10 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                                     hintText: 'Product Barcode',
                                     textEditingController: _productBarcodeController,
                                     icon: Icons.qr_code_2,
-                                    onTap: () => BlocProvider.of<AppBloc>(context).add(
-                                      NavigateToBarcodeScannerScreen(),
-                                    ),
+                                    onTap: () =>
+                                        BlocProvider.of<AppBloc>(context).add(
+                                          NavigateToBarcodeScannerScreen(),
+                                        ),
                                   ),
                                 ),
                                 const Flexible(

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -32,6 +33,10 @@ class _OrderListScreenState extends State<OrderListScreen> {
   final ScrollController _scrollController = ScrollController();
   double orderTotalAmount = 0;
   int orderLength = 0;
+  NumberFormat formatAmount = NumberFormat.currency(
+    locale: 'en_US',
+    symbol: '\$',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +52,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
           ),
           child: Icon(Icons.adaptive.arrow_back),
         ),
-        title: Text('Order List (0/${orderLength})'),
+        title: Text('Order List ($orderLength/$orderLength)'),
         centerTitle: false,
         actions: [
           IconButton(
@@ -61,7 +66,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
         ],
         bottom: PreferredSize(
           preferredSize: Size(size.width, 30),
-          child: Text('Orders Total: UZS $orderTotalAmount - Unpaid: UZS 0'),
+          child: Text('Orders Total: ${formatAmount.format(orderTotalAmount)} - Unpaid: ${formatAmount.format(0)}'),
         ),
       ),
       body: BlocConsumer<OrderBloc, OrderState>(
@@ -83,11 +88,41 @@ class _OrderListScreenState extends State<OrderListScreen> {
             );
           } else if (orderState is OrdersFromDateByStoreIDLoaded) {
             List<OrderModel> orders = orderState.orders!;
-            // double totalAmount = 0;
-            // orderLength = orders.length;
-            // for (var order in orders) {
-            //   orderTotalAmount += order.totalAmount;
-            // }
+            orders = orders.reversed.toList();
+            // return ListView.builder(
+            //   itemCount: orders.length,
+            //   itemBuilder: (context, int item) {
+            //     OrderModel order = orders[item];
+            //     DateTime date = orders[item].orderDate;
+            //     String formattedTime = DateFormat(
+            //       'HH:mm',
+            //     ).format(date);
+            //     String formattedDate = DateFormat(
+            //       'd/MM/yyyy, HH:mm:ss',
+            //     ).format(date);
+            //     return CupertinoListTile(
+            //       onTap: (){},
+            //       title: Row(
+            //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //         children: [
+            //           Text(
+            //             formatAmount.format(order.totalAmount),
+            //             style: TextStyle(color: Colors.black, fontSize: 18.sp),
+            //           ),
+            //           Text(
+            //             formatAmount.format(order.totalAmount),
+            //             style: TextStyle(color: Colors.blueAccent.withGreen(200), fontSize: 18.sp),
+            //           ),
+            //         ],
+            //       ),
+            //       subtitle: Text(
+            //         formattedDate,
+            //         style: TextStyle(color: Colors.black, fontSize: 13.sp),
+            //       ),
+            //     );
+            //   },
+            //
+            // );
             return GroupedListView<OrderModel, DateTime>(
               controller: _scrollController,
               elements: orders,
@@ -105,24 +140,51 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   date: formattedDate,
                 );
               },
-              itemComparator: (order1, order2) => order2.compareTo(order1),
+              itemComparator: (order1, order2) => order1.compareTo(order2),
               itemBuilder: (context, OrderModel order) {
                 DateTime date = order.orderDate;
                 String formattedTime = DateFormat(
                   'HH:mm',
                 ).format(date);
                 String formattedDate = DateFormat(
-                  'd MMMM yyyy, HH:mm',
+                  'd/MM/yyyy, HH:mm',
                 ).format(date);
                 return CupertinoListTile(
-                  title: Text('ID: ${order.id}'),
-                  subtitle: Text('Time: $formattedTime'),
-                  trailing: Text('Price: UZS ${order.totalAmount}'),
+                  onTap: () {
+                    showBottomSheet(
+                      context: context,
+                      builder: (context) {
+                        return BottomSheet(
+                          onClosing: () {},
+                          builder: (context) {
+                            return Container();
+                          },
+                        );
+                      },
+                    );
+                  },
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        formatAmount.format(order.totalAmount),
+                        style: TextStyle(color: Colors.black, fontSize: 18.sp),
+                      ),
+                      Text(
+                        formatAmount.format(order.totalAmount),
+                        style: TextStyle(color: Colors.blueAccent.withGreen(200), fontSize: 18.sp),
+                      ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    formattedDate,
+                    style: TextStyle(color: Colors.black, fontSize: 13.sp),
+                  ),
                 );
               },
               useStickyGroupSeparators: true,
               floatingHeader: true,
-              order: GroupedListOrder.ASC, // optional
+              order: GroupedListOrder.DESC, // optional
             );
           } else if (orderState is OrderNotFound) {
             return Container(

@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
@@ -105,15 +106,18 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   }
 
   Future<void> updateProduct(UpdateProductEvent event, Emitter<ProductState> emit) async {
-    late ProductModel? productModel;
-
+    ProductModel? productModel;
+    log(event.toString());
     try {
       emit(ProductUpdating());
       if (event.imageFile != null) {
         final imageUrl = await ImageHelper().uploadImageToStorage(event.imageFile!, 'products/${event.product.id}.jpg');
         productModel = event.product.copyWith(image: imageUrl);
+      } else {
+        productModel = event.product;
       }
-      await _productRepository.updateProduct(productModel!);
+      log(productModel.toString());
+      await _productRepository.updateProduct(productModel);
       final updatedProduct = await _productRepository.getProductById(productModel.id);
       final products = await _productRepository.getProductsByStoreId(event.store);
 

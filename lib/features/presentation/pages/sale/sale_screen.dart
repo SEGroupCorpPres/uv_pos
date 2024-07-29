@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,9 +15,11 @@ import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/stock_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
+import 'package:uv_pos/features/data/remote/models/user_model.dart';
 import 'package:uv_pos/features/presentation/bloc/order/order_bloc.dart';
 import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
 import 'package:uv_pos/features/presentation/bloc/stock/stock_bloc.dart';
+import 'package:uv_pos/features/presentation/pages/sale/receipt_detail.dart';
 import 'package:uv_pos/features/presentation/widgets/sale_button.dart';
 import 'package:uv_pos/features/presentation/widgets/sale_product_price.dart';
 import 'package:uv_pos/features/presentation/widgets/scanner_error.dart';
@@ -48,13 +49,20 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   );
   final TextEditingController _discountController = TextEditingController();
   final TextEditingController _productQtyController = TextEditingController(text: 1.toString());
-  BlueThermalPrinter bluetoothPrinter = BlueThermalPrinter.instance;
+  final TextEditingController _customerController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _searchScrollController = ScrollController();
+
+  // BlueThermalPrinter bluetoothPrinter = BlueThermalPrinter.instance;
   StreamSubscription<BarcodeCapture>? _subscription;
   ValueNotifier<bool> isFlat = ValueNotifier<bool>(true);
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool isProcessing = false;
   bool isScannerRunning = true;
   bool isSearch = false;
+  List<ProductModel> _searchList = [];
+  List<ProductModel> _productList = [];
+  bool _isSearching = false;
   Barcode? _barcode;
   double productAmount = 0;
   double orderSubTotalAmount = 0;
@@ -64,7 +72,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     locale: 'en_US',
     symbol: '\$',
   );
-  FocusNode _qtyFocusNode = FocusNode();
+  final FocusNode _qtyFocusNode = FocusNode();
 
   // bool isFlat = true;
   int productQty = 1;
@@ -115,6 +123,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     if (isScannerRunning) {
       try {
         await scannerController.stop();
+        log('scanner is ${scannerController.value.isRunning}');
         setState(() {
           isScannerRunning = false;
         });
@@ -157,37 +166,37 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     }
   }
 
-  void initBluetooth() async {
-    bool? isConnected = await bluetoothPrinter.isConnected;
-    if (!isConnected!) {
-      List<BluetoothDevice> devices = await bluetoothPrinter.getBondedDevices();
-      if (devices.isNotEmpty) {
-        BluetoothDevice targetDevice = devices.first;
-        await bluetoothPrinter.connect(targetDevice);
-      }
-    }
-  }
-
-  Future<void> printOrder() async {
-    if (await bluetoothPrinter.isConnected ?? false) {
-      bluetoothPrinter.printNewLine();
-      bluetoothPrinter.printCustom("Order Details", 2, 1);
-      bluetoothPrinter.printNewLine();
-      // for (String product in order) {
-      //   bluetoothPrinter.printCustom(product, 1, 1);
-      //   bluetoothPrinter.printNewLine();
-      // }
-      // bluetoothPrinter.printCustom("Total items: ${order.length}", 1, 1);
-      bluetoothPrinter.printNewLine();
-      bluetoothPrinter.printCustom("Thank you!", 1, 1);
-      bluetoothPrinter.printNewLine();
-      bluetoothPrinter.paperCut();
-    } else {
-      if (kDebugMode) {
-        print("Bluetooth printer not connected");
-      }
-    }
-  }
+  // void initBluetooth() async {
+  //   bool? isConnected = await bluetoothPrinter.isConnected;
+  //   if (!isConnected!) {
+  //     List<BluetoothDevice> devices = await bluetoothPrinter.getBondedDevices();
+  //     if (devices.isNotEmpty) {
+  //       BluetoothDevice targetDevice = devices.first;
+  //       await bluetoothPrinter.connect(targetDevice);
+  //     }
+  //   }
+  // }
+  //
+  // Future<void> printOrder() async {
+  //   if (await bluetoothPrinter.isConnected ?? false) {
+  //     bluetoothPrinter.printNewLine();
+  //     bluetoothPrinter.printCustom("Order Details", 2, 1);
+  //     bluetoothPrinter.printNewLine();
+  //     // for (String product in order) {
+  //     //   bluetoothPrinter.printCustom(product, 1, 1);
+  //     //   bluetoothPrinter.printNewLine();
+  //     // }
+  //     // bluetoothPrinter.printCustom("Total items: ${order.length}", 1, 1);
+  //     bluetoothPrinter.printNewLine();
+  //     bluetoothPrinter.printCustom("Thank you!", 1, 1);
+  //     bluetoothPrinter.printNewLine();
+  //     bluetoothPrinter.paperCut();
+  //   } else {
+  //     if (kDebugMode) {
+  //       print("Bluetooth printer not connected");
+  //     }
+  //   }
+  // }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -324,6 +333,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   }
 
   Widget _changeProductQtyDiaolg(BuildContext context, ProductModel product) {
+    _productQtyController.text = product.quantity.toString();
     return SimpleDialog(
       title: const Text(
         'Change Quantity',
@@ -333,15 +343,27 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            IconButton(
-              onPressed: () {
-                if (int.tryParse(_productQtyController.text)! > 1) {
-                  setState(() {
-                    _productQtyController.text = (int.tryParse(_productQtyController.text)! - 1).toString();
-                  });
+            BlocBuilder<ProductBloc, ProductState>(
+              builder: (context, prodState) {
+                if (prodState is ProductByIdLoaded) {
+                  if (prodState.product.quantity > 0) {
+                    return IconButton(
+                      onPressed: () {
+                        if (int.tryParse(_productQtyController.text)! >= 1) {
+                          setState(() {
+                            _productQtyController.text = (int.tryParse(_productQtyController.text)! - 1).toString();
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.remove),
+                    );
+                  } else {
+                    return Container();
+                  }
+                } else {
+                  return Container();
                 }
               },
-              icon: const Icon(Icons.remove),
             ),
             Container(
               width: 100.w,
@@ -355,13 +377,28 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  _productQtyController.text = (int.tryParse(_productQtyController.text)! + 1).toString();
-                });
+            BlocBuilder<ProductBloc, ProductState>(
+              builder: (context, productState) {
+                log('change qty dialog: prodState: $productState');
+                if (productState is ProductByIdLoaded) {
+                  log('prodState prod: $productState');
+                  log('product: $product');
+                  if (productState.product.quantity > product.quantity) {
+                    return IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _productQtyController.text = (int.tryParse(_productQtyController.text)! + 1).toString();
+                        });
+                      },
+                      icon: const Icon(Icons.add),
+                    );
+                  } else {
+                    return Container();
+                  }
+                } else {
+                  return Container();
+                }
               },
-              icon: const Icon(Icons.add),
             ),
           ],
         ),
@@ -386,10 +423,10 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                       quantity: int.tryParse(_productQtyController.text)!,
                     ),
                   );
-                  Navigator.pop(context);
                 } else if (int.tryParse(_productQtyController.text)! == 0) {
                   BlocProvider.of<OrderBloc>(context).add(RemoveProduct(product.id));
                 }
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               child: const Text(
@@ -405,10 +442,19 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
 
   void _productBlocListener(BuildContext context, ProductState productState, List<ProductModel> products, AppState appState) {
     if (productState is ProductNotFound) {
-      _showAddNewProductDialog(context, _barcode!.rawValue!);
+      _showAddNewProductDialog(
+        context,
+        _barcode!.rawValue!,
+        null,
+        false,
+        appState.store,
+      );
+    }
+    if (productState is ProductsByStoreIdLoaded) {
+      _productList = productState.products ?? [];
     }
     if (productState is ProductSearchByBarcodeLoaded) {
-      if (productState.product.quantity != 0) {
+      if (productState.product.quantity > 0) {
         if (!containsProduct(products, productState.product)) {
           BlocProvider.of<OrderBloc>(context).add(
             AddProduct(productState.product.copyWith(quantity: 1)),
@@ -416,22 +462,22 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
         } else {
           int qty = 0;
           for (var product in products) {
-            if (product.id == productState.product.id) {
+            if (product.id == productState.product.id && product.quantity < productState.product.quantity) {
               qty = product.quantity;
+              BlocProvider.of<OrderBloc>(context).add(
+                UpdateOrderProductQuantity(
+                  product: productState.product,
+                  quantity: qty + 1,
+                ),
+              );
               break;
             }
           }
-          BlocProvider.of<OrderBloc>(context).add(
-            UpdateOrderProductQuantity(
-              product: productState.product,
-              quantity: qty + 1,
-            ),
-          );
         }
       } else {
         _showAddNewProductDialog(
           context,
-          productState.product.barcode,
+          productState.product.barcode!,
           productState.product,
           true,
           appState.store,
@@ -476,7 +522,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   @override
   void deactivate() {
     // TODO: implement deactivate
-    scannerController.stop();
+    // scannerController.stop();
     super.deactivate();
   }
 
@@ -516,6 +562,19 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             title: const Text('Sale'),
             centerTitle: false,
             actions: [
+              IconButton(
+                onPressed: () {
+                  _buildShowModalBottomSheet(context);
+                  BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(appState.store));
+                },
+                icon: const Icon(Icons.search),
+              ),
+              IconButton(
+                onPressed: () {
+                  _toggleScanner();
+                },
+                icon: const Icon(Icons.person_add),
+              ),
               IconButton(
                 onPressed: () {
                   scannerController.stop();
@@ -572,92 +631,111 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                         _productBlocListener(context, productState, products, appState);
                       },
 
-                      child: BlocConsumer<OrderBloc, OrderState>(listener: (context, orderState) {
-                        _orderBlocListener(context, orderState, products, appState);
-                      }, builder: (context, orderState) {
-                        if (orderState is UpdatedOrderProducts || orderState is OrderDiscountState) {
-                          if (orderState is UpdatedOrderProducts) {
-                            List<ProductModel> products = orderState.products ?? [];
-                            log('this is $orderState builder and producs: $products');
-                          }
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey,
-                                      offset: Offset(0, 0),
-                                      spreadRadius: 1,
-                                      blurRadius: 2,
-                                      blurStyle: BlurStyle.inner,
-                                    ),
-                                  ],
-                                ),
-                                height: isScannerRunning ? size.height * .34 : size.height * .64,
-                                child: ListView.builder(
-                                  padding: EdgeInsets.zero,
-                                  itemCount: products.length,
-                                  itemBuilder: (context, item) {
-                                    ProductModel product = products[item];
-                                    return CupertinoListTile(
-                                      onTap: () {
-                                        _showChangeProductQtyDiaolg(context, product);
-                                      },
-                                      leadingSize: 40.r,
-                                      leading: DecoratedBox(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(10),
-                                          color: Colors.grey,
-                                          image: DecorationImage(
-                                            image: product.image != null ? NetworkImage(product.image!) : const AssetImage(Assets.imagesImageBg),
+                      child: BlocConsumer<OrderBloc, OrderState>(
+                        listener: (context, orderState) {
+                          _orderBlocListener(context, orderState, products, appState);
+                        },
+                        builder: (context, orderState) {
+                          if (orderState is UpdatedOrderProducts || orderState is OrderDiscountState) {
+                            List<ProductModel> products = orderState is UpdatedOrderProducts
+                                ? orderState.products ?? []
+                                : orderState is OrderDiscountState
+                                    ? orderState.products ?? []
+                                    : [];
+                            log('Builder: $orderState builder and producs: $products');
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey,
+                                        offset: Offset(0, 0),
+                                        spreadRadius: 1,
+                                        blurRadius: 2,
+                                        blurStyle: BlurStyle.inner,
+                                      ),
+                                    ],
+                                  ),
+                                  height: isScannerRunning ? size.height * .34 : size.height * .64,
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    itemCount: products.length,
+                                    itemBuilder: (context, item) {
+                                      ProductModel product = products[item];
+                                      return CupertinoListTile(
+                                        onTap: () {
+                                          BlocProvider.of<ProductBloc>(context).add(FetchProductByIdEvent(product.id));
+                                          _showChangeProductQtyDiaolg(context, product);
+                                        },
+                                        leadingSize: 40.r,
+                                        leading: DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(10),
+                                            color: Colors.grey,
+                                            image: DecorationImage(
+                                              image: product.image != null ? NetworkImage(product.image!) : const AssetImage(Assets.imagesImageBg),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      title: Text(
-                                        product.name,
-                                        softWrap: true,
-                                      ),
-                                      subtitle: Text(
-                                        '${product.quantity} x ${formatAmount.format(product.price.toInt())}',
-                                        style: TextStyle(fontSize: 14.sp),
-                                      ),
-                                      trailing: SizedBox(
-                                        height: 32.sp,
-                                        child: Text(
-                                          formatAmount.format((product.quantity * product.price)),
-                                          style: TextStyle(fontSize: 15.sp),
+                                        title: Text(
+                                          product.name,
+                                          softWrap: true,
                                         ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          );
-                        } else {
-                          return Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey,
-                                  offset: Offset(0, 0),
-                                  spreadRadius: 1,
-                                  blurRadius: 2,
-                                  blurStyle: BlurStyle.inner,
+                                        subtitle: Text(
+                                          '${product.quantity} x ${formatAmount.format(product.price.toInt())}',
+                                          style: TextStyle(fontSize: 14.sp),
+                                        ),
+                                        trailing: SizedBox(
+                                          height: 32.sp,
+                                          child: Text(
+                                            formatAmount.format((product.quantity * product.price)),
+                                            style: TextStyle(fontSize: 15.sp),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ],
-                            ),
-                            height: isScannerRunning ? size.height * .34 : size.height * .64,
-                          );
-                        }
-                      }),
+                            );
+                          } else {
+                            return Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey,
+                                    offset: Offset(0, 0),
+                                    spreadRadius: 1,
+                                    blurRadius: 2,
+                                    blurStyle: BlurStyle.inner,
+                                  ),
+                                ],
+                              ),
+                              height: isScannerRunning ? size.height * .34 : size.height * .64,
+                            );
+                          }
+                        },
+                      ),
                     ),
-                    buildSaleButtons(size, context, appState),
+                    BlocBuilder<OrderBloc, OrderState>(
+                      builder: (context, orderState) {
+                        if (orderState is OrderDiscountState || orderState is UpdatedOrderProducts) {
+                          List<ProductModel> products = orderState is UpdatedOrderProducts
+                              ? orderState.products!
+                              : orderState is OrderDiscountState
+                                  ? orderState.products!
+                                  : [];
+                          return buildSaleButtons(size, context, appState, products);
+                        } else {
+                          return buildSaleButtons(size, context, appState, products);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -668,7 +746,138 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  Container buildSaleButtons(Size size, BuildContext context, AppState appState) {
+  Future<dynamic> _buildShowModalBottomSheet(BuildContext context) {
+    return showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      enableDrag: true,
+      scrollControlDisabledMaxHeightRatio: MediaQuery.sizeOf(context).height * .9,
+      anchorPoint: const Offset(0, .8),
+      useSafeArea: true,
+      builder: (context) {
+        return _buildSearchBottomSheet(
+          context,
+        );
+      },
+    );
+  }
+
+  Container _buildSearchBottomSheet(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      width: double.infinity,
+      height: MediaQuery.sizeOf(context).height * .9,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search',
+              alignLabelWithHint: true,
+              fillColor: Colors.white,
+              focusColor: Colors.white,
+              hintStyle: const TextStyle(color: Colors.black),
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  _searchController.clear();
+                },
+                icon: const Icon(Icons.close),
+              ),
+            ),
+            onChanged: (value) {
+              _searchList.clear();
+              for (ProductModel product in _productList) {
+                if (product.name.toLowerCase().contains(value.toLowerCase())) {
+                  _searchList.add(product);
+                }
+                setState(() {
+                  _searchList;
+                  _isSearching = true;
+                });
+              }
+            },
+          ),
+          SizedBox(
+            height: 10.h,
+          ),
+          BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, productState) {
+              if (productState is ProductLoading) {
+                return SizedBox(
+                  height: MediaQuery.sizeOf(context).height * .71.h,
+                  child: const Center(
+                    child: CircularProgressIndicator.adaptive(),
+                  ),
+                );
+              } else if (productState is ProductsByStoreIdLoaded) {
+                var state = productState;
+                _productList = _isSearching ? _searchList : state.products ?? [];
+                return SizedBox(
+                  height: MediaQuery.sizeOf(context).height * .71.h,
+                  child: SingleChildScrollView(
+                    controller: _searchScrollController,
+                    child: Wrap(
+                      alignment: WrapAlignment.start,
+                      children: _productList
+                          .asMap()
+                          .entries
+                          .map(
+                            (entry) => SizedBox(
+                              width: 105.w,
+                              height: 160.h,
+                              child: Card(
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      width: 105.w,
+                                      height: 105.w,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: entry.value.image != null
+                                              ? NetworkImage(entry.value.image!)
+                                              : const AssetImage(
+                                                  Assets.imagesImageBg,
+                                                ),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: Container(
+                                        color: Colors.black45.withOpacity(.5),
+                                        width: double.infinity,
+                                        height: 55.h,
+                                        child: Text(
+                                          '${entry.value.name}  \n${formatAmount.format(entry.value.price)}',
+                                          style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                );
+              } else {
+                return ErrorWidget('Product Not found');
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Container buildSaleButtons(Size size, BuildContext context, AppState appState, List<ProductModel> products) {
     return Container(
       decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.black38))),
       width: double.infinity,
@@ -677,13 +886,13 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
           children: [
             Column(
               children: [
-                SaleProductPrice(title: 'Sub Total', price: 'UZS $orderSubTotalAmount'),
+                SaleProductPrice(title: 'Sub Total', price: formatAmount.format(orderSubTotalAmount)),
                 SaleProductPrice(
                   title: 'Discount',
-                  procedure: discount,
-                  discountingPrice: orderSubTotalAmount - orderTotalAmount,
+                  procedure: !isFlat.value ? discount : double.tryParse(((orderTotalAmount - orderSubTotalAmount) * 100 / orderSubTotalAmount).toStringAsFixed(3)),
+                  discountingPrice: formatAmount.format(orderSubTotalAmount - orderTotalAmount),
                 ),
-                SaleProductPrice(title: 'Total', price: 'UZS $orderTotalAmount '),
+                SaleProductPrice(title: 'Total', price: formatAmount.format(orderTotalAmount)),
               ],
             ),
             SizedBox(
@@ -708,6 +917,11 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   SaleButton(
                     title: 'Clear',
                     onPressed: () {
+                      orderSubTotalAmount = 0;
+                      orderTotalAmount = 0;
+                      isFlat.value = false;
+                      discount = 0;
+                      setState(() {});
                       BlocProvider.of<OrderBloc>(context).add(ClearProductList());
                     },
                     bgColor: Colors.red,
@@ -715,11 +929,10 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   SaleButton(
                     title: 'Pay',
                     onPressed: () {
-                      _showPayingDialog(context, appState.store!);
+                      _showPayingDialog(context, appState.user!, appState.store!, products);
                       if (kDebugMode) {
                         print(scannerController.value.isRunning);
                       }
-                      scannerController.stop();
                     },
                     bgColor: Colors.green,
                   ),
@@ -732,76 +945,181 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showPayingDialog(BuildContext context, StoreModel store) {
+  void _showPayingDialog(BuildContext context, UserModel employee, StoreModel store, List<ProductModel> products) {
     showAdaptiveDialog(
       context: context,
       builder: (context) {
-        return _buildPayingDialogWidget(
-          context,
-          store,
-        );
+        return _buildPayingDialogWidget(context, employee, store, products);
       },
     );
   }
 
-  SimpleDialog _buildPayingDialogWidget(BuildContext context, StoreModel? store) {
+  SimpleDialog _buildPayingDialogWidget(BuildContext context, UserModel? employee, StoreModel? store, List<ProductModel> products) {
     return SimpleDialog(
-      title: Text(
-        '"Gul" MCHJ',
-        textAlign: TextAlign.center,
-        softWrap: true,
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 24.sp,
+      titlePadding: EdgeInsets.zero,
+      clipBehavior: Clip.hardEdge,
+      title: Container(
+        clipBehavior: Clip.none,
+        color: Colors.blueGrey.withAlpha(100),
+        height: 40.h,
+        child: Center(
+          child: Text(
+            'Receipt',
+            textAlign: TextAlign.center,
+            softWrap: true,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 24.sp,
+            ),
+          ),
         ),
       ),
       children: [
         Column(
           children: [
-            SaleProductPrice(
-              title: 'Sub Total',
-              price: 'UZS $orderSubTotalAmount',
-              textAlign: TextAlign.start,
+            Text(
+              store!.name ?? '',
+              textAlign: TextAlign.center,
+              softWrap: true,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24.sp,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            SaleProductPrice(
-              title: 'Discount',
-              procedure: discount,
-              discountingPrice: orderSubTotalAmount - orderTotalAmount,
-              textAlign: TextAlign.start,
+            Text(
+              store.phone,
+              textAlign: TextAlign.center,
+              softWrap: true,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20.sp,
+              ),
             ),
-            SaleProductPrice(
-              title: 'Total',
-              price: 'UZS $orderTotalAmount ',
-              textAlign: TextAlign.start,
+            Text(
+              store.address,
+              textAlign: TextAlign.center,
+              softWrap: true,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20.sp,
+              ),
             ),
           ],
         ),
-        SizedBox(
-          height: 250.sp,
-          width: 300.sp,
-          child: ListView.builder(
-            shrinkWrap: true,
-            padding: EdgeInsets.zero,
-            itemCount: products.length,
-            itemBuilder: (context, item) {
-              ProductModel product = products[item];
-              return CupertinoListTile(
-                title: Text(product.name),
-                subtitle: Text('${product.quantity} * ${product.price} UZS'),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      product.quantity.toString(),
-                      softWrap: true,
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          width: double.infinity,
+          // height: 50,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Customer',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.sp,
                     ),
-                    Text('UZS ${product.quantity * product.price}'),
-                  ],
-                ),
-              );
-            },
+                  ),
+                  Text(
+                    '_customerController.text',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 5.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Employee',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                  Text(
+                    employee!.displayName ?? '',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
+        ),
+        SizedBox(height: 10.h),
+        Divider(
+          indent: 20.w,
+          endIndent: 20.w,
+          height: 5,
+          color: Colors.black,
+        ),
+        SizedBox(height: 10.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Column(
+            children: [
+              const ReceiptDetail(
+                name: 'Description',
+                qty: 'Qty',
+                price: 'Total',
+              ),
+              Column(
+                children: products
+                    .asMap()
+                    .entries
+                    .map(
+                      (entry) => ReceiptDetail(
+                        name: '${entry.key + 1}. ${entry.value.name}',
+                        qty: '${entry.value.quantity} x ${entry.value.price}',
+                        price: (entry.value.price * entry.value.quantity).toString(),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Divider(
+          indent: 20.w,
+          endIndent: 20.w,
+          height: 5,
+          color: Colors.black,
+        ),
+        Column(
+          children: [
+            SaleProductPrice(
+              title: 'Total',
+              price: formatAmount.format(orderTotalAmount),
+              textAlign: TextAlign.start,
+            ),
+            SaleProductPrice(
+              fontSize: 12,
+              fontColor: Colors.grey,
+              title: 'Received Amount / Cash',
+              price: formatAmount.format(orderTotalAmount),
+              textAlign: TextAlign.start,
+            ),
+          ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -815,11 +1133,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 DateTime createdTime = DateTime.now();
                 OrderModel order = OrderModel(
                   id: createdTime.microsecondsSinceEpoch.toString(),
-                  customerId: '',
+                  customerName: 'User',
+                  employeeName: employee.displayName ?? '',
                   productList: products,
                   totalAmount: orderTotalAmount,
                   orderDate: createdTime,
-                  storeId: store!.id,
+                  storeId: store.id,
                 );
                 late StockModel stock;
                 for (var product in products) {
@@ -828,11 +1147,15 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   BlocProvider.of<StockBloc>(context).add(AddUpdateStockProduct(product.id, product.quantity, product, stock: stock));
                 }
                 Navigator.pop(context);
-
                 BlocProvider.of<OrderBloc>(context).add(
                   CreateOrderEvent(order, store.id),
                 );
                 BlocProvider.of<OrderBloc>(context).add(ClearProductList());
+                orderSubTotalAmount = 0;
+                orderTotalAmount = 0;
+                isFlat.value = false;
+                discount = 0;
+                setState(() {});
               },
               child: const Text('Confirm'),
             ),
@@ -853,6 +1176,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       context: context,
       builder: (context) {
         return AddProductDialog(
+          scannerController: scannerController,
           product: product,
           barcode: barcode,
           isEdit: isEdit,
