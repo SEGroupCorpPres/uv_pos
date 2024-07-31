@@ -20,14 +20,13 @@ import 'package:uv_pos/generated/assets.dart';
 class CreateProductScreen extends StatefulWidget {
   const CreateProductScreen({super.key});
 
-  static Page page() =>
-      Platform.isIOS
-          ? const CupertinoPage(
-        child: CreateProductScreen(),
-      )
-          : const MaterialPage(
-        child: CreateProductScreen(),
-      );
+  static Page page() => Platform.isIOS
+      ? const CupertinoPage(
+          child: CreateProductScreen(),
+        )
+      : const MaterialPage(
+          child: CreateProductScreen(),
+        );
 
   @override
   State<CreateProductScreen> createState() => _CreateProductScreenState();
@@ -139,203 +138,210 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         _productPriceController.text = product?.price.toString() ?? '';
         _productCostController.text = product?.cost.toString() ?? '';
         _productQtyController.text = product?.quantity.toString() ?? '';
-        return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: true,
-            leading: InkWell(
-              onTap: () {
-                BlocProvider.of<AppBloc>(context).add(
-                  NavigateToProductListScreen(store),
+        return PopScope(
+          canPop: false,
+          onPopInvoked: (bool didPop) {
+            context.read<AppBloc>().add(
+                  NavigateToProductListScreen(appState.store),
                 );
-                BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(store));
-              },
-              child: Icon(Icons.adaptive.arrow_back),
-            ),
-            title: Text(!appState.isEdit ? 'Create Product' : 'Edit Product'),
-            centerTitle: false,
-            actions: [
-              TextButton.icon(
-                onPressed: () {
-                  if (_formKey.currentState?.validate() ?? false) {
-                    String id = '';
-                    if (!appState.isEdit) {
-                      final createdDate = Timestamp.now();
-
-                      id = createdDate.microsecondsSinceEpoch.toString();
-                    } else {
-                      id = appState.product!.id;
-                    }
-                    final product = ProductModel(
-                      id: id,
-                      name: _productNameController.text,
-                      barcode: _productBarcodeController.text,
-                      description: _productDescriptionController.text,
-                      price: double.parse(_productPriceController.text),
-                      cost: double.parse(_productCostController.text),
-                      quantity: int.parse(_productQtyController.text),
-                      storeId: store!.id,
-                    );
-                    if (!appState.isEdit) {
-                      context.read<ProductBloc>().add(CreateProductEvent(product, _image, store));
-                    } else {
-                      context.read<ProductBloc>().add(UpdateProductEvent(product, _image, store));
-                    }
-                  }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              automaticallyImplyLeading: true,
+              leading: InkWell(
+                onTap: () {
+                  BlocProvider.of<AppBloc>(context).add(
+                    NavigateToProductListScreen(store),
+                  );
+                  BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(store));
                 },
-                icon: const Icon(Icons.save),
-                label: const Text('Save'),
+                child: Icon(Icons.adaptive.arrow_back),
               ),
-            ],
-          ),
-          resizeToAvoidBottomInset: true,
-          body: BlocConsumer<ProductBloc, ProductState>(
-            listener: (context, state) {
-              if (state is ProductCreated || state is ProductUpdated) {
-                // Navigate back or show a success message when the product is created
-                ScaffoldMessenger.of(context).showSnackBar( SnackBar(content: Text(!appState.isEdit ? 'Product created successfully' : 'Product updated successfully')));
-                BlocProvider.of<AppBloc>(context).add(
-                  NavigateToProductListScreen(store),
-                );
-              } else if (state is ProductError) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
-              }
-            },
-            builder: (context, state) {
-              if (state is ProductCreating || state is ProductUpdating) {
-                return const Center(child: CircularProgressIndicator.adaptive());
-              }
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: size.width,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          !appState.isEdit
-                              ? Center(
-                            child: Container(
-                              width: 150.r,
-                              height: 150.r,
-                              margin: EdgeInsets.symmetric(vertical: 30.r),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10.r),
-                                child: _image == null
-                                    ? Image.asset(Assets.imagesImageBg)
-                                    : Image.file(
-                                  _image!,
-                                  fit: BoxFit.cover,
-                                  width: 100.r,
-                                ),
-                              ),
-                            ),
-                          )
-                              : product!.image != null
-                              ? Container(
-                            width: 150.r,
-                            height: 150.r,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10.r),
-                              image: DecorationImage(
-                                image: NetworkImage(product!.image!),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          )
-                              : Container(
-                            width: 150.r,
-                            height: 150.r,
-                            margin: EdgeInsets.symmetric(vertical: 30.r),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10.r),
-                              child: Image.asset(Assets.imagesImageBg),
-                            ),
-                          ),
-                          SizedBox(height: 20.h),
-                          SizedBox(
-                            width: size.width,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                StoreButton(
-                                  title: 'Pick an Image',
-                                  icon: Icons.image,
-                                  onPressed: () {
-                                    Platform.isIOS ? _cupertinoStyleGalleryImageUpload() : _uploadingAPictureFromTheGalleryInMaterialStyle();
-                                  },
-                                ),
-                                StoreButton(
-                                  title: 'Take a Photo',
-                                  icon: Icons.camera_alt,
-                                  onPressed: () {
-                                    Platform.isIOS ? _cupertinoStyleCameraCapture() : _takingAPictureWithACameraInMaterialStyle();
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 10.w),
-                      child: Form(
-                        key: _formKey,
+              title: Text(!appState.isEdit ? 'Create Product' : 'Edit Product'),
+              centerTitle: false,
+              actions: [
+                TextButton.icon(
+                  onPressed: () {
+                    if (_formKey.currentState?.validate() ?? false) {
+                      String id = '';
+                      if (!appState.isEdit) {
+                        final createdDate = Timestamp.now();
+
+                        id = createdDate.microsecondsSinceEpoch.toString();
+                      } else {
+                        id = appState.product!.id;
+                      }
+                      final product = ProductModel(
+                        id: id,
+                        name: _productNameController.text,
+                        barcode: _productBarcodeController.text,
+                        description: _productDescriptionController.text,
+                        price: double.parse(_productPriceController.text),
+                        cost: double.parse(_productCostController.text),
+                        quantity: int.parse(_productQtyController.text),
+                        storeId: store!.id,
+                      );
+                      if (!appState.isEdit) {
+                        context.read<ProductBloc>().add(CreateProductEvent(product, _image, store));
+                      } else {
+                        context.read<ProductBloc>().add(UpdateProductEvent(product, _image, store));
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.save),
+                  label: const Text('Save'),
+                ),
+              ],
+            ),
+            resizeToAvoidBottomInset: true,
+            body: BlocConsumer<ProductBloc, ProductState>(
+              listener: (context, state) {
+                if (state is ProductCreated || state is ProductUpdated) {
+                  // Navigate back or show a success message when the product is created
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(!appState.isEdit ? 'Product created successfully' : 'Product updated successfully')));
+                  BlocProvider.of<AppBloc>(context).add(
+                    NavigateToProductListScreen(store),
+                  );
+                } else if (state is ProductError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
+                }
+              },
+              builder: (context, state) {
+                if (state is ProductCreating || state is ProductUpdating) {
+                  return const Center(child: CircularProgressIndicator.adaptive());
+                }
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: size.width,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            StoreTextField(
-                              hintText: 'Product Name',
-                              icon: Icons.text_fields,
-                              textEditingController: _productNameController,
-                            ),
-                            Row(
-                              children: [
-                                Flexible(
-                                  flex: 15,
-                                  child: StoreTextField(
-                                    hintText: 'Product Barcode',
-                                    textEditingController: _productBarcodeController,
-                                    icon: Icons.qr_code_2,
-                                    onTap: () =>
-                                        BlocProvider.of<AppBloc>(context).add(
-                                          NavigateToBarcodeScannerScreen(),
+                            !appState.isEdit
+                                ? Center(
+                                    child: Container(
+                                      width: 150.r,
+                                      height: 150.r,
+                                      margin: EdgeInsets.symmetric(vertical: 30.r),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10.r),
+                                        child: _image == null
+                                            ? Image.asset(Assets.imagesImageBg)
+                                            : Image.file(
+                                                _image!,
+                                                fit: BoxFit.cover,
+                                                width: 100.r,
+                                              ),
+                                      ),
+                                    ),
+                                  )
+                                : product!.image != null
+                                    ? Container(
+                                        width: 150.r,
+                                        height: 150.r,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10.r),
+                                          image: DecorationImage(
+                                            image: NetworkImage(product!.image!),
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
+                                      )
+                                    : Container(
+                                        width: 150.r,
+                                        height: 150.r,
+                                        margin: EdgeInsets.symmetric(vertical: 30.r),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(10.r),
+                                          child: Image.asset(Assets.imagesImageBg),
+                                        ),
+                                      ),
+                            SizedBox(height: 20.h),
+                            SizedBox(
+                              width: size.width,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  StoreButton(
+                                    title: 'Pick an Image',
+                                    icon: Icons.image,
+                                    onPressed: () {
+                                      Platform.isIOS ? _cupertinoStyleGalleryImageUpload() : _uploadingAPictureFromTheGalleryInMaterialStyle();
+                                    },
                                   ),
-                                ),
-                                const Flexible(
-                                  flex: 2,
-                                  child: Center(child: Icon(Icons.qr_code)),
-                                ),
-                              ],
-                            ),
-                            StoreTextField(
-                              hintText: 'Product Description',
-                              icon: Icons.description,
-                              textEditingController: _productDescriptionController,
-                            ),
-                            StoreTextField(
-                              hintText: 'Price',
-                              icon: Icons.price_check,
-                              textEditingController: _productPriceController,
-                            ),
-                            StoreTextField(
-                              hintText: 'Cost',
-                              icon: Icons.price_check,
-                              textEditingController: _productCostController,
-                            ),
-                            StoreTextField(
-                              hintText: 'Quantity',
-                              icon: Icons.notifications,
-                              textEditingController: _productQtyController,
+                                  StoreButton(
+                                    title: 'Take a Photo',
+                                    icon: Icons.camera_alt,
+                                    onPressed: () {
+                                      Platform.isIOS ? _cupertinoStyleCameraCapture() : _takingAPictureWithACameraInMaterialStyle();
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 10.w),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              StoreTextField(
+                                hintText: 'Product Name',
+                                icon: Icons.text_fields,
+                                textEditingController: _productNameController,
+                              ),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    flex: 15,
+                                    child: StoreTextField(
+                                      hintText: 'Product Barcode',
+                                      textEditingController: _productBarcodeController,
+                                      icon: Icons.qr_code_2,
+                                      onTap: () => BlocProvider.of<AppBloc>(context).add(
+                                        NavigateToBarcodeScannerScreen(),
+                                      ),
+                                    ),
+                                  ),
+                                  const Flexible(
+                                    flex: 2,
+                                    child: Center(child: Icon(Icons.qr_code)),
+                                  ),
+                                ],
+                              ),
+                              StoreTextField(
+                                hintText: 'Product Description',
+                                icon: Icons.description,
+                                textEditingController: _productDescriptionController,
+                              ),
+                              StoreTextField(
+                                hintText: 'Price',
+                                icon: Icons.price_check,
+                                textEditingController: _productPriceController,
+                              ),
+                              StoreTextField(
+                                hintText: 'Cost',
+                                icon: Icons.price_check,
+                                textEditingController: _productCostController,
+                              ),
+                              StoreTextField(
+                                hintText: 'Quantity',
+                                icon: Icons.notifications,
+                                textEditingController: _productQtyController,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         );
       },

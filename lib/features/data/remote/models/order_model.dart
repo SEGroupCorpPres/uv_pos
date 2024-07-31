@@ -12,6 +12,7 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
   final String? barcode;
   final String? qrcode;
   final String storeId;
+  final double discountPrice;
 
   const OrderModel({
     required this.id,
@@ -22,11 +23,12 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
     required this.orderDate,
     this.barcode,
     this.qrcode,
+    required this.discountPrice,
     required this.storeId,
   });
 
   @override
-  List<Object?> get props => [id, customerName, employeeName, productList, totalAmount, orderDate, storeId, barcode, qrcode];
+  List<Object?> get props => [id, customerName, employeeName, productList, totalAmount, orderDate, storeId, barcode, qrcode, discountPrice];
 
   // Factory constructor to create an Order instance from a map (if needed)
   factory OrderModel.fromMap(Map<String, dynamic> data) {
@@ -39,6 +41,7 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
       orderDate: DateTime.parse(data['order_date']),
       storeId: data['store_id'],
       barcode: data['barcode'],
+      discountPrice: data['discount_price'],
       qrcode: data['qrcode'],
     );
   }
@@ -55,6 +58,7 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
       'store_id': storeId,
       'barcode': barcode,
       'qrcode': qrcode,
+      'discount_price': discountPrice,
     };
   }
 
@@ -68,6 +72,7 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
     String? storeId,
     String? barcode,
     String? qrcode,
+    double? discountPrice,
   }) {
     return OrderModel(
       id: id ?? this.id,
@@ -79,6 +84,7 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
       storeId: storeId ?? this.storeId,
       barcode: barcode ?? this.barcode,
       qrcode: qrcode ?? this.qrcode,
+      discountPrice: discountPrice ?? this.discountPrice,
     );
   }
 

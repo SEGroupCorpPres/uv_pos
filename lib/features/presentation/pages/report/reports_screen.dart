@@ -40,55 +40,63 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget build(BuildContext context) {
     getStoreID();
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        leading: InkWell(
-          onTap: () => BlocProvider.of<AppBloc>(context).add(
-            const NavigateToHomeScreen(),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        context.read<AppBloc>().add(
+          const NavigateToHomeScreen(),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: true,
+          leading: InkWell(
+            onTap: () => BlocProvider.of<AppBloc>(context).add(
+              const NavigateToHomeScreen(),
+            ),
+            child: Icon(Icons.adaptive.arrow_back),
           ),
-          child: Icon(Icons.adaptive.arrow_back),
+          title: const Text('Reports'),
+          centerTitle: false,
         ),
-        title: const Text('Reports'),
-        centerTitle: false,
-      ),
-      body: Card(
-        child: ListView.separated(
-          itemCount: 4,
-          itemBuilder: (context, item) {
-            final String title = reportsList[item];
-            return ListTile(
-              splashColor: Colors.transparent,
-              onTap: () {
-                switch (item) {
-                  case 1:
-                    BlocProvider.of<AppBloc>(context).add(
-                      NavigateToReportByCustomersScreen(),
-                    );
-                  case 2:
-                    BlocProvider.of<AppBloc>(context).add(
-                      NavigateToReportByEmployeeScreen(),
-                    );
-                  case 3:
-                    BlocProvider.of<AppBloc>(context).add(
-                      NavigateToReportByDatesScreen(),
-                    );
-                  default:
-                    print('storeID is  ----------> $storeID');
-                    BlocProvider.of<AppBloc>(context).add(
-                      NavigateToSaleReportScreen(),
-                    );
-                    BlocProvider.of<OrderBloc>(context).add(
-                          LoadOrdersEvent(storeID),
-                        );
-                }
-              },
-              title: Text(title),
-            );
-          },
-          separatorBuilder: (context, item) {
-            return const Divider();
-          },
+        body: Card(
+          child: ListView.separated(
+            itemCount: 4,
+            itemBuilder: (context, item) {
+              final String title = reportsList[item];
+              return ListTile(
+                splashColor: Colors.transparent,
+                onTap: () {
+                  switch (item) {
+                    case 1:
+                      BlocProvider.of<AppBloc>(context).add(
+                        NavigateToReportByCustomersScreen(),
+                      );
+                    case 2:
+                      BlocProvider.of<AppBloc>(context).add(
+                        NavigateToReportByEmployeeScreen(),
+                      );
+                    case 3:
+                      BlocProvider.of<AppBloc>(context).add(
+                        NavigateToReportByDatesScreen(),
+                      );
+                    default:
+                      print('storeID is  ----------> $storeID');
+                      BlocProvider.of<AppBloc>(context).add(
+                        NavigateToSaleReportScreen(),
+                      );
+                      BlocProvider.of<OrderBloc>(context).add(
+                            LoadOrdersEvent(storeID),
+                          );
+                  }
+                },
+                title: Text(title),
+              );
+            },
+            separatorBuilder: (context, item) {
+              return const Divider();
+            },
+          ),
         ),
       ),
     );

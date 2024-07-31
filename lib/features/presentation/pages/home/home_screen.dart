@@ -34,33 +34,32 @@ class _HomeScreenState extends State<HomeScreen> {
     final Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, appState) {
-        return BlocConsumer<StoreBloc, StoreState>(
-          listener: (context, storeState) {},
-          builder: (context, state) {
-            if (state is StoreLoading) {
-              return const Center(
-                child: CircularProgressIndicator.adaptive(),
-              );
-            } else if (state is StoreByIdLoaded) {
-              StoreModel store = state.store;
-              return PopScope(
-                canPop: false,
-                onPopInvoked: (bool didPop) {
-                  sessionEnding.onWillPop(context);
-                },
-                child: Scaffold(
-                  appBar: AppBar(
-                    automaticallyImplyLeading: false,
-                    title: Text('${appState.user!.displayName} (\$0)'),
-                    centerTitle: false,
-                    actions: [
-                      PopupMenuButton(
-                        itemBuilder: (context) => popupMenuList,
-                      ),
-                    ],
-                    bottom: PreferredSize(
-                      preferredSize: Size(double.infinity, 60.h),
-                      child: ListTile(
+        return PopScope(
+          canPop: false,
+          onPopInvoked: (bool didPop) {
+            sessionEnding.onWillPop(context);
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              title: Text('${appState.user!.displayName} (\$0)'),
+              centerTitle: false,
+              actions: [
+                PopupMenuButton(
+                  itemBuilder: (context) => popupMenuList,
+                ),
+              ],
+              bottom: PreferredSize(
+                preferredSize: Size(double.infinity, 60.h),
+                child: BlocBuilder<StoreBloc, StoreState>(
+                  builder: (context, state) {
+                    if (state is StoreLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator.adaptive(),
+                      );
+                    } else if (state is StoreByIdLoaded) {
+                      StoreModel store = state.store;
+                      return ListTile(
                         title: Text(
                           store.name,
                           style: TextStyle(
@@ -100,10 +99,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                  body: Padding(
+                      );
+                    } else if (state is StoreNotFound) {
+                      return ErrorWidget('Store Not found');
+                    } else {
+                      return Container();
+                    }
+                  },
+                ),
+              ),
+            ),
+            body: BlocBuilder<StoreBloc, StoreState>(
+              builder: (context, state) {
+                if (state is StoreLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator.adaptive(),
+                  );
+                } else if (state is StoreByIdLoaded) {
+                  StoreModel store = state.store;
+                  return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0).w,
                     child: SingleChildScrollView(
                       child: Wrap(
@@ -112,17 +126,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: menuList(context, store),
                       ),
                     ),
-                  ),
-                ),
-              );
-            } else if (state is StoreNotFound) {
-              return const Center(
-                child: Text('No record found'),
-              );
-            } else {
-              return Container();
-            }
-          },
+                  );
+                } else if (state is StoreNotFound) {
+                  return ErrorWidget('Store Not found');
+                } else {
+                  return Container();
+                }
+              },
+            ),
+          ),
         );
       },
     );

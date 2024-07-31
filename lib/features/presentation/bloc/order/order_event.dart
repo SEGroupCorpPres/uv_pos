@@ -21,12 +21,13 @@ class LoadOrdersEvent extends OrderEvent {
 
 class CreateOrderEvent extends OrderEvent {
   final OrderModel order;
-  final String storeID;
+  final StoreModel store;
+  final UserModel user;
 
-  const CreateOrderEvent(this.order, this.storeID);
+  const CreateOrderEvent(this.order, this.store, this.user);
 
   @override
-  List<Object?> get props => [order, storeID];
+  List<Object?> get props => [order, store, user];
 }
 
 class UpdateOrderEvent extends OrderEvent {

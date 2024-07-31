@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
+import 'package:uv_pos/features/data/remote/models/store_model.dart';
+import 'package:uv_pos/features/data/remote/models/user_model.dart';
 import 'package:uv_pos/features/domain/repositories/order_repository.dart';
 import 'package:uv_pos/features/domain/repositories/product_repository.dart';
 
@@ -62,13 +64,15 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       await _orderRepository.createOrder(event.order);
       final createdOrder = await _orderRepository.getOrderById(event.order);
       final orders = await _orderRepository.getOrdersForDateByStoreId(
-        event.storeID,
+        event.store.id,
         event.order.orderDate,
       );
+      log(createdOrder.toString());
 
       if (createdOrder != null) {
-        emit(OrderCreated(order: createdOrder));
+        emit(OrderCreated(order: createdOrder, store: event.store, user: event.user));
         emit(OrdersFromDateByStoreIDLoaded(orders: orders));
+        // emit(const UpdatedOrderProducts(products: []));
       } else {
         emit(const OrderError(error: 'Failed to create Order.'));
       }

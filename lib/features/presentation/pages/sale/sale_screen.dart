@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:barcode/barcode.dart' as barcode;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -68,6 +70,10 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   double orderSubTotalAmount = 0;
   double orderTotalAmount = 0;
   double discount = 0;
+  String customerName = '';
+  String? orderBarcode = '';
+  String? orderQrcode = '';
+
   NumberFormat formatAmount = NumberFormat.currency(
     locale: 'en_US',
     symbol: '\$',
@@ -97,6 +103,13 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     if (!scannerController.value.isRunning) {
       _startScanner();
     }
+  }
+
+  // Function to generate Barcode or QR Code
+  String generateBarcode(String value, String type) {
+    final barcodeType = type == 'barcode' ? barcode.Barcode.code128() : barcode.Barcode.qrCode();
+    final svg = barcodeType.toSvg(value, width: type == 'barcode' ? 200 : 100, height: 100, fontHeight: 12.sp);
+    return svg;
   }
 
   Future<void> _playBeepSound() async {
@@ -244,6 +257,18 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _showAddCustomertDiaolg(BuildContext context) {
+    showAdaptiveDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return _addCustomerDialog(context);
+      },
+      useSafeArea: false,
+      traversalEdgeBehavior: TraversalEdgeBehavior.leaveFlutterView,
+    );
+  }
+
   Widget _enterDiscountDialog(BuildContext context) {
     return SimpleDialog(
       children: [
@@ -318,6 +343,51 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               onPressed: () {
                 discount = double.tryParse(_discountController.text)!;
                 BlocProvider.of<OrderBloc>(context).add(OrderDiscountedEvent(discount: discount, isFlat: isFlat.value));
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: const Text(
+                'Ok',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _addCustomerDialog(BuildContext context) {
+    return SimpleDialog(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(10.0).r,
+          child: TextField(
+            controller: _customerController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Customer name',
+              hintStyle: TextStyle(color: Colors.grey),
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 20),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  customerName = _customerController.text;
+                });
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -497,25 +567,11 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     if (orderState is OrderCreating) {
       const Center(child: CircularProgressIndicator.adaptive());
     }
+    if (orderState is OrderCreated) {
+      _showSuccessfullDialog(context, orderState.user!, orderState.store, orderState.order);
+    }
     if (orderState is OrderDiscountState) {
       orderTotalAmount = orderState.isFlat ? orderSubTotalAmount - orderState.discount : (1 - orderState.discount / 100) * orderSubTotalAmount;
-    }
-    if (orderState is OrderCreated) {
-      showAdaptiveDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog.adaptive(
-            title: const Text('Paying successfully', style: TextStyle(color: Colors.black, fontSize: 20)),
-            icon: const Icon(Icons.check_circle_outline),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Ok'),
-              ),
-            ],
-          );
-        },
-      );
     }
   }
 
@@ -548,195 +604,209 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     final Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, appState) {
-        return Scaffold(
-          resizeToAvoidBottomInset: true,
-          appBar: AppBar(
-            automaticallyImplyLeading: true,
-            leading: InkWell(
-              onTap: () {
-                BlocProvider.of<AppBloc>(context).add(const NavigateToHomeScreen());
-                scannerController.stop();
-              },
-              child: Icon(Icons.adaptive.arrow_back),
-            ),
-            title: const Text('Sale'),
-            centerTitle: false,
-            actions: [
-              IconButton(
-                onPressed: () {
-                  _buildShowModalBottomSheet(context);
-                  BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(appState.store));
-                },
-                icon: const Icon(Icons.search),
-              ),
-              IconButton(
-                onPressed: () {
-                  _toggleScanner();
-                },
-                icon: const Icon(Icons.person_add),
-              ),
-              IconButton(
-                onPressed: () {
+        return PopScope(
+          canPop: false,
+          onPopInvoked: (bool didPop) {
+            context.read<AppBloc>().add(
+                  const NavigateToHomeScreen(),
+                );
+          },
+          child: Scaffold(
+            resizeToAvoidBottomInset: true,
+            appBar: AppBar(
+              automaticallyImplyLeading: true,
+              leading: InkWell(
+                onTap: () {
+                  BlocProvider.of<AppBloc>(context).add(const NavigateToHomeScreen());
                   scannerController.stop();
                 },
-                icon: const Icon(Icons.save),
+                child: Icon(Icons.adaptive.arrow_back),
               ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.edit_note_outlined),
-              ),
-              IconButton(
-                onPressed: () {
-                  _toggleScanner();
-                },
-                icon: const Icon(Icons.qr_code_2),
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: Card(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    isScannerRunning
-                        ? SizedBox(
-                            width: size.width,
-                            height: size.height * .3,
-                            child: MobileScanner(
-                              controller: scannerController,
-                              onDetect: (capture) {
-                                final List<Barcode> barCodes = capture.barcodes;
-                                _barcode = barCodes.first;
-                                _playBeepSound();
+              title: const Text('Sale'),
+              centerTitle: false,
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    _buildShowModalBottomSheet(context);
+                    BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(appState.store));
+                  },
+                  icon: const Icon(Icons.search),
+                ),
+                IconButton(
+                  onPressed: () {
+                    _showAddCustomertDiaolg(context);
+                  },
+                  icon: const Icon(Icons.person_add),
+                ),
+                IconButton(
+                  onPressed: () {
+                    scannerController.stop();
+                  },
+                  icon: const Icon(Icons.save),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.edit_note_outlined),
+                ),
+                IconButton(
+                  onPressed: () {
+                    _toggleScanner();
+                  },
+                  icon: const Icon(Icons.qr_code_2),
+                ),
+              ],
+            ),
+            body: SafeArea(
+              child: Card(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      isScannerRunning
+                          ? SizedBox(
+                              width: size.width,
+                              height: size.height * .3,
+                              child: MobileScanner(
+                                controller: scannerController,
+                                onDetect: (capture) {
+                                  final List<Barcode> barCodes = capture.barcodes;
+                                  _barcode = barCodes.first;
+                                  _playBeepSound();
 
-                                BlocProvider.of<ProductBloc>(context).add(
-                                  FetchProductByBarcodeEvent(barCodes.first.rawValue!),
-                                );
-                              },
-                              errorBuilder: (context, error, child) {
-                                if (kDebugMode) {
-                                  print(error);
-                                }
-                                return ScannerErrorWidget(error: error);
-                              },
-                            ),
-                          )
-                        : const SizedBox(),
-                    const SizedBox(height: 5),
-                    BlocListener<ProductBloc, ProductState>(
-                      // listenWhen: (prev, current) => prev == current,
-                      listener: (context, productState) {
-                        _productBlocListener(context, productState, products, appState);
-                      },
-
-                      child: BlocConsumer<OrderBloc, OrderState>(
-                        listener: (context, orderState) {
-                          _orderBlocListener(context, orderState, products, appState);
+                                  BlocProvider.of<ProductBloc>(context).add(
+                                    FetchProductByBarcodeEvent(barCodes.first.rawValue!),
+                                  );
+                                },
+                                errorBuilder: (context, error, child) {
+                                  if (kDebugMode) {
+                                    print(error);
+                                  }
+                                  return ScannerErrorWidget(error: error);
+                                },
+                              ),
+                            )
+                          : const SizedBox(),
+                      const SizedBox(height: 5),
+                      BlocListener<ProductBloc, ProductState>(
+                        // listenWhen: (prev, current) => prev == current,
+                        listener: (context, productState) {
+                          _productBlocListener(context, productState, products, appState);
                         },
-                        builder: (context, orderState) {
-                          if (orderState is UpdatedOrderProducts || orderState is OrderDiscountState) {
-                            List<ProductModel> products = orderState is UpdatedOrderProducts
-                                ? orderState.products ?? []
-                                : orderState is OrderDiscountState
-                                    ? orderState.products ?? []
-                                    : [];
-                            log('Builder: $orderState builder and producs: $products');
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey,
-                                        offset: Offset(0, 0),
-                                        spreadRadius: 1,
-                                        blurRadius: 2,
-                                        blurStyle: BlurStyle.inner,
-                                      ),
-                                    ],
-                                  ),
-                                  height: isScannerRunning ? size.height * .34 : size.height * .64,
-                                  child: ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    itemCount: products.length,
-                                    itemBuilder: (context, item) {
-                                      ProductModel product = products[item];
-                                      return CupertinoListTile(
-                                        onTap: () {
-                                          BlocProvider.of<ProductBloc>(context).add(FetchProductByIdEvent(product.id));
-                                          _showChangeProductQtyDiaolg(context, product);
-                                        },
-                                        leadingSize: 40.r,
-                                        leading: DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            color: Colors.grey,
-                                            image: DecorationImage(
-                                              image: product.image != null ? NetworkImage(product.image!) : const AssetImage(Assets.imagesImageBg),
+
+                        child: BlocConsumer<OrderBloc, OrderState>(
+                          listener: (context, orderState) {
+                            _orderBlocListener(context, orderState, products, appState);
+                          },
+                          builder: (context, orderState) {
+                            if (orderState is OrderCreating) {
+                              return const Center(
+                                child: CircularProgressIndicator.adaptive(),
+                              );
+                            } else if (orderState is OrderError) {
+                              return ErrorWidget(orderState.error);
+                            } else if (orderState is UpdatedOrderProducts || orderState is OrderDiscountState) {
+                              List<ProductModel> products = orderState is UpdatedOrderProducts
+                                  ? orderState.products ?? []
+                                  : orderState is OrderDiscountState
+                                      ? orderState.products ?? []
+                                      : [];
+                              log('Builder: $orderState builder and producs: $products');
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey,
+                                          offset: Offset(0, 0),
+                                          spreadRadius: 1,
+                                          blurRadius: 2,
+                                          blurStyle: BlurStyle.inner,
+                                        ),
+                                      ],
+                                    ),
+                                    height: isScannerRunning ? size.height * .34 : size.height * .64,
+                                    child: ListView.builder(
+                                      padding: EdgeInsets.zero,
+                                      itemCount: products.length,
+                                      itemBuilder: (context, item) {
+                                        ProductModel product = products[item];
+                                        return CupertinoListTile(
+                                          onTap: () {
+                                            BlocProvider.of<ProductBloc>(context).add(FetchProductByIdEvent(product.id));
+                                            _showChangeProductQtyDiaolg(context, product);
+                                          },
+                                          leadingSize: 40.r,
+                                          leading: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(10),
+                                              color: Colors.grey,
+                                              image: DecorationImage(
+                                                image: product.image != null ? NetworkImage(product.image!) : const AssetImage(Assets.imagesImageBg),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        title: Text(
-                                          product.name,
-                                          softWrap: true,
-                                        ),
-                                        subtitle: Text(
-                                          '${product.quantity} x ${formatAmount.format(product.price.toInt())}',
-                                          style: TextStyle(fontSize: 14.sp),
-                                        ),
-                                        trailing: SizedBox(
-                                          height: 32.sp,
-                                          child: Text(
-                                            formatAmount.format((product.quantity * product.price)),
-                                            style: TextStyle(fontSize: 15.sp),
+                                          title: Text(
+                                            product.name,
+                                            softWrap: true,
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          } else {
-                            return Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey,
-                                    offset: Offset(0, 0),
-                                    spreadRadius: 1,
-                                    blurRadius: 2,
-                                    blurStyle: BlurStyle.inner,
+                                          subtitle: Text(
+                                            '${product.quantity} x ${formatAmount.format(product.price.toInt())}',
+                                            style: TextStyle(fontSize: 14.sp),
+                                          ),
+                                          trailing: SizedBox(
+                                            height: 32.sp,
+                                            child: Text(
+                                              formatAmount.format((product.quantity * product.price)),
+                                              style: TextStyle(fontSize: 15.sp),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ],
-                              ),
-                              height: isScannerRunning ? size.height * .34 : size.height * .64,
-                            );
+                              );
+                            } else {
+                              return Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey,
+                                      offset: Offset(0, 0),
+                                      spreadRadius: 1,
+                                      blurRadius: 2,
+                                      blurStyle: BlurStyle.inner,
+                                    ),
+                                  ],
+                                ),
+                                height: isScannerRunning ? size.height * .34 : size.height * .64,
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                      BlocBuilder<OrderBloc, OrderState>(
+                        builder: (context, orderState) {
+                          if (orderState is OrderDiscountState || orderState is UpdatedOrderProducts) {
+                            List<ProductModel> products = orderState is UpdatedOrderProducts
+                                ? orderState.products!
+                                : orderState is OrderDiscountState
+                                    ? orderState.products!
+                                    : [];
+                            return buildSaleButtons(size, context, appState, products);
+                          } else {
+                            return buildSaleButtons(size, context, appState, products);
                           }
                         },
                       ),
-                    ),
-                    BlocBuilder<OrderBloc, OrderState>(
-                      builder: (context, orderState) {
-                        if (orderState is OrderDiscountState || orderState is UpdatedOrderProducts) {
-                          List<ProductModel> products = orderState is UpdatedOrderProducts
-                              ? orderState.products!
-                              : orderState is OrderDiscountState
-                                  ? orderState.products!
-                                  : [];
-                          return buildSaleButtons(size, context, appState, products);
-                        } else {
-                          return buildSaleButtons(size, context, appState, products);
-                        }
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -955,6 +1025,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   }
 
   SimpleDialog _buildPayingDialogWidget(BuildContext context, UserModel? employee, StoreModel? store, List<ProductModel> products) {
+    log(_customerController.text);
     return SimpleDialog(
       titlePadding: EdgeInsets.zero,
       clipBehavior: Clip.hardEdge,
@@ -1026,7 +1097,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   Text(
-                    '_customerController.text',
+                    customerName,
                     textAlign: TextAlign.center,
                     softWrap: true,
                     style: TextStyle(
@@ -1108,6 +1179,18 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
         Column(
           children: [
             SaleProductPrice(
+              title: 'Sub Total',
+              price: formatAmount.format(orderSubTotalAmount),
+              textAlign: TextAlign.start,
+            ),
+            SaleProductPrice(
+              fontSize: 12,
+              fontColor: Colors.grey,
+              title: 'Discount',
+              price: formatAmount.format(orderSubTotalAmount - orderTotalAmount),
+              textAlign: TextAlign.start,
+            ),
+            SaleProductPrice(
               title: 'Total',
               price: formatAmount.format(orderTotalAmount),
               textAlign: TextAlign.start,
@@ -1133,22 +1216,27 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 DateTime createdTime = DateTime.now();
                 OrderModel order = OrderModel(
                   id: createdTime.microsecondsSinceEpoch.toString(),
-                  customerName: 'User',
+                  customerName: customerName,
                   employeeName: employee.displayName ?? '',
                   productList: products,
                   totalAmount: orderTotalAmount,
                   orderDate: createdTime,
+                  discountPrice: orderSubTotalAmount - orderTotalAmount,
                   storeId: store.id,
                 );
+                orderBarcode = generateBarcode('INV${createdTime.microsecondsSinceEpoch.toString()}', 'barcode');
+                orderQrcode = generateBarcode(order.toString(), 'qrcode');
+                order = order.copyWith(barcode: orderBarcode, qrcode: orderQrcode);
+                log('order is $order');
                 late StockModel stock;
                 for (var product in products) {
                   stock = StockModel(id: product.id, storeId: store.id, qty: product.quantity, product: product);
-                  BlocProvider.of<ProductBloc>(context).add(UpdateProductQuantity(product: product, store: store, quantity: product.quantity));
                   BlocProvider.of<StockBloc>(context).add(AddUpdateStockProduct(product.id, product.quantity, product, stock: stock));
+                  BlocProvider.of<ProductBloc>(context).add(UpdateProductQuantity(product: product, store: store, quantity: product.quantity));
                 }
                 Navigator.pop(context);
                 BlocProvider.of<OrderBloc>(context).add(
-                  CreateOrderEvent(order, store.id),
+                  CreateOrderEvent(order, store, employee),
                 );
                 BlocProvider.of<OrderBloc>(context).add(ClearProductList());
                 orderSubTotalAmount = 0;
@@ -1156,10 +1244,258 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 isFlat.value = false;
                 discount = 0;
                 setState(() {});
+                // _showSuccessfullDialog(context, employee, store, order);
               },
               child: const Text('Confirm'),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  void _showSuccessfullDialog(BuildContext context, UserModel employee, StoreModel store, OrderModel order) {
+    showAdaptiveDialog(
+      context: context,
+      builder: (context) {
+        return _buildSuccessfullDialogWidget(context, employee, store, order);
+      },
+    );
+  }
+
+  SimpleDialog _buildSuccessfullDialogWidget(BuildContext context, UserModel? employee, StoreModel? store, OrderModel order) {
+    DateTime date = order.orderDate;
+    String formattedDate = DateFormat(
+      'd/MM/yyyy, HH:mm:ss',
+    ).format(date);
+    return SimpleDialog(
+      contentPadding: EdgeInsets.zero,
+      titlePadding: EdgeInsets.zero,
+      clipBehavior: Clip.hardEdge,
+      title: Container(
+        clipBehavior: Clip.none,
+        color: Colors.blueGrey.withAlpha(100),
+        width: double.infinity,
+        height: 40.h,
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Text(
+                    'Receipt',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+          ],
+        ),
+      ),
+      children: [
+        Column(
+          children: [
+            Text(
+              store!.name ?? '',
+              textAlign: TextAlign.center,
+              softWrap: true,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24.sp,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              store.phone,
+              textAlign: TextAlign.center,
+              softWrap: true,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20.sp,
+              ),
+            ),
+            Text(
+              store.address,
+              textAlign: TextAlign.center,
+              softWrap: true,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20.sp,
+              ),
+            ),
+          ],
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          width: double.infinity,
+          // height: 50,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Customer',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                  Text(
+                    customerName,
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 5.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Employee',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                  Text(
+                    employee!.displayName ?? '',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Divider(
+          indent: 20.w,
+          endIndent: 20.w,
+          height: 5,
+          color: Colors.black,
+        ),
+        SizedBox(height: 10.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Column(
+            children: [
+              const ReceiptDetail(
+                name: 'Description',
+                qty: 'Qty',
+                price: 'Total',
+              ),
+              Column(
+                children: order.productList
+                    .asMap()
+                    .entries
+                    .map(
+                      (entry) => ReceiptDetail(
+                        name: '${entry.key + 1}. ${entry.value.name}',
+                        qty: '${entry.value.quantity} x ${entry.value.price}',
+                        price: (entry.value.price * entry.value.quantity).toString(),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Divider(
+          indent: 20.w,
+          endIndent: 20.w,
+          height: 5,
+          color: Colors.black,
+        ),
+        Column(
+          children: [
+            SaleProductPrice(
+              title: 'Total',
+              price: formatAmount.format(order.totalAmount),
+              textAlign: TextAlign.start,
+            ),
+            SaleProductPrice(
+              fontSize: 12,
+              fontColor: Colors.grey,
+              title: 'Received Amount / Cash',
+              price: formatAmount.format(orderTotalAmount),
+              textAlign: TextAlign.start,
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            const Text('Thanks for coming!'),
+            Text(formattedDate),
+            SizedBox(
+              height: 10.h,
+            ),
+            SvgPicture.string(order.barcode!),
+          ],
+        ),
+        Container(
+          clipBehavior: Clip.none,
+          color: Colors.blueGrey.withAlpha(100),
+          width: double.infinity,
+          height: 50.h,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  backgroundColor: CupertinoColors.activeGreen,
+                  minimumSize: Size(100.w, 30.h),
+                ),
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(
+                  Icons.adaptive.share,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Share',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              SizedBox(width: 10.w),
+              TextButton.icon(
+                style: TextButton.styleFrom(backgroundColor: CupertinoColors.activeBlue, minimumSize: Size(100.w, 30.h)),
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.print,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Print',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

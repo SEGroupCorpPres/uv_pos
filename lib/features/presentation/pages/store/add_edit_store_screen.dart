@@ -120,7 +120,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop){
+      onPopInvoked: (bool didPop) {
         BlocProvider.of<AppBloc>(context).add(
           NavigateToStoreListScreen(),
         );

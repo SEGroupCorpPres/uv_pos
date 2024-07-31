@@ -49,12 +49,14 @@ class _StoreListScreenState extends State<StoreListScreen> {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     uid = sharedPreferences.getString('uid')!;
   }
-SessionEnding sessionEnding = SessionEnding();
+
+  SessionEnding sessionEnding = SessionEnding();
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop){
+      onPopInvoked: (bool didPop) {
         sessionEnding.onWillPop(context);
       },
       child: Scaffold(
@@ -95,7 +97,13 @@ SessionEnding sessionEnding = SessionEnding();
             ),
             IconButton(
               onPressed: () {
-                BlocProvider.of<AppBloc>(context).add(AuthLoggedOut());
+                showAdaptiveDialog(
+                  context: context,
+                  builder: (contex) {
+                    return buildAlertDialog(contex);
+                  },
+                );
+                // BlocProvider.of<AppBloc>(context).add(AuthLoggedOut());
               },
               icon: const Icon(Icons.power_settings_new),
             ),
@@ -211,6 +219,46 @@ SessionEnding sessionEnding = SessionEnding();
           child: const Icon(Icons.add),
         ),
       ),
+    );
+  }
+
+  AlertDialog buildAlertDialog(BuildContext context) {
+    return AlertDialog.adaptive(
+      icon: Icon(
+        Icons.logout,
+        size: 30.sp,
+      ),
+      content: Text(
+        'Accountdan chiqishni hohlaysizmi ?',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 20.sp),
+      ),
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.grey, minimumSize: Size(100.w, 40.h)),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 20),
+            ElevatedButton(
+              onPressed: () {
+                BlocProvider.of<AppBloc>(context).add(AuthLoggedOut());
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, minimumSize: Size(100.w, 40.h)),
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

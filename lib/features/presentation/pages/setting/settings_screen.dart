@@ -61,85 +61,93 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.sizeOf(context);
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        leading: InkWell(
-          onTap: () => BlocProvider.of<AppBloc>(context).add(
-            const NavigateToHomeScreen(),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        context.read<AppBloc>().add(
+          const NavigateToHomeScreen(),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: true,
+          leading: InkWell(
+            onTap: () => BlocProvider.of<AppBloc>(context).add(
+              const NavigateToHomeScreen(),
+            ),
+            child: Icon(Icons.adaptive.arrow_back),
           ),
-          child: Icon(Icons.adaptive.arrow_back),
-        ),
-        title: const Text('Settings'),
-        centerTitle: false,
-        actions: [
-          TextButton.icon(
-            onPressed: () => BlocProvider.of<AppBloc>(context).add(
-      const NavigateToHomeScreen(),
-    ),
-            icon: const Icon(Icons.save),
-            label: const Text('Save'),
-          ),
-        ],
+          title: const Text('Settings'),
+          centerTitle: false,
+          actions: [
+            TextButton.icon(
+              onPressed: () => BlocProvider.of<AppBloc>(context).add(
+        const NavigateToHomeScreen(),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Flexible(flex: 1, child: Icon(Icons.currency_bitcoin)),
-                  Flexible(
-                    flex: 9,
-                    child: DropdownMenu(
-                      width: size.width - 80,
-                      hintText: 'Primary Currency',
-                      inputDecorationTheme: const InputDecorationTheme(),
-                      menuStyle: const MenuStyle(),
-                      dropdownMenuEntries: const [],
+              icon: const Icon(Icons.save),
+              label: const Text('Save'),
+            ),
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(flex: 1, child: Icon(Icons.currency_bitcoin)),
+                    Flexible(
+                      flex: 9,
+                      child: DropdownMenu(
+                        width: size.width - 80,
+                        hintText: 'Primary Currency',
+                        inputDecorationTheme: const InputDecorationTheme(),
+                        menuStyle: const MenuStyle(),
+                        dropdownMenuEntries: const [],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Flexible(flex: 1, child: Icon(Icons.currency_bitcoin)),
-                  Flexible(
-                    flex: 9,
-                    child: DropdownMenu(
-                      width: size.width - 80,
-                      hintText: 'Secondary Currency',
-                      // label: Text('Operation'),
-                      inputDecorationTheme: const InputDecorationTheme(),
-                      menuStyle: const MenuStyle(),
-                      dropdownMenuEntries: const [],
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(flex: 1, child: Icon(Icons.currency_bitcoin)),
+                    Flexible(
+                      flex: 9,
+                      child: DropdownMenu(
+                        width: size.width - 80,
+                        hintText: 'Secondary Currency',
+                        // label: Text('Operation'),
+                        inputDecorationTheme: const InputDecorationTheme(),
+                        menuStyle: const MenuStyle(),
+                        dropdownMenuEntries: const [],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const StoreTextField(hintText: 'Send daily report at', icon: Icons.timer),
-              Row(
-                children: [
-                  Switch.adaptive(
-                    value: isSwitched,
-                    onChanged: (bool value) {
-                      setState(() {
-                        isSwitched = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(width: 15),
-                  const Text(
-                    'Automatically Print Report',
-                    style: TextStyle(color: Colors.black, fontSize: 16),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+                const StoreTextField(hintText: 'Send daily report at', icon: Icons.timer),
+                Row(
+                  children: [
+                    Switch.adaptive(
+                      value: isSwitched,
+                      onChanged: (bool value) {
+                        setState(() {
+                          isSwitched = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 15),
+                    const Text(
+                      'Automatically Print Report',
+                      style: TextStyle(color: Colors.black, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
@@ -15,7 +17,7 @@ class OrderRepository {
 // Create a Order document in Firestore
     try {
       // Write Order document to Firestore
-      await ordersReference.doc(orderDateFormatted).collection('daily_orders').add(order.toMap());
+      await ordersReference.doc(orderDateFormatted).collection('daily_orders').doc(order.id).set(order.toMap());
       if (kDebugMode) {
         print('Order created successfully!');
       }
@@ -33,6 +35,8 @@ class OrderRepository {
     final orderDateFormatted = _formatDate(order.orderDate);
     try {
       DocumentSnapshot documentSnapshot = await ordersReference.doc(orderDateFormatted).collection('daily_orders').doc(order.id).get();
+      log('documentSnapshot isExist:   ------->  ${documentSnapshot.exists.toString()}\n\n\n\n\n');
+
       if (documentSnapshot.exists) {
         return OrderModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
       } else {

@@ -43,45 +43,43 @@ class _ReportByCustomersScreenState extends State<ReportByCustomersScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        leading: InkWell(
-          onTap: () => BlocProvider.of<AppBloc>(context).add(
-            NavigateToReportsScreen(),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        context.read<AppBloc>().add(
+           NavigateToReportsScreen(),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: true,
+          leading: InkWell(
+            onTap: () => BlocProvider.of<AppBloc>(context).add(
+              NavigateToReportsScreen(),
+            ),
+            child: Icon(Icons.adaptive.arrow_back),
           ),
-          child: Icon(Icons.adaptive.arrow_back),
+          title: const Text('Report by Customers'),
+          centerTitle: false,
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.search),
+            )
+          ],
         ),
-        title: const Text('Report by Customers'),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Current DateTime: $_currentDateTime',
-              style: TextStyle(fontSize: 18),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Current DateTime: $_currentDateTime',
+                style: TextStyle(fontSize: 18),
+              ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: 100,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_currentDateTime.toString()),
-                );
-              },
-            ),
-          ),
-        ],
+
+          ],
+        ),
       ),
     );
   }

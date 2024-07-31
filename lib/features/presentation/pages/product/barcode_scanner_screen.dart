@@ -25,17 +25,12 @@ class BarcodeScannerScreen extends StatefulWidget {
 class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   late MobileScannerController scannerController;
 
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    scannerController = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-      autoStart: true
-    );
+    scannerController = MobileScannerController(detectionSpeed: DetectionSpeed.noDuplicates, autoStart: true);
   }
-
 
   @override
   void dispose() {
@@ -46,34 +41,42 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        leading: InkWell(
-          onTap: () => BlocProvider.of<AppBloc>(context).add(
-            const NavigateToCreateProductScreen(),
-          ),
-          child: Icon(Icons.adaptive.arrow_back),
-        ),
-        title: const Text('Barcode Scanner'),
-        centerTitle: false,
-      ),
-      body: MobileScanner(
-        controller: scannerController,
-        onDetect: (capture) {
-          final List<Barcode> barCodes = capture.barcodes;
-          if (kDebugMode) {
-            print('${barCodes.first.rawValue}  rawValue');
-          }
-          BlocProvider.of<AppBloc>(context).add(
-            NavigateToCreateProductScreen(
-              null,
-              barCodes.first.rawValue,
-              false,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        context.read<AppBloc>().add(
+              const NavigateToCreateProductScreen(),
+            );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: true,
+          leading: InkWell(
+            onTap: () => BlocProvider.of<AppBloc>(context).add(
+              const NavigateToCreateProductScreen(),
             ),
-          );
-          scannerController.stop();
-        },
+            child: Icon(Icons.adaptive.arrow_back),
+          ),
+          title: const Text('Barcode Scanner'),
+          centerTitle: false,
+        ),
+        body: MobileScanner(
+          controller: scannerController,
+          onDetect: (capture) {
+            final List<Barcode> barCodes = capture.barcodes;
+            if (kDebugMode) {
+              print('${barCodes.first.rawValue}  rawValue');
+            }
+            BlocProvider.of<AppBloc>(context).add(
+              NavigateToCreateProductScreen(
+                null,
+                barCodes.first.rawValue,
+                false,
+              ),
+            );
+            scannerController.stop();
+          },
+        ),
       ),
     );
   }

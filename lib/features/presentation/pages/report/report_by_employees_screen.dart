@@ -56,33 +56,41 @@ class _ReportByEmployeesScreenState extends State<ReportByEmployeesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        leading: InkWell(
-          onTap: () => BlocProvider.of<AppBloc>(context).add(
-            NavigateToReportsScreen(),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        context.read<AppBloc>().add(
+           NavigateToReportsScreen(),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: true,
+          leading: InkWell(
+            onTap: () => BlocProvider.of<AppBloc>(context).add(
+              NavigateToReportsScreen(),
+            ),
+            child: Icon(Icons.adaptive.arrow_back),
           ),
-          child: Icon(Icons.adaptive.arrow_back),
+          title: const Text('Report by Employees'),
+          centerTitle: false,
+          actions: [
+            IconButton(
+              onPressed: () {
+                showAdaptiveDialog(
+                  context: context,
+                  builder: (context) {
+                    return _filterDialogWidget(context);
+                  },
+                );
+              },
+              icon: const Icon(Icons.search),
+            )
+          ],
         ),
-        title: const Text('Report by Employees'),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            onPressed: () {
-              showAdaptiveDialog(
-                context: context,
-                builder: (context) {
-                  return _filterDialogWidget(context);
-                },
-              );
-            },
-            icon: const Icon(Icons.search),
-          )
-        ],
-      ),
-      body: const Center(
-        child: Text('No record found'),
+        body: const Center(
+          child: Text('No record found'),
+        ),
       ),
     );
   }

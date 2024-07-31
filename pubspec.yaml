@@ -74,7 +74,8 @@ dependencies:
   # syncfusion
   syncfusion_flutter_charts: ^26.1.42
   syncfusion_flutter_barcodes: ^26.2.5
-
+  barcode: ^2.2.8
+  flutter_svg: ^2.0.10+1
   #Toast
   fluttertoast: ^8.2.6
 

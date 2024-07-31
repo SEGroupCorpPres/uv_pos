@@ -45,11 +45,13 @@ class OrderCreating extends OrderState {}
 
 class OrderCreated extends OrderState {
   final OrderModel order;
+  final StoreModel store;
+  final UserModel? user;
 
-  const OrderCreated({required this.order});
+  const OrderCreated({required this.order, required this.store, this.user});
 
   @override
-  List<Object?> get props => [order];
+  List<Object?> get props => [order, store, user];
 }
 
 class OrderUpdating extends OrderState {}

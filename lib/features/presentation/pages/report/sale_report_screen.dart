@@ -59,128 +59,138 @@ class _SaleReportScreenState extends State<SaleReportScreen> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.sizeOf(context);
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        leading: InkWell(
-          onTap: () => BlocProvider.of<AppBloc>(context).add(
-            NavigateToReportsScreen(),
-          ),
-          child: Icon(Icons.adaptive.arrow_back),
-        ),
-        title: const Text('Sale Report'),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            onPressed: () {
-              showAdaptiveDialog(
-                context: context,
-                builder: (context) {
-                  return _filterDialogWidget(context);
-                },
-              );
-            },
-            icon: const Icon(Icons.search),
-          ),
-        ],
-      ),
-      body: BlocListener<AppBloc, AppState>(
-        listener: (context, appState) {
-          if (appState.status == AppStatus.loading) {
-            const Center(
-              child: CircularProgressIndicator.adaptive(),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        context.read<AppBloc>().add(
+              NavigateToReportsScreen(),
             );
-          }
-        },
-        child: BlocConsumer<OrderBloc, OrderState>(
-          listener: (context, orderState) {
-            if (orderState is OrderLoading) {
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: true,
+          leading: InkWell(
+            onTap: () => BlocProvider.of<AppBloc>(context).add(
+              NavigateToReportsScreen(),
+            ),
+            child: Icon(Icons.adaptive.arrow_back),
+          ),
+          title: const Text('Sale Report'),
+          centerTitle: false,
+          actions: [
+            IconButton(
+              onPressed: () {
+                showAdaptiveDialog(
+                  context: context,
+                  builder: (context) {
+                    return _filterDialogWidget(context);
+                  },
+                );
+              },
+              icon: const Icon(Icons.search),
+            ),
+          ],
+        ),
+        body: BlocListener<AppBloc, AppState>(
+          listener: (context, appState) {
+            if (appState.status == AppStatus.loading) {
               const Center(
                 child: CircularProgressIndicator.adaptive(),
               );
             }
           },
-          builder: (context, orderState) {
-            if (orderState is OrderLoading) {
-              return const Center(
-                child: CircularProgressIndicator.adaptive(),
-              );
-            } else if (orderState is OrdersFromDateByStoreIDLoaded) {
-              if (orderState.orders != null && orderState.orders!.isNotEmpty) {
-                orders = orderState.orders!;
-                double totalAmount = 0;
-                for (var order in orders) {
-                  totalAmount += order.totalAmount;
-                }
-                final chartData = orders
-                    .map(
-                      (order) => ChartData(order.orderDate, order.totalAmount),
-                    )
-                    .toList();
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        height: 320.h,
-                        // color: Colors.greenAccent,
-                        child: SfCartesianChart(
-                          primaryXAxis: const DateTimeAxis(),
-                          enableAxisAnimation: true,
-                          // enableSideBySideSeriesPlacement: false,
-                          primaryYAxis: const NumericAxis(),
-                          series: <CartesianSeries>[
-                            // Renders spline chart
-                            SplineSeries<ChartData, DateTime>(
-                              dataSource: chartData,
-                              xValueMapper: (ChartData data, _) => data.date,
-                              yValueMapper: (ChartData data, _) => data.amount,
-                            )
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+          child: BlocConsumer<OrderBloc, OrderState>(
+            listener: (context, orderState) {
+              if (orderState is OrderLoading) {
+                const Center(
+                  child: CircularProgressIndicator.adaptive(),
+                );
+              }
+            },
+            builder: (context, orderState) {
+              if (orderState is OrderLoading) {
+                return const Center(
+                  child: CircularProgressIndicator.adaptive(),
+                );
+              } else if (orderState is OrdersFromDateByStoreIDLoaded) {
+                if (orderState.orders != null && orderState.orders!.isNotEmpty) {
+                  orders = orderState.orders!;
+                  double totalAmount = 0;
+                  for (var order in orders) {
+                    totalAmount += order.totalAmount;
+                  }
+                  final chartData = orders
+                      .map(
+                        (order) => ChartData(order.orderDate, order.totalAmount),
+                      )
+                      .toList();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 20),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ChartName(color: Colors.blueAccent, title: 'Orders Total'),
-                          SizedBox(width: 30),
-                          ChartName(color: Colors.redAccent, title: 'Total unpaid'),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 320.h,
+                            // color: Colors.greenAccent,
+                            child: SfCartesianChart(
+                              primaryXAxis: const DateTimeAxis(),
+                              enableAxisAnimation: true,
+                              // enableSideBySideSeriesPlacement: false,
+                              primaryYAxis: const NumericAxis(),
+                              series: <CartesianSeries>[
+                                // Renders spline chart
+                                SplineSeries<ChartData, DateTime>(
+                                  dataSource: chartData,
+                                  xValueMapper: (ChartData data, _) => data.date,
+                                  yValueMapper: (ChartData data, _) => data.amount,
+                                )
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ChartName(color: Colors.blueAccent, title: 'Orders Total'),
+                              SizedBox(width: 30),
+                              ChartName(color: Colors.redAccent, title: 'Total unpaid'),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20.w),
+                            child: const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ChartItem(title: 'Employee'),
+                                ChartItem(title: 'Customers'),
+                                ChartItem(title: 'Payment Method'),
+                                ChartItem(title: 'Products'),
+                                ChartItem(
+                                  title: 'Profit',
+                                  price: '0',
+                                ),
+                              ],
+                            ),
+                          )
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      Padding(
-                        padding:  EdgeInsets.symmetric(horizontal:  20.w),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ChartItem(title: 'Employee'),
-                            ChartItem(title: 'Customers'),
-                            ChartItem(title: 'Payment Method'),
-                            ChartItem(title: 'Products'),
-                            ChartItem(
-                              title: 'Profit',
-                              price: '0',
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                );
+                    ),
+                  );
+                } else {
+                  return ErrorWidget('Orders not found');
+                }
+              } else if (orderState is OrderNotFound) {
+                return ErrorWidget(orderState);
+              } else if (orderState is OrderError) {
+                return ErrorWidget(orderState.error);
               } else {
-                return ErrorWidget('Orders not found');
+                return Container();
               }
-            } else if (orderState is OrderNotFound) {
-              return ErrorWidget(orderState);
-            } else if (orderState is OrderError) {
-              return ErrorWidget(orderState.error);
-            } else {
-              return Container();
-            }
-          },
+            },
+          ),
         ),
       ),
     );
