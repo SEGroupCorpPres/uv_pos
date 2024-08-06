@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -24,6 +25,7 @@ class BarcodeScannerScreen extends StatefulWidget {
 
 class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   late MobileScannerController scannerController;
+  String? barcode = '';
 
   @override
   void initState() {
@@ -60,22 +62,39 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           title: const Text('Barcode Scanner'),
           centerTitle: false,
         ),
-        body: MobileScanner(
-          controller: scannerController,
-          onDetect: (capture) {
-            final List<Barcode> barCodes = capture.barcodes;
-            if (kDebugMode) {
-              print('${barCodes.first.rawValue}  rawValue');
+        body: BlocListener<ProductBloc, ProductState>(
+          listener: (context, productState) {
+            if (productState is ProductSearchByBarcodeLoaded) {
+              BlocProvider.of<AppBloc>(context).add(
+                NavigateToCreateProductScreen(
+                  productState.product,
+                  productState.product.barcode,
+                  true,
+                ),
+              );
             }
-            BlocProvider.of<AppBloc>(context).add(
-              NavigateToCreateProductScreen(
-                null,
-                barCodes.first.rawValue,
-                false,
-              ),
-            );
-            scannerController.stop();
+            if (productState is ProductNotFound) {
+              BlocProvider.of<AppBloc>(context).add(
+                NavigateToCreateProductScreen(
+                  null,
+                  barcode,
+                  false,
+                ),
+              );
+            }
           },
+          child: MobileScanner(
+            controller: scannerController,
+            onDetect: (capture) {
+              final List<Barcode> barCodes = capture.barcodes;
+              if (kDebugMode) {
+                print('${barCodes.first.rawValue}  rawValue');
+              }
+              barcode = barCodes.first.rawValue;
+              context.read<ProductBloc>().add(FetchProductByBarcodeEvent(barcode!));
+              scannerController.stop();
+            },
+          ),
         ),
       ),
     );
