@@ -77,12 +77,27 @@ class ProductAlreadyCreated extends ProductState {}
 class ProductDeleting extends ProductState {}
 
 class ProductDeleted extends ProductState {}
+
 class OrderProductQuantityUpdate extends ProductState {
   final List<int> quantities;
   final int index;
 
-  const OrderProductQuantityUpdate( {required this.quantities, required this.index,});
+  const OrderProductQuantityUpdate({
+    required this.quantities,
+    required this.index,
+  });
+
   @override
   // TODO: implement props
   List<Object?> get props => [quantities, index];
+}
+
+class FilteredProductList extends ProductState {
+  final List<ProductModel> filteredProducts;
+
+  const FilteredProductList({required this.filteredProducts});
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [filteredProducts];
 }

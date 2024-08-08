@@ -627,8 +627,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               actions: [
                 IconButton(
                   onPressed: () {
-                    _buildShowModalBottomSheet(context);
-                    BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(appState.store));
+                    BlocProvider.of<ProductBloc>(context).add(FilterProductList(store: appState.store!, filter: ''));
+                    _buildShowModalBottomSheet(context, appState.store!);
                   },
                   icon: const Icon(Icons.search),
                 ),
@@ -816,7 +816,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  Future<dynamic> _buildShowModalBottomSheet(BuildContext context) {
+  Future<dynamic> _buildShowModalBottomSheet(BuildContext context, StoreModel store) {
     return showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -827,14 +827,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       anchorPoint: const Offset(0, .8),
       useSafeArea: true,
       builder: (context) {
-        return _buildSearchBottomSheet(
-          context,
-        );
+        return _buildSearchBottomSheet(context, store);
       },
     );
   }
 
-  Container _buildSearchBottomSheet(BuildContext context) {
+  Container _buildSearchBottomSheet(BuildContext context, StoreModel store) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       width: double.infinity,
@@ -859,15 +857,16 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             ),
             onChanged: (value) {
               _searchList.clear();
-              for (ProductModel product in _productList) {
-                if (product.name.toLowerCase().contains(value.toLowerCase())) {
-                  _searchList.add(product);
-                }
-                setState(() {
-                  _searchList;
-                  _isSearching = true;
-                });
-              }
+              BlocProvider.of<ProductBloc>(context).add(FilterProductList(filter: value, store: store));
+              // for (ProductModel product in _productList) {
+              //   if (product.name.toLowerCase().contains(value.toLowerCase())) {
+              //     _searchList.add(product);
+              //   }
+              //   setState(() {
+              //     _searchList;
+              //     _isSearching = true;
+              //   });
+              // }
             },
           ),
           SizedBox(
@@ -882,9 +881,9 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                     child: CircularProgressIndicator.adaptive(),
                   ),
                 );
-              } else if (productState is ProductsByStoreIdLoaded) {
+              } else if (productState is FilteredProductList) {
                 var state = productState;
-                _productList = _isSearching ? _searchList : state.products ?? [];
+                _productList =  state.filteredProducts;
                 return SizedBox(
                   height: MediaQuery.sizeOf(context).height * .71.h,
                   child: SingleChildScrollView(
@@ -1049,7 +1048,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
         Column(
           children: [
             Text(
-              store!.name ?? '',
+              store!.name,
               textAlign: TextAlign.center,
               softWrap: true,
               style: TextStyle(
@@ -1305,7 +1304,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
         Column(
           children: [
             Text(
-              store!.name ?? '',
+              store!.name,
               textAlign: TextAlign.center,
               softWrap: true,
               style: TextStyle(

@@ -53,7 +53,7 @@ class DeleteProductEvent extends ProductEvent {
 }
 
 class FetchProductByIdEvent extends ProductEvent {
-  final String  id;
+  final String id;
 
   const FetchProductByIdEvent(this.id);
 
@@ -87,4 +87,15 @@ class UpdateProductQuantity extends ProductEvent {
 
   @override
   List<Object?> get props => [product, store, quantity];
+}
+
+class FilterProductList extends ProductEvent {
+  final StoreModel store;
+  final String? filter;
+
+  const FilterProductList({this.filter, required this.store});
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [filter, store];
 }

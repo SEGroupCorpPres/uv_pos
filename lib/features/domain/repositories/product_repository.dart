@@ -66,6 +66,37 @@ class ProductRepository {
     }
   }
 
+  Future<List<ProductModel>> getProductsByStoreIdWithFilter(StoreModel storeModel, String? filter) async {
+    List<QueryDocumentSnapshot> documents = [];
+    try {
+      QuerySnapshot querySnapshot = await productsReference
+          .where(
+            'store_id',
+            isEqualTo: storeModel.id,
+          )
+          .get();
+      // Filtrlash: name maydonida 'value2' substranti bor hujjatlar
+      if (filter != null || filter!.isNotEmpty) {
+        documents = querySnapshot.docs.where((doc) {
+          String name = doc['name'];
+          return name.contains(filter ?? '');
+        }).toList();
+      } else {
+        documents = querySnapshot.docs;
+      }
+
+      List<ProductModel> products = documents.map(
+        (doc) {
+          return ProductModel.fromMap(doc.data() as Map<String, dynamic>);
+        },
+      ).toList();
+
+      return products;
+    } catch (e) {
+      throw Exception('Error fetching products: $e');
+    }
+  }
+
   Future<ProductModel?> getProductByBarcode(String barcode) async {
     try {
       QuerySnapshot querySnapshot = await productsReference

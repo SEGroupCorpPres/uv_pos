@@ -19,6 +19,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     on<LoadProductsEvent>(fetchProductList);
     on<FetchProductByIdEvent>(fetchProductById);
     on<FetchProductByBarcodeEvent>(onFetchProductByBarcode);
+    on<FilterProductList>(fetchFilteredProductList);
     on<CreateProductEvent>(createProduct);
     on<UpdateProductEvent>(updateProduct);
     on<UpdateProductQuantity>(updateProductQuantity);
@@ -37,6 +38,26 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       }
       if (products.isNotEmpty) {
         emit(ProductsByStoreIdLoaded(products: products));
+      } else {
+        emit(ProductNotFound());
+      }
+    } catch (e) {
+      emit(ProductError(error: e.toString()));
+    }
+  }
+
+  Future<void> fetchFilteredProductList(FilterProductList event, Emitter<ProductState> emit) async {
+    try {
+      emit(ProductLoading());
+      if (kDebugMode) {
+        print('store is ${event.store}');
+      }
+      final products = await _productRepository.getProductsByStoreIdWithFilter(event.store, event.filter);
+      if (kDebugMode) {
+        print('first product is $products');
+      }
+      if (products.isNotEmpty) {
+        emit(FilteredProductList(filteredProducts: products));
       } else {
         emit(ProductNotFound());
       }
