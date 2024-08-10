@@ -62,9 +62,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   bool isProcessing = false;
   bool isScannerRunning = true;
   bool isSearch = false;
-  List<ProductModel> _searchList = [];
+  final List<ProductModel> _searchList = [];
   List<ProductModel> _productList = [];
-  bool _isSearching = false;
   Barcode? _barcode;
   double productAmount = 0;
   double orderSubTotalAmount = 0;
@@ -75,8 +74,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   String? orderQrcode = '';
 
   NumberFormat formatAmount = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: '\$',
+    locale: 'uz_UZ',
+    symbol: 'UZS',
   );
   final FocusNode _qtyFocusNode = FocusNode();
 
@@ -858,20 +857,9 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             onChanged: (value) {
               _searchList.clear();
               BlocProvider.of<ProductBloc>(context).add(FilterProductList(filter: value, store: store));
-              // for (ProductModel product in _productList) {
-              //   if (product.name.toLowerCase().contains(value.toLowerCase())) {
-              //     _searchList.add(product);
-              //   }
-              //   setState(() {
-              //     _searchList;
-              //     _isSearching = true;
-              //   });
-              // }
             },
           ),
-          SizedBox(
-            height: 10.h,
-          ),
+          SizedBox(height: 10.h),
           BlocBuilder<ProductBloc, ProductState>(
             builder: (context, productState) {
               if (productState is ProductLoading) {
@@ -883,7 +871,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 );
               } else if (productState is FilteredProductList) {
                 var state = productState;
-                _productList =  state.filteredProducts;
+                _productList = state.filteredProducts;
                 return SizedBox(
                   height: MediaQuery.sizeOf(context).height * .71.h,
                   child: SingleChildScrollView(
@@ -894,40 +882,47 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                           .asMap()
                           .entries
                           .map(
-                            (entry) => SizedBox(
-                              width: 105.w,
-                              height: 160.h,
-                              child: Card(
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      width: 105.w,
-                                      height: 105.w,
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: entry.value.image != null
-                                              ? NetworkImage(entry.value.image!)
-                                              : const AssetImage(
-                                                  Assets.imagesImageBg,
-                                                ),
-                                          fit: BoxFit.cover,
+                            (entry) => InkWell(
+                              onTap: () {
+                                BlocProvider.of<OrderBloc>(context).add(
+                                  AddProduct(entry.value.copyWith(quantity: 1)),
+                                );
+                              },
+                              child: SizedBox(
+                                width: 105.w,
+                                height: 160.h,
+                                child: Card(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        width: 105.w,
+                                        height: 105.w,
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image: entry.value.image != null
+                                                ? NetworkImage(entry.value.image!)
+                                                : const AssetImage(
+                                                    Assets.imagesImageBg,
+                                                  ),
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: Container(
-                                        color: Colors.black45.withOpacity(.5),
-                                        width: double.infinity,
-                                        height: 55.h,
-                                        child: Text(
-                                          '${entry.value.name}  \n${formatAmount.format(entry.value.price)}',
-                                          style: TextStyle(color: Colors.white, fontSize: 12.sp),
-                                          textAlign: TextAlign.center,
+                                      Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: Container(
+                                          color: Colors.black45.withOpacity(.5),
+                                          width: double.infinity,
+                                          height: 55.h,
+                                          child: Text(
+                                            '${entry.value.name}  \n${formatAmount.format(entry.value.price)}',
+                                            style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
