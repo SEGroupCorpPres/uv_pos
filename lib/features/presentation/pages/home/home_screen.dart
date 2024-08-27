@@ -36,6 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, appState) {
         return PopScope(
           canPop: false,
+          onPopInvokedWithResult: (bool didPop, result){
+
+          },
           onPopInvoked: (bool didPop) {
             sessionEnding.onWillPop(context);
           },
@@ -46,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
               centerTitle: false,
               actions: [
                 PopupMenuButton(
-                  itemBuilder: (context) => popupMenuList,
+                  itemBuilder: (context) => popupMenuList(context),
                 ),
               ],
               bottom: PreferredSize(

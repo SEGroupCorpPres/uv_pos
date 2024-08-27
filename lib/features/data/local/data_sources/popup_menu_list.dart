@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 
-List<PopupMenuEntry<Widget>> popupMenuList = [
+List<PopupMenuEntry<Widget>> popupMenuList(BuildContext context) => [
   const PopupMenuItem(
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -99,7 +102,15 @@ List<PopupMenuEntry<Widget>> popupMenuList = [
       ],
     ),
   ),
-  const PopupMenuItem(
+   PopupMenuItem(
+    onTap: (){
+      showAdaptiveDialog(
+        context: context,
+        builder: (contex) {
+          return buildAlertDialog(contex);
+        },
+      );
+    },
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -118,3 +129,42 @@ List<PopupMenuEntry<Widget>> popupMenuList = [
     ),
   ),
 ];
+AlertDialog buildAlertDialog(BuildContext context) {
+  return AlertDialog.adaptive(
+    icon: Icon(
+      Icons.logout,
+      size: 30.sp,
+    ),
+    content: Text(
+      'Accountdan chiqishni hohlaysizmi ?',
+      textAlign: TextAlign.center,
+      style: TextStyle(fontSize: 20.sp),
+    ),
+    actions: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.grey, minimumSize: Size(100.w, 40.h)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 20),
+          ElevatedButton(
+            onPressed: () {
+              BlocProvider.of<AppBloc>(context).add(AuthLoggedOut());
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, minimumSize: Size(100.w, 40.h)),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
