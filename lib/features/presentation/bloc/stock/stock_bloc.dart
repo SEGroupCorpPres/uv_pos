@@ -36,7 +36,8 @@ class StockBloc extends Bloc<StockEvent, StockState> {
         id: stock.id,
         storeId: stock.storeId,
         product: stock.product,
-        qty: stock.qty + event.quantity,
+        size: stock.size + event.size,
+        mesurementType: stock.mesurementType
       );
       await _stockRepository.updateStock(stockModel);
     }
@@ -51,38 +52,5 @@ class StockBloc extends Bloc<StockEvent, StockState> {
     }
   }
 
-  //
-  // void _onRemoveStockProduct(RemoveStockProduct event, Emitter<StockState> emit) async {
-  //   if (state is StockLoaded) {
-  //     final state = this.state as StockLoaded;
-  //     final updatedProducts = state.products.where((product) => product.id != event.productId).toList();
-  //     try {
-  //       await _productRepository.removeProduct(event.productId);
-  //       emit(StockLoaded(updatedProducts));
-  //     } catch (e) {
-  //       emit(StockError('Error removing product: $e'));
-  //     }
-  //   }
-  // }
 
-  // void _onUpdateStockQuantity(UpdateStockQuantity event, Emitter<StockState> emit) async {
-  //   late StockModel stockModel;
-  //   if (state is StockLoaded) {
-  //     final state = this.state as StockLoaded;
-  //     final updateStocks = state.stocks.map(
-  //       (stock) {
-  //         if (stock.id == event.productId) {
-  //           return stockModel;
-  //         } else {
-  //           return stock;
-  //         }
-  //       },
-  //     ).toList();
-  //     try {
-  //       emit(StockLoaded(updateStocks));
-  //     } catch (e) {
-  //       emit(StockError('Error updating product quantity: $e'));
-  //     }
-  //   }
-  // }
 }

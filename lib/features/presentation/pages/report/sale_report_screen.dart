@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+// import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/chart_model.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
@@ -134,20 +134,20 @@ class _SaleReportScreenState extends State<SaleReportScreen> {
                             width: double.infinity,
                             height: 320.h,
                             // color: Colors.greenAccent,
-                            child: SfCartesianChart(
-                              primaryXAxis: const DateTimeAxis(),
-                              enableAxisAnimation: true,
-                              // enableSideBySideSeriesPlacement: false,
-                              primaryYAxis: const NumericAxis(),
-                              series: <CartesianSeries>[
-                                // Renders spline chart
-                                SplineSeries<ChartData, DateTime>(
-                                  dataSource: chartData,
-                                  xValueMapper: (ChartData data, _) => data.date,
-                                  yValueMapper: (ChartData data, _) => data.amount,
-                                )
-                              ],
-                            ),
+                            // child: SfCartesianChart(
+                            //   primaryXAxis: const DateTimeAxis(),
+                            //   enableAxisAnimation: true,
+                            //   // enableSideBySideSeriesPlacement: false,
+                            //   primaryYAxis: const NumericAxis(),
+                            //   series: <CartesianSeries>[
+                            //     // Renders spline chart
+                            //     SplineSeries<ChartData, DateTime>(
+                            //       dataSource: chartData,
+                            //       xValueMapper: (ChartData data, _) => data.date,
+                            //       yValueMapper: (ChartData data, _) => data.amount,
+                            //     )
+                            //   ],
+                            // ),
                           ),
                           const SizedBox(height: 30),
                           const Row(

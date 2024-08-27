@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/core/helpers/image_helper.dart';
+import 'package:uv_pos/features/data/remote/models/product_mesurement_type.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
@@ -40,25 +41,21 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   late final TextEditingController _productDescriptionController = TextEditingController();
   late final TextEditingController _productPriceController = TextEditingController();
   late final TextEditingController _productCostController = TextEditingController();
-  late final TextEditingController _productQtyController = TextEditingController();
+  late final TextEditingController _productSizeController = TextEditingController();
+  late final TextEditingController _productNotifySizeController = TextEditingController();
+
   File? _image;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'createProductFormKey');
   final ImageHelper imageHelper = ImageHelper();
   late MobileScannerController scannerController;
+  String? image = '';
   String? barcode = '';
+  String? _selectedValue = ProductMeasurementType.dona.name;
 
   @override
   void initState() {
     // TODO: implement initState
     scannerController = MobileScannerController(detectionSpeed: DetectionSpeed.noDuplicates, autoStart: true);
-
-    // _productNameController = TextEditingController();
-    // _productBarcodeController = TextEditingController();
-    // _productDescriptionController = TextEditingController();
-    // _productPriceController = TextEditingController();
-    // _productCostController = TextEditingController();
-    // _productQtyController = TextEditingController();
-    // _productNameController = TextEditingController();
     super.initState();
   }
 
@@ -111,12 +108,6 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   @override
   void dispose() {
     // TODO: implement dispose
-    // _productNameController.dispose();
-    // _productBarcodeController.dispose();
-    // _productDescriptionController.dispose();
-    // _productPriceController.dispose();
-    // _productCostController.dispose();
-    // _productQtyController.dispose();
     scannerController.dispose();
 
     super.dispose();
@@ -145,7 +136,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         _productDescriptionController.text = product?.description ?? '';
         _productPriceController.text = product?.price.toString() ?? '';
         _productCostController.text = product?.cost.toString() ?? '';
-        _productQtyController.text = product?.quantity.toString() ?? '';
+        _productSizeController.text = product?.size.toString() ?? '';
+        _productNotifySizeController.text = product?.notifySize.toString() ?? '';
+        _selectedValue = product?.productMeasurementType ?? ProductMeasurementType.dona.name;
         return PopScope(
           canPop: false,
           onPopInvoked: (bool didPop) {
@@ -174,9 +167,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                       String id = '';
                       if (!appState.isEdit) {
                         final createdDate = Timestamp.now();
-
                         id = createdDate.microsecondsSinceEpoch.toString();
                       } else {
+                        image = appState.product!.image;
                         id = appState.product!.id;
                       }
                       final product = ProductModel(
@@ -186,7 +179,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                         description: _productDescriptionController.text,
                         price: double.parse(_productPriceController.text),
                         cost: double.parse(_productCostController.text),
-                        quantity: int.parse(_productQtyController.text),
+                        size: double.parse(_productSizeController.text),
+                        notifySize: double.parse(_productNotifySizeController.text),
+                        productMeasurementType: _selectedValue!,
                         storeId: store!.id,
                       );
                       if (!appState.isEdit) {
@@ -244,14 +239,14 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                                       ),
                                     ),
                                   )
-                                : product!.image != null
+                                : image != null
                                     ? Container(
                                         width: 150.r,
                                         height: 150.r,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(10.r),
                                           image: DecorationImage(
-                                            image: NetworkImage(product.image!),
+                                            image: NetworkImage(image!),
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -298,7 +293,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                           child: Column(
                             children: [
                               StoreTextField(
-                                hintText: 'Product Name',
+                                hintText: 'Maxsulot nomi',
                                 icon: Icons.text_fields,
                                 textEditingController: _productNameController,
                               ),
@@ -307,77 +302,73 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                                   Flexible(
                                     flex: 15,
                                     child: StoreTextField(
-                                        hintText: 'Product Barcode',
+                                        hintText: 'Maxsulot Barcode',
                                         textEditingController: _productBarcodeController,
                                         icon: Icons.qr_code_2,
-                                        onTap: () {
-                                          showModalBottomSheet(
-                                            context: context,
-                                            enableDrag: true,
-                                            isScrollControlled: true,
-                                            useSafeArea: true,
-                                            showDragHandle: true,
-
-                                            builder: (conext) {
-                                              return Scaffold(
-                                                body: BlocListener<ProductBloc, ProductState>(
-                                                  listener: (context, productState) {
-                                                    if (productState is ProductSearchByBarcodeLoaded) {
-                                                      // BlocProvider.of<AppBloc>(context).add(
-                                                      //   NavigateToCreateProductScreen(
-                                                      //     productState.product,
-                                                      //     productState.product.barcode,
-                                                      //     true,
-                                                      //   ),
-                                                      // );
-                                                    }
-                                                    if (productState is ProductNotFound) {
-                                                      // BlocProvider.of<AppBloc>(context).add(
-                                                      //   NavigateToCreateProductScreen(
-                                                      //     null,
-                                                      //     barcode,
-                                                      //     false,
-                                                      //   ),
-                                                      // );
-                                                    }
-                                                    Navigator.pop(context);
-                                                  },
-                                                  child: Stack(
-                                                    children: [
-                                                      MobileScanner(
-                                                        controller: scannerController,
-                                                        onDetect: (capture) {
-                                                          final List<Barcode> barCodes = capture.barcodes;
-                                                          if (kDebugMode) {
-                                                            print('${barCodes.first.rawValue}  rawValue');
-                                                          }
-                                                          barcode = barCodes.first.rawValue;
-                                                          context.read<ProductBloc>().add(FetchProductByBarcodeEvent(barcode!));
-                                                          scannerController.stop();
-                                                        },
-                                                      ),
-                                                      Container(
-                                                        width: size.width,
-                                                        height: size.height - MediaQuery.of(context).padding.top,
-                                                        color: Colors.black.withOpacity(.6),
-                                                        child: Center(
-                                                          child: Container(
-                                                            width: 100.r,
-                                                            height: 100.r,
-                                                            color: Colors.transparent,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        }
-                                        // => BlocProvider.of<AppBloc>(context).add(
-                                        //   NavigateToBarcodeScannerScreen(),
-                                        // ),
+                                        onTap: ()
+                                          // showModalBottomSheet(
+                                          //   context: context,
+                                          //   enableDrag: true,
+                                          //   isScrollControlled: true,
+                                          //   useSafeArea: true,
+                                          //   showDragHandle: true,
+                                          //   builder: (conext) {
+                                          //     return Scaffold(
+                                          //       body: BlocListener<ProductBloc, ProductState>(
+                                          //         listener: (context, productState) {
+                                          //           if (productState is ProductSearchByBarcodeLoaded) {
+                                          //             final ProductModel product = productState.product;
+                                          //             _productNameController.text = product.name;
+                                          //             image = product.image;
+                                          //             _productDescriptionController.text = product.description ?? '';
+                                          //             _productBarcodeController.text = product.barcode.toString();
+                                          //             _productPriceController.text = product.price.toString() ;
+                                          //             _productCostController.text = product.cost.toString() ;
+                                          //             _productSizeController.text = product.size.toString() ;
+                                          //             _productNotifySizeController.text = product.notifySize.toString() ;
+                                          //             _selectedValue = product.productMeasurementType ?? ProductMeasurementType.dona.name;
+                                          //           }
+                                          //           if (productState is ProductNotFound) {
+                                          //             _productBarcodeController.text = barcode.toString();
+                                          //           }
+                                          //           Navigator.pop(context);
+                                          //         },
+                                          //         child: Stack(
+                                          //           children: [
+                                          //             MobileScanner(
+                                          //               controller: scannerController,
+                                          //               onDetect: (capture) {
+                                          //                 final List<Barcode> barCodes = capture.barcodes;
+                                          //                 if (kDebugMode) {
+                                          //                   print('${barCodes.first.rawValue}  rawValue');
+                                          //                 }
+                                          //                 barcode = barCodes.first.rawValue;
+                                          //                 context.read<ProductBloc>().add(FetchProductByBarcodeEvent(barcode!));
+                                          //                 scannerController.stop();
+                                          //               },
+                                          //             ),
+                                          //             Container(
+                                          //               width: size.width,
+                                          //               height: size.height - MediaQuery.of(context).padding.top,
+                                          //               color: Colors.black.withOpacity(.6),
+                                          //               child: Center(
+                                          //                 child: Container(
+                                          //                   width: 100.r,
+                                          //                   height: 100.r,
+                                          //                   color: Colors.transparent,
+                                          //                 ),
+                                          //               ),
+                                          //             ),
+                                          //           ],
+                                          //         ),
+                                          //       ),
+                                          //     );
+                                          //   },
+                                          // );
+                                        // }
+                                        => BlocProvider.of<AppBloc>(context).add(
+                                          NavigateToBarcodeScannerScreen(),
+                                        ),
                                         ),
                                   ),
                                   const Flexible(
@@ -387,24 +378,68 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                                 ],
                               ),
                               StoreTextField(
-                                hintText: 'Product Description',
+                                hintText: 'Maxsulot tavsifi',
                                 icon: Icons.description,
                                 textEditingController: _productDescriptionController,
                               ),
                               StoreTextField(
-                                hintText: 'Price',
+                                hintText: 'Narxi',
                                 icon: Icons.price_check,
                                 textEditingController: _productPriceController,
                               ),
                               StoreTextField(
-                                hintText: 'Cost',
+                                hintText: 'Asl narxi',
                                 icon: Icons.price_check,
                                 textEditingController: _productCostController,
                               ),
                               StoreTextField(
-                                hintText: 'Quantity',
+                                hintText: 'O\'lcham',
                                 icon: Icons.notifications,
-                                textEditingController: _productQtyController,
+                                textEditingController: _productSizeController,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Flexible(
+                                    child: SizedBox(),
+                                    flex: 1,
+                                  ),
+                                  Flexible(
+                                    flex: 9,
+                                    fit: FlexFit.tight,
+                                    child: DropdownButtonFormField<String>(
+                                      decoration: InputDecoration(
+                                        labelText: 'O\'lchov turini tanlang',
+                                      ),
+                                      value: _selectedValue,
+                                      items: productMeasurementTypes.map<DropdownMenuItem<String>>(
+                                        (String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(value),
+                                          );
+                                        },
+                                      ).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          _selectedValue = newValue;
+                                        });
+                                      },
+                                      validator: (value) {
+                                        if (value == null) {
+                                          return 'Please select an option';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 12.h),
+                              StoreTextField(
+                                hintText: 'Ogohlantiruvchi o\'lcham',
+                                icon: Icons.notifications,
+                                textEditingController: _productNotifySizeController,
                               ),
                             ],
                           ),
@@ -420,4 +455,6 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       },
     );
   }
+
+  List<String> productMeasurementTypes = ProductMeasurementType.values.map((value) => value.name).toList();
 }

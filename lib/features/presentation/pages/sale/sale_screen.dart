@@ -14,6 +14,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
+import 'package:uv_pos/features/data/remote/models/product_mesurement_type.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/stock_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -243,13 +244,13 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showChangeProductQtyDiaolg(BuildContext context, ProductModel product) {
+  void _showChangeProductQtyDiaolg(BuildContext context, ProductModel orderProduct) {
     _qtyFocusNode.requestFocus();
     showAdaptiveDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return _changeProductQtyDiaolg(context, product);
+        return _changeProductQtyDiaolg(context, orderProduct);
       },
       useSafeArea: false,
       traversalEdgeBehavior: TraversalEdgeBehavior.leaveFlutterView,
@@ -401,8 +402,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _changeProductQtyDiaolg(BuildContext context, ProductModel product) {
-    _productQtyController.text = product.quantity.toString();
+  Widget _changeProductQtyDiaolg(BuildContext context, ProductModel orderProduct) {
+    _productQtyController.text = orderProduct.size.toString();
     return SimpleDialog(
       title: const Text(
         'Change Quantity',
@@ -415,7 +416,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             BlocBuilder<ProductBloc, ProductState>(
               builder: (context, prodState) {
                 if (prodState is ProductByIdLoaded) {
-                  if (prodState.product.quantity > 0) {
+                  if (prodState.product.size > 0) {
                     return IconButton(
                       onPressed: () {
                         if (int.tryParse(_productQtyController.text)! >= 1) {
@@ -451,8 +452,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 log('change qty dialog: prodState: $productState');
                 if (productState is ProductByIdLoaded) {
                   log('prodState prod: $productState');
-                  log('product: $product');
-                  if (productState.product.quantity > product.quantity) {
+                  log('product: $orderProduct');
+                  if (productState.product.size > orderProduct.size) {
                     return IconButton(
                       onPressed: () {
                         setState(() {
@@ -488,12 +489,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 if (int.tryParse(_productQtyController.text)! > 1) {
                   BlocProvider.of<OrderBloc>(context).add(
                     UpdateOrderProductQuantity(
-                      product: product,
-                      quantity: int.tryParse(_productQtyController.text)!,
+                      product: orderProduct,
+                      size: double.tryParse(_productQtyController.text)!,
                     ),
                   );
                 } else if (int.tryParse(_productQtyController.text)! == 0) {
-                  BlocProvider.of<OrderBloc>(context).add(RemoveProduct(product.id));
+                  BlocProvider.of<OrderBloc>(context).add(RemoveProduct(orderProduct.id));
                 }
                 Navigator.pop(context);
               },
@@ -523,20 +524,20 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       _productList = productState.products ?? [];
     }
     if (productState is ProductSearchByBarcodeLoaded) {
-      if (productState.product.quantity > 0) {
+      if (productState.product.size > 0) {
         if (!containsProduct(products, productState.product)) {
           BlocProvider.of<OrderBloc>(context).add(
-            AddProduct(productState.product.copyWith(quantity: 1)),
+            AddProduct(productState.product.copyWith(size: 1)),
           );
         } else {
-          int qty = 0;
+          double qty = 0;
           for (var product in products) {
-            if (product.id == productState.product.id && product.quantity < productState.product.quantity) {
-              qty = product.quantity;
+            if (product.id == productState.product.id && product.size < productState.product.size) {
+              qty = product.size;
               BlocProvider.of<OrderBloc>(context).add(
                 UpdateOrderProductQuantity(
                   product: productState.product,
-                  quantity: qty + 1,
+                  size: qty + 1,
                 ),
               );
               break;
@@ -559,7 +560,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     if (orderState is UpdatedOrderProducts) {
       if (orderState.products != null || orderState.products!.isNotEmpty) {
         products = orderState.products!;
-        orderSubTotalAmount = orderState.products!.fold(0, (sum, product) => sum + product.price * product.quantity);
+        orderSubTotalAmount = orderState.products!.fold(0, (sum, product) => sum + product.price * product.size);
         orderTotalAmount = orderSubTotalAmount;
       }
     }
@@ -737,7 +738,10 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                         return CupertinoListTile(
                                           onTap: () {
                                             BlocProvider.of<ProductBloc>(context).add(FetchProductByIdEvent(product.id));
-                                            _showChangeProductQtyDiaolg(context, product);
+                                            _showChangeProductQtyDiaolg(
+                                              context,
+                                              product,
+                                            );
                                           },
                                           leadingSize: 40.r,
                                           leading: DecoratedBox(
@@ -754,13 +758,13 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                             softWrap: true,
                                           ),
                                           subtitle: Text(
-                                            '${product.quantity} x ${formatAmount.format(product.price.toInt())}',
+                                            '${product.size} x ${formatAmount.format(product.price.toInt())}',
                                             style: TextStyle(fontSize: 14.sp),
                                           ),
                                           trailing: SizedBox(
                                             height: 32.sp,
                                             child: Text(
-                                              formatAmount.format((product.quantity * product.price)),
+                                              formatAmount.format((product.size * product.price)),
                                               style: TextStyle(fontSize: 15.sp),
                                             ),
                                           ),
@@ -885,7 +889,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                             (entry) => InkWell(
                               onTap: () {
                                 BlocProvider.of<OrderBloc>(context).add(
-                                  AddProduct(entry.value.copyWith(quantity: 1)),
+                                  AddProduct(entry.value.copyWith(size: 1)),
                                 );
                               },
                               child: SizedBox(
@@ -915,7 +919,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                           width: double.infinity,
                                           height: 55.h,
                                           child: Text(
-                                            '${entry.value.name}  \n${formatAmount.format(entry.value.price)}',
+                                            '${entry.value.name}  \n${formatAmount.format(entry.value.price)} \n ${entry.value.productMeasurementType == ProductMeasurementType.dona.name ? entry.value.size.toInt().toString() + ' dona' : entry.value.productMeasurementType == ProductMeasurementType.kg.name ? entry.value.size.toString() + 'kg' : entry.value.productMeasurementType == ProductMeasurementType.l.name ? entry.value.size.toString() + 'l' : entry.value.size.toString() + 'm'}',
                                             style: TextStyle(color: Colors.white, fontSize: 12.sp),
                                             textAlign: TextAlign.center,
                                           ),
@@ -1154,8 +1158,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                     .map(
                       (entry) => ReceiptDetail(
                         name: '${entry.key + 1}. ${entry.value.name}',
-                        qty: '${entry.value.quantity} x ${entry.value.price}',
-                        price: (entry.value.price * entry.value.quantity).toString(),
+                        qty: '${entry.value.size} x ${entry.value.price}',
+                        price: (entry.value.price * entry.value.size).toString(),
                       ),
                     )
                     .toList(),
@@ -1224,9 +1228,10 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 log('order is $order');
                 late StockModel stock;
                 for (var product in products) {
-                  stock = StockModel(id: product.id, storeId: store.id, qty: product.quantity, product: product);
-                  BlocProvider.of<StockBloc>(context).add(AddUpdateStockProduct(product.id, product.quantity, product, stock: stock));
-                  BlocProvider.of<ProductBloc>(context).add(UpdateProductQuantity(product: product, store: store, quantity: product.quantity));
+                  stock = StockModel(id: product.id, storeId: store.id, size: product.size, mesurementType: product.productMeasurementType ?? ProductMeasurementType.dona.toString(), product: product);
+                  BlocProvider.of<StockBloc>(context)
+                      .add(AddUpdateStockProduct(product.id, product.size, product.productMeasurementType ?? ProductMeasurementType.dona.toString(), product, stock: stock));
+                  BlocProvider.of<ProductBloc>(context).add(UpdateProductQuantity(product: product, store: store, size: product.size));
                 }
                 Navigator.pop(context);
                 BlocProvider.of<OrderBloc>(context).add(
@@ -1410,8 +1415,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                     .map(
                       (entry) => ReceiptDetail(
                         name: '${entry.key + 1}. ${entry.value.name}',
-                        qty: '${entry.value.quantity} x ${entry.value.price}',
-                        price: (entry.value.price * entry.value.quantity).toString(),
+                        qty: '${entry.value.size} x ${entry.value.price}',
+                        price: (entry.value.price * entry.value.size).toString(),
                       ),
                     )
                     .toList(),

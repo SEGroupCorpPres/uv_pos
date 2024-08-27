@@ -89,7 +89,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         if (existingProductIndex != -1) {
           final updatedProducts = List<ProductModel>.from(currentState.products!);
           final existingProduct = updatedProducts[existingProductIndex];
-          updatedProducts[existingProductIndex] = existingProduct.copyWith(quantity: existingProduct.quantity + 1);
+          updatedProducts[existingProductIndex] = existingProduct.copyWith(size: existingProduct.size + 1);
           emit(UpdatedOrderProducts(products: updatedProducts));
         } else {
           final updatedProducts = List<ProductModel>.from(currentState.products!)..add(event.product);
@@ -122,7 +122,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         log('this is a $state');
         final updatedProducts = currentState.products!.map(
           (product) {
-            return product.id == event.product.id ? product.copyWith(quantity: event.quantity) : product;
+            return product.id == event.product.id ? product.copyWith(size: event.size) : product;
           },
         ).toList();
         for (var product in updatedProducts) {

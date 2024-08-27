@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+import 'package:uv_pos/features/data/remote/models/product_mesurement_type.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
@@ -34,8 +35,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final List<ProductModel> _searchList = [];
   bool _isSearching = false;
   NumberFormat formatAmount = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: '\$',
+    locale: 'uz_UZ',
   );
 
   @override
@@ -62,8 +62,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
             canPop: false,
             onPopInvoked: (bool didPop) {
               context.read<AppBloc>().add(
-                const NavigateToHomeScreen(),
-              );
+                    const NavigateToHomeScreen(),
+                  );
             },
             child: Scaffold(
               appBar: AppBar(
@@ -127,10 +127,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20).r,
                         itemCount: productList.length,
                         itemBuilder: (context, item) {
+                          final String pmt = productList[item].productMeasurementType!;
                           final String name = productList[item].name;
                           final double price = productList[item].price;
-                          final int qty = productList[item].quantity;
+                          final double qty = productList[item].size;
                           final String? image = productList[item].image;
+                          final double notifySize = productList[item].notifySize!;
                           return Slidable(
                             // Specify a key if the Slidable is dismissible.
                             key: const ValueKey(0),
@@ -183,67 +185,82 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
                             // The child of the Slidable is what the user sees when the
                             // component is not dragged.
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                image != null
-                                    ? Container(
-                                        width: 120.r,
-                                        height: 120.r,
-                                        decoration: BoxDecoration(
-                                          color: Colors.yellowAccent,
-                                          borderRadius: BorderRadius.circular(20),
-                                          image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
+                            child: Container(
+                              margin: EdgeInsets.only(bottom: 10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20).r,
+                              color: notifySize == qty ? CupertinoColors.systemRed : notifySize == qty /2 ? CupertinoColors.systemOrange : CupertinoColors.systemGreen,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  image != null
+                                      ? Container(
+                                          width: 120.r,
+                                          height: 120.r,
+                                          decoration: BoxDecoration(
+                                            color: Colors.yellowAccent,
+                                            borderRadius: BorderRadius.circular(20).r,
+                                            image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
+                                          ),
+                                          // margin: const EdgeInsets.only(bottom: 10).h,
+                                        )
+                                      : Container(
+                                          width: 120.r,
+                                          height: 120.r,
+                                          decoration: BoxDecoration(
+                                            color: Colors.yellowAccent,
+                                            borderRadius: BorderRadius.circular(20).r,
+                                          ),
+                                          // margin: const EdgeInsets.only(bottom: 10).h,
+                                          alignment: Alignment.center,
+                                          child: const Text('No image'),
                                         ),
-                                        margin: const EdgeInsets.only(bottom: 10).h,
-                                      )
-                                    : Container(
-                                        width: 120.r,
-                                        height: 120.r,
-                                        decoration: BoxDecoration(
-                                          color: Colors.yellowAccent,
-                                          borderRadius: BorderRadius.circular(20).r,
+                                  SizedBox(width: 15.w),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        width: size.width * .5,
+                                        child: Text(
+                                          'Nomi: $name',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          softWrap: true,
                                         ),
-                                        margin: const EdgeInsets.only(bottom: 10).h,
-                                        alignment: Alignment.center,
-                                        child: const Text('No image'),
                                       ),
-                                SizedBox(width: 15.w),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(
-                                      width: size.width * .5,
-                                      child: Text(
-                                        'Nomi: $name',
+                                      Text(
+                                        'Narxi: ${formatAmount.format(price)}',
                                         style: TextStyle(
                                           color: Colors.black,
-                                          fontSize: 18.sp,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15.sp,
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                        softWrap: true,
                                       ),
-                                    ),
-                                    Text(
-                                      'Price: ${formatAmount.format(price)}',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 15.sp,
-                                        fontWeight: FontWeight.w500,
+                                      Text(
+                                        'Size:  ${pmt == ProductMeasurementType.dona.name ? qty.toInt().toString() + ' dona' : pmt == ProductMeasurementType.kg.name ? qty.toString() + 'kg' : pmt == ProductMeasurementType.l.name ? qty.toString() + 'l' : qty.toString() + 'm'}',
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      'Quantity: $qty dona',
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
+                                      Text(
+                                        'Ogohlantirish:  ${pmt == ProductMeasurementType.dona.name ? notifySize.toInt().toString() + ' dona' : pmt == ProductMeasurementType.kg.name ? notifySize.toString() + 'kg' : pmt == ProductMeasurementType.l.name ? notifySize.toString() + 'l' : notifySize.toString() + 'm'}',
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },

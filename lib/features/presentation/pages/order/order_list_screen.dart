@@ -44,8 +44,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
   bool _isSearchTap = false;
 
   NumberFormat formatAmount = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: '\$',
+    locale: 'uz_UZ',
+    symbol: 'UZS',
   );
 
   @override
@@ -403,8 +403,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
                     .map(
                       (entry) => ReceiptDetail(
                         name: '${entry.key + 1}. ${entry.value.name}',
-                        qty: '${entry.value.quantity} x ${entry.value.price}',
-                        price: (entry.value.price * entry.value.quantity).toString(),
+                        qty: '${entry.value.size} x ${entry.value.price}',
+                        price: (entry.value.price * entry.value.size).toString(),
                       ),
                     )
                     .toList(),

@@ -6,23 +6,26 @@ class StockModel extends Equatable {
     required this.id,
     required this.storeId,
     required this.product,
-    required this.qty,
+    required this.size,
+    required this.mesurementType,
   });
 
   @override
   // TODO: implement props
-  List<Object?> get props => [id, storeId, qty];
+  List<Object?> get props => [id, storeId, size];
   final String id;
   final String storeId;
   final ProductModel product;
-  final int qty;
+  final double size;
+  final String mesurementType;
 
   factory StockModel.fromMap(Map<String, dynamic> data) {
     return StockModel(
       id: data['id'] as String,
       storeId: data['store_id'] as String,
       product: ProductModel.fromMap(data['product']),
-      qty: data['qty'] as int,
+      size: data['size'] as double,
+      mesurementType: data['mesurement_type'] as String,
     );
   }
 
@@ -32,7 +35,8 @@ class StockModel extends Equatable {
       'id': id,
       'store_id': storeId,
       'product': product.toMap(),
-      'qty': qty,
+      'size': size,
+      'mesurement_type': mesurementType,
     };
   }
 
@@ -40,13 +44,15 @@ class StockModel extends Equatable {
     String? id,
     String? storeId,
     ProductModel? product,
-    int? qty,
+    double? size,
+    String? mesurementType,
   }) {
     return StockModel(
       id: id ?? this.id,
       storeId: storeId ?? this.storeId,
       product: product ?? this.product,
-      qty: qty ?? this.qty,
+      size: size ?? this.size,
+      mesurementType: mesurementType ?? this.mesurementType,
     );
   }
 }

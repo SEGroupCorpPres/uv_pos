@@ -139,7 +139,7 @@ class _StocksScreenState extends State<StocksScreen> {
                           ],
                         ),
                         subtitle: Text(
-                          'Qty: ${stock.qty}',
+                          'Qty: ${stock.size}',
                           style: TextStyle(color: Colors.black, fontSize: 13.sp),
                         ),
                       ),

@@ -206,13 +206,13 @@ class OrderDetailBottomSheet extends StatelessWidget {
                                       softWrap: true,
                                     ),
                                     subtitle: Text(
-                                      '${product.quantity} x ${formatAmount.format(product.price.toInt())}',
+                                      '${product.size} x ${formatAmount.format(product.price.toInt())}',
                                       style: TextStyle(fontSize: 14.sp),
                                     ),
                                     trailing: SizedBox(
                                       height: 32.sp,
                                       child: Text(
-                                        formatAmount.format((product.quantity * product.price)),
+                                        formatAmount.format((product.size * product.price)),
                                         style: TextStyle(fontSize: 15.sp),
                                       ),
                                     ),

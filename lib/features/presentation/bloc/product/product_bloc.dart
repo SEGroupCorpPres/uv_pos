@@ -159,7 +159,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       ProductModel? oldProduct = await _productRepository.getProductById(event.product.id);
       if (oldProduct != null) {
-        updatingProduct = event.product.copyWith(quantity: oldProduct.quantity - event.quantity);
+        updatingProduct = event.product.copyWith(size: oldProduct.size - event.size);
       }
       await _productRepository.updateProduct(updatingProduct!);
       final updatedProduct = await _productRepository.getProductById(updatingProduct.id);
