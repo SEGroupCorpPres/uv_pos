@@ -38,6 +38,11 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   late TextEditingController _storeDescriptionTextEditingController;
   late TextEditingController _storePhoneTextEditingController;
   late TextEditingController _storeAddressTextEditingController;
+
+  String? _name;
+  String? _description;
+  String? _phone;
+  String? _address;
   File? _image;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'createEditStoreFormKey');
   bool _isEdit = false;
@@ -47,12 +52,29 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   @override
   void initState() {
     getUID();
-    _storeNameTextEditingController = TextEditingController();
-    _storeDescriptionTextEditingController = TextEditingController();
-    _storePhoneTextEditingController = TextEditingController();
-    _storeAddressTextEditingController = TextEditingController();
+    getFields();
+    _storeNameTextEditingController = TextEditingController(text: _name ?? '');
+    _storeDescriptionTextEditingController = TextEditingController(text: _description ?? '');
+    _storePhoneTextEditingController = TextEditingController(text: _phone ?? '');
+    _storeAddressTextEditingController = TextEditingController(text: _address ?? '');
     // TODO: implement initState
     super.initState();
+  }
+
+  Future<void> _saveFields(String name, String desc, String phone, String address) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.setString('store_name', name);
+    preferences.setString('store_desc', desc);
+    preferences.setString('store_phone', phone);
+    preferences.setString('store_address', address);
+  }
+
+  Future<void> _clearField() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.remove('store_name');
+    preferences.remove('store_desc');
+    preferences.remove('store_phone');
+    preferences.remove('store_address');
   }
 
   Future<void> _cupertinoStyleCameraCapture() async {
@@ -60,7 +82,13 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
     if (files.isNotEmpty) {
       final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
       if (croppedFile != null) {
-        setState(() => _image = File(croppedFile.path));
+        setState(() {
+          _name = _storeNameTextEditingController.text;
+          _description = _storeDescriptionTextEditingController.text;
+          _phone = _storePhoneTextEditingController.text;
+          _address = _storeAddressTextEditingController.text;
+          _image = File(croppedFile.path);
+        });
       }
     }
   }
@@ -71,7 +99,13 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
       if (files.length == 1) {
         final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
         if (croppedFile != null) {
-          setState(() => _image = File(croppedFile.path));
+          setState(() {
+            _name = _storeNameTextEditingController.text;
+            _description = _storeDescriptionTextEditingController.text;
+            _phone = _storePhoneTextEditingController.text;
+            _address = _storeAddressTextEditingController.text;
+            _image = File(croppedFile.path);
+          });
         }
       } else {}
     }
@@ -82,7 +116,13 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
     if (files.isNotEmpty) {
       final croppedFile = await imageHelper.crop(file: files.single, cropStyle: CropStyle.rectangle);
       if (croppedFile != null) {
-        setState(() => _image = File(croppedFile.path));
+        setState(() {
+          _name = _storeNameTextEditingController.text;
+          _description = _storeDescriptionTextEditingController.text;
+          _phone = _storePhoneTextEditingController.text;
+          _address = _storeAddressTextEditingController.text;
+          _image = File(croppedFile.path);
+        });
       }
     }
   }
@@ -93,7 +133,13 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
       if (files.length == 1) {
         final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
         if (croppedFile != null) {
-          setState(() => _image = File(croppedFile.path));
+          setState(() {
+            _name = _storeNameTextEditingController.text;
+            _description = _storeDescriptionTextEditingController.text;
+            _phone = _storePhoneTextEditingController.text;
+            _address = _storeAddressTextEditingController.text;
+            _image = File(croppedFile.path);
+          });
         }
       } else {}
     }
@@ -102,6 +148,14 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   Future<void> getUID() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     uid = sharedPreferences.getString('uid')!;
+  }
+
+  Future<void> getFields() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    _name = await sharedPreferences.getString('store_name');
+    _description = await sharedPreferences.getString('store_desc');
+    _phone = await sharedPreferences.getString('store_phone');
+    _address = await sharedPreferences.getString('store_address');
   }
 
   @override
@@ -120,7 +174,10 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      onPopInvokedWithResult: (bool didPop, result) {
+        if (didPop) {
+          return;
+        }
         BlocProvider.of<AppBloc>(context).add(
           NavigateToStoreListScreen(),
         );
@@ -155,6 +212,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                   } else {
                     context.read<StoreBloc>().add(UpdateStoreEvent(store, _image));
                   }
+                  _clearField();
                 }
               },
               icon: const Icon(Icons.save),
@@ -174,11 +232,10 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                   store = appState.store;
                 }
               }
-              _storeNameTextEditingController.text = store?.name ?? '';
-              _storeDescriptionTextEditingController.text = store?.description ?? '';
-              _storePhoneTextEditingController.text = store?.phone ?? '';
-              _storeAddressTextEditingController.text = store?.address ?? '';
-
+              _storeNameTextEditingController.text = store?.name ?? _name ?? '';
+              _storeDescriptionTextEditingController.text = store?.description ?? _description ?? '';
+              _storePhoneTextEditingController.text = store?.phone ?? _phone ?? '';
+              _storeAddressTextEditingController.text = store?.address ?? _address ?? '';
               return BlocConsumer<StoreBloc, StoreState>(
                 listener: (context, state) {
                   if (state is StoreCreated) {
@@ -218,6 +275,9 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                                     return 'Please enter a name';
                                   }
                                   return null;
+                                },
+                                onSaved: (value) {
+                                  _name = value;
                                 },
                               ),
                               StoreTextField(
@@ -303,6 +363,8 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                                   title: 'Take a Photo',
                                   icon: Icons.camera_alt,
                                   onPressed: () {
+                                    _saveFields(_storeNameTextEditingController.text, _storeDescriptionTextEditingController.text, _storePhoneTextEditingController.text,
+                                        _storeAddressTextEditingController.text);
                                     Platform.isIOS ? _cupertinoStyleCameraCapture() : _takingAPictureWithACameraInMaterialStyle();
                                   },
                                 ),

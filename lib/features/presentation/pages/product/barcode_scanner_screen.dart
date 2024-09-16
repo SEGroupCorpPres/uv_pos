@@ -55,7 +55,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           automaticallyImplyLeading: true,
           leading: InkWell(
             onTap: () => BlocProvider.of<AppBloc>(context).add(
-              const NavigateToCreateProductScreen(),
+               NavigateToCreateProductScreen(
+                 null,
+                 '',
+
+               ),
             ),
             child: Icon(Icons.adaptive.arrow_back),
           ),

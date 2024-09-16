@@ -155,18 +155,23 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
   Future<void> updateProductQuantity(UpdateProductQuantity event, Emitter<ProductState> emit) async {
     late ProductModel? updatingProduct;
+    List<ProductModel>? notifyProductsList;
 
     try {
       ProductModel? oldProduct = await _productRepository.getProductById(event.product.id);
       if (oldProduct != null) {
         updatingProduct = event.product.copyWith(size: oldProduct.size - event.size);
+        notifyProductsList = event.notifyProductsList;
       }
       await _productRepository.updateProduct(updatingProduct!);
       final updatedProduct = await _productRepository.getProductById(updatingProduct.id);
       final products = await _productRepository.getProductsByStoreId(event.store);
 
       if (updatedProduct != null) {
-        emit(ProductUpdated(product: updatedProduct));
+        if (updatedProduct.size <= updatedProduct.notifySize) {
+          notifyProductsList?.add(updatedProduct);
+        }
+        emit(ProductUpdated(product: updatedProduct, notifyProductsList: notifyProductsList));
         emit(ProductsByStoreIdLoaded(products: products));
       } else {
         emit(ProductNotFound());

@@ -18,14 +18,24 @@ class ImageHelper {
   Future<List<XFile>> pickImage({
     ImageSource source = ImageSource.gallery,
     int imageQuality = 100,
+    double? maxResolution,
     bool multiple = false,
   }) async {
     if (multiple) {
       // Pick multiple images
-      return await _imagePicker.pickMultiImage(imageQuality: imageQuality);
+      return await _imagePicker.pickMultiImage(
+        imageQuality: imageQuality,
+        maxHeight: maxResolution,
+        maxWidth: maxResolution,
+      );
     }
     // Pick single image
-    final XFile? file = await _imagePicker.pickImage(source: source, imageQuality: imageQuality);
+    final XFile? file = await _imagePicker.pickImage(
+      source: source,
+      imageQuality: imageQuality,
+      maxWidth: maxResolution,
+      maxHeight: maxResolution,
+    );
     if (file != null) {
       return [file];
     }

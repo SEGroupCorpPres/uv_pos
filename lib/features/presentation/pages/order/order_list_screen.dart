@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:multi_selection_filter/multi_selection_filter.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -32,6 +33,8 @@ class OrderListScreen extends StatefulWidget {
   State<OrderListScreen> createState() => _OrderListScreenState();
 }
 
+enum Menu { filter, report }
+
 class _OrderListScreenState extends State<OrderListScreen> {
   StoreModel? store;
   final ScrollController _scrollController = ScrollController();
@@ -48,6 +51,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
     symbol: 'UZS',
   );
 
+  Map<String, bool> orderFilterMap = {};
+
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.sizeOf(context);
@@ -58,10 +63,13 @@ class _OrderListScreenState extends State<OrderListScreen> {
         // if (appState.status == AppStatus.orderListScreen) {
         return PopScope(
           canPop: false,
-          onPopInvoked: (bool didPop) {
+          onPopInvokedWithResult: (bool didPop, result) {
+            if (didPop) {
+              return;
+            }
             context.read<AppBloc>().add(
-              const NavigateToHomeScreen(),
-            );
+                  const NavigateToHomeScreen(),
+                );
           },
           child: Scaffold(
             appBar: AppBar(
@@ -80,6 +88,10 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   icon: const Icon(Icons.qr_code_2),
                 ),
                 IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.calendar_month),
+                ),
+                IconButton(
                   onPressed: () {
                     setState(() {
                       _isSearchTap = !_isSearchTap;
@@ -87,6 +99,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   },
                   icon: const Icon(Icons.search),
                 ),
+                _buildFilterDialogWidget(context, store),
               ],
               bottom: PreferredSize(
                 preferredSize: Size(size.width, _isSearchTap ? 60.h : 30.h),
@@ -143,7 +156,13 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   _orderList = orderState.orders!;
                   orderList = _isSearching ? _searchList : _orderList;
                   orderList = orderList.reversed.toList();
-
+                  orderList.asMap().entries.map(
+                        (item) => orderFilterMap.putIfAbsent(
+                          item.value.toString() != 'orderDate' ? item.value.toString() : '',
+                          () => false,
+                        ),
+                      );
+                  setState(() {});
                   return GroupedListView<OrderModel, DateTime>(
                     controller: _scrollController,
                     elements: orderList,
@@ -173,7 +192,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                       return CupertinoListTile(
                         backgroundColorActivated: Colors.transparent,
                         onTap: () {
-                          _showOrderdetailBottomSheet(context, appState.store!, order);
+                          _showOrderDetailBottomSheet(context, appState.store!, order);
                         },
                         title: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -224,7 +243,46 @@ class _OrderListScreenState extends State<OrderListScreen> {
     );
   }
 
-  PersistentBottomSheetController _showOrderdetailBottomSheet(BuildContext context, StoreModel store, OrderModel order) {
+  void _showFilterDialog(BuildContext context, StoreModel store) {
+    showAdaptiveDialog(
+      context: context,
+      builder: (context) {
+        return _buildFilterDialogWidget(context, store);
+      },
+    );
+  }
+
+  Widget _buildFilterDialogWidget(BuildContext context, StoreModel? store) {
+    // DateTime date = order.orderDate;
+    // String formattedDate = DateFormat(
+    //   'd/MM/yyyy, HH:mm:ss',
+    // ).format(date);
+    return Align(
+      alignment: Alignment.center,
+      child: MultiSelectionFilter(
+        title: 'Order filter',
+        textListToShow: orderFilterMap.keys.toList(),
+        selectedList: orderFilterMap.values.toList(),
+        accentColor: const Color(0xFF01b4e4),
+        checkboxTitleBG: Colors.black87,
+        checkboxCheckColor: Colors.white,
+        checkboxTitleTextColor: Colors.white,
+        doneButtonBG: const Color(0xFF01b4e4),
+        doneButtonTextColor: Colors.white,
+        onDoneButtonPressed: () => Navigator.pop(context),
+        onCheckboxTap: (key, index, isChecked) {
+          setState(() {
+            orderFilterMap[key] = isChecked;
+          });
+        },
+        child: Icon(
+          Icons.filter_alt,
+        ),
+      ),
+    );
+  }
+
+  PersistentBottomSheetController _showOrderDetailBottomSheet(BuildContext context, StoreModel store, OrderModel order) {
     return showBottomSheet(
       enableDrag: true,
       showDragHandle: true,

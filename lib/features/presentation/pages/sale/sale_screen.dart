@@ -14,7 +14,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
-import 'package:uv_pos/features/data/remote/models/product_mesurement_type.dart';
+import 'package:uv_pos/features/data/remote/models/product_measurement_type.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/stock_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -63,8 +63,10 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   bool isProcessing = false;
   bool isScannerRunning = true;
   bool isSearch = false;
+  List<ProductModel> searchProductList = [];
   final List<ProductModel> _searchList = [];
   List<ProductModel> _productList = [];
+  List<ProductModel> _notifyProductList = [];
   Barcode? _barcode;
   double productAmount = 0;
   double orderSubTotalAmount = 0;
@@ -232,7 +234,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     }
   }
 
-  void _showDiscountDiaolg(BuildContext context) {
+  void _showDiscountDialog(BuildContext context) {
     showAdaptiveDialog(
       context: context,
       barrierDismissible: false,
@@ -244,20 +246,20 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showChangeProductQtyDiaolg(BuildContext context, ProductModel orderProduct) {
+  void _showChangeProductQtyDialog(BuildContext context, ProductModel orderProduct) {
     _qtyFocusNode.requestFocus();
     showAdaptiveDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return _changeProductQtyDiaolg(context, orderProduct);
+        return _changeProductQtyDialog(context, orderProduct);
       },
       useSafeArea: false,
       traversalEdgeBehavior: TraversalEdgeBehavior.leaveFlutterView,
     );
   }
 
-  void _showAddCustomertDiaolg(BuildContext context) {
+  void _showAddCustomerDialog(BuildContext context) {
     showAdaptiveDialog(
       context: context,
       barrierDismissible: false,
@@ -343,6 +345,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               onPressed: () {
                 discount = double.tryParse(_discountController.text)!;
                 BlocProvider.of<OrderBloc>(context).add(OrderDiscountedEvent(discount: discount, isFlat: isFlat.value));
+                log(isFlat.value.toString());
+                log(discount.toString());
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -402,7 +406,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _changeProductQtyDiaolg(BuildContext context, ProductModel orderProduct) {
+  Widget _changeProductQtyDialog(BuildContext context, ProductModel orderProduct) {
     _productQtyController.text = orderProduct.size.toString();
     return SimpleDialog(
       title: const Text(
@@ -510,7 +514,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _productBlocListener(BuildContext context, ProductState productState, List<ProductModel> products, AppState appState) {
+  void _productBlocListener(
+    BuildContext context,
+    ProductState productState,
+    List<ProductModel> products,
+    AppState appState,
+  ) {
     if (productState is ProductNotFound) {
       _showAddNewProductDialog(
         context,
@@ -556,11 +565,22 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     }
   }
 
-  void _orderBlocListener(BuildContext context, OrderState orderState, List<ProductModel> products, AppState appState) {
+  void _orderBlocListener(
+    BuildContext context,
+    OrderState orderState,
+    List<ProductModel> products,
+    AppState appState,
+  ) {
     if (orderState is UpdatedOrderProducts) {
       if (orderState.products != null || orderState.products!.isNotEmpty) {
         products = orderState.products!;
-        orderSubTotalAmount = orderState.products!.fold(0, (sum, product) => sum + product.price * product.size);
+        orderSubTotalAmount = orderState.products!.fold(
+            0,
+            (
+              sum,
+              product,
+            ) =>
+                sum + product.price * product.size);
         orderTotalAmount = orderSubTotalAmount;
       }
     }
@@ -568,7 +588,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       const Center(child: CircularProgressIndicator.adaptive());
     }
     if (orderState is OrderCreated) {
-      _showSuccessfullDialog(context, orderState.user!, orderState.store, orderState.order);
+      _showSuccessfullDialog(
+        context,
+        orderState.user!,
+        orderState.store,
+        orderState.order,
+      );
     }
     if (orderState is OrderDiscountState) {
       orderTotalAmount = orderState.isFlat ? orderSubTotalAmount - orderState.discount : (1 - orderState.discount / 100) * orderSubTotalAmount;
@@ -606,7 +631,10 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       builder: (context, appState) {
         return PopScope(
           canPop: false,
-          onPopInvoked: (bool didPop) {
+          onPopInvokedWithResult: (bool didPop, result) {
+            if (didPop) {
+              return;
+            }
             context.read<AppBloc>().add(
                   const NavigateToHomeScreen(),
                 );
@@ -634,7 +662,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 ),
                 IconButton(
                   onPressed: () {
-                    _showAddCustomertDiaolg(context);
+                    _showAddCustomerDialog(context);
                   },
                   icon: const Icon(Icons.person_add),
                 ),
@@ -735,10 +763,11 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                       itemCount: products.length,
                                       itemBuilder: (context, item) {
                                         ProductModel product = products[item];
+                                        String pmt = product.productMeasurementType!;
                                         return CupertinoListTile(
                                           onTap: () {
                                             BlocProvider.of<ProductBloc>(context).add(FetchProductByIdEvent(product.id));
-                                            _showChangeProductQtyDiaolg(
+                                            _showChangeProductQtyDialog(
                                               context,
                                               product,
                                             );
@@ -758,7 +787,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                             softWrap: true,
                                           ),
                                           subtitle: Text(
-                                            '${product.size} x ${formatAmount.format(product.price.toInt())}',
+                                            '${pmt == 'dona' ? product.size.toInt() : product.size} x ${formatAmount.format(product.price.toInt())}',
                                             style: TextStyle(fontSize: 14.sp),
                                           ),
                                           trailing: SizedBox(
@@ -842,6 +871,22 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       height: MediaQuery.sizeOf(context).height * .9,
       child: Column(
         children: [
+          SaleButton(
+            minWidth: MediaQuery.sizeOf(context).width,
+            title: 'Add to order',
+            onPressed: () {
+              searchProductList.forEach((searchedProduct) {
+                BlocProvider.of<OrderBloc>(context).add(
+                  AddProduct(searchedProduct.copyWith(size: 1)),
+                );
+              });
+              Navigator.pop(context);
+            },
+            bgColor: Colors.blue,
+          ),
+          SizedBox(
+            height: 10,
+          ),
           TextFormField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -868,7 +913,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             builder: (context, productState) {
               if (productState is ProductLoading) {
                 return SizedBox(
-                  height: MediaQuery.sizeOf(context).height * .71.h,
+                  height: MediaQuery.sizeOf(context).height * .61.h,
                   child: const Center(
                     child: CircularProgressIndicator.adaptive(),
                   ),
@@ -877,7 +922,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 var state = productState;
                 _productList = state.filteredProducts;
                 return SizedBox(
-                  height: MediaQuery.sizeOf(context).height * .71.h,
+                  height: MediaQuery.sizeOf(context).height * .6.h,
                   child: SingleChildScrollView(
                     controller: _searchScrollController,
                     child: Wrap(
@@ -888,9 +933,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                           .map(
                             (entry) => InkWell(
                               onTap: () {
-                                BlocProvider.of<OrderBloc>(context).add(
-                                  AddProduct(entry.value.copyWith(size: 1)),
-                                );
+                                searchProductList.add(entry.value);
                               },
                               child: SizedBox(
                                 width: 105.w,
@@ -957,7 +1000,11 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 SaleProductPrice(title: 'Sub Total', price: formatAmount.format(orderSubTotalAmount)),
                 SaleProductPrice(
                   title: 'Discount',
-                  procedure: !isFlat.value ? discount : double.tryParse(((orderTotalAmount - orderSubTotalAmount) * 100 / orderSubTotalAmount).toStringAsFixed(3)),
+                  procedure: !isFlat.value
+                      ? discount
+                      : orderSubTotalAmount != 0
+                          ? double.tryParse(((orderTotalAmount - orderSubTotalAmount) * 100 / orderSubTotalAmount).toStringAsFixed(3))
+                          : 0,
                   discountingPrice: formatAmount.format(orderSubTotalAmount - orderTotalAmount),
                 ),
                 SaleProductPrice(title: 'Total', price: formatAmount.format(orderTotalAmount)),
@@ -978,7 +1025,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   SaleButton(
                     title: 'Discount',
                     onPressed: () {
-                      _showDiscountDiaolg(context);
+                      _showDiscountDialog(context);
                     },
                     bgColor: Colors.blue,
                   ),
@@ -997,7 +1044,9 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   SaleButton(
                     title: 'Pay',
                     onPressed: () {
-                      _showPayingDialog(context, appState.user!, appState.store!, products);
+                      if (products.isNotEmpty) {
+                        _showPayingDialog(context, appState.user!, appState.store!, products);
+                      }
                       if (kDebugMode) {
                         print(scannerController.value.isRunning);
                       }

@@ -78,15 +78,18 @@ class UpdateProductQuantity extends ProductEvent {
   final ProductModel product;
   final StoreModel store;
   final double size;
+  final List<ProductModel>? notifyProductsList;
+
 
   const UpdateProductQuantity({
     required this.product,
     required this.store,
     required this.size,
+    this.notifyProductsList
   });
 
   @override
-  List<Object?> get props => [product, store, size];
+  List<Object?> get props => [product, store, size, notifyProductsList];
 }
 
 class FilterProductList extends ProductEvent {

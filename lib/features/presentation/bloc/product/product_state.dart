@@ -65,11 +65,13 @@ class ProductUpdating extends ProductState {}
 
 class ProductUpdated extends ProductState {
   final ProductModel product;
+  final List<ProductModel>? notifyProductsList;
 
-  const ProductUpdated({required this.product});
+
+  const ProductUpdated({required this.product, this.notifyProductsList});
 
   @override
-  List<Object?> get props => [product];
+  List<Object?> get props => [product, notifyProductsList];
 }
 
 class ProductAlreadyCreated extends ProductState {}
@@ -101,3 +103,12 @@ class FilteredProductList extends ProductState {
   // TODO: implement props
   List<Object?> get props => [filteredProducts];
 }
+
+// class NotifyProductQty extends ProductState {
+//
+//   NotifyProductQty({required this.notifyProductsList});
+//   @override
+//   // TODO: implement props
+//   List<Object?> get props => [notifyProductsList];
+//
+// }

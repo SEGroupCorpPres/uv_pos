@@ -56,7 +56,10 @@ class _StoreListScreenState extends State<StoreListScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      onPopInvokedWithResult: (bool didPop, result) {
+        if (didPop) {
+          return;
+        }
         sessionEnding.onWillPop(context);
       },
       child: Scaffold(

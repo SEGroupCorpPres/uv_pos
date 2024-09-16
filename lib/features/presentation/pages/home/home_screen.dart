@@ -36,10 +36,10 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, appState) {
         return PopScope(
           canPop: false,
-          onPopInvokedWithResult: (bool didPop, result){
-
-          },
-          onPopInvoked: (bool didPop) {
+          onPopInvokedWithResult: (bool didPop, result) {
+            if (didPop) {
+              return;
+            }
             sessionEnding.onWillPop(context);
           },
           child: Scaffold(

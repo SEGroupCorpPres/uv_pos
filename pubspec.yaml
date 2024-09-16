@@ -61,6 +61,7 @@ dependencies:
   file: ^7.0.0
   # opne file
   image_picker: ^1.1.2
+  image:
   image_cropper: ^5.0.1
   animated_search_bar: ^2.7.2
   #restartApp
@@ -78,6 +79,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   #Toast
   fluttertoast: ^8.2.6
+  multi_selection_filter: ^0.0.6
 
   # #splash
   # animated_splash_screen: ^1.2.0

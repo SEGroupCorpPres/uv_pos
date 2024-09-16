@@ -8,7 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/data/remote/models/product_mesurement_type.dart';
+import 'package:uv_pos/features/data/remote/models/product_measurement_type.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
@@ -34,6 +34,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
   late StoreModel? store;
   final List<ProductModel> _searchList = [];
   bool _isSearching = false;
+  int _currentPage = 1;
+  bool _isLoading = false;
+  bool _hasMoreData = true;
   NumberFormat formatAmount = NumberFormat.currency(
     locale: 'uz_UZ',
   );
@@ -44,6 +47,27 @@ class _ProductListScreenState extends State<ProductListScreen> {
     super.initState();
   }
 
+  // Future<void> _fetchOrders() async {
+  //   setState(() => _isLoading = true);
+  //
+  //   // Simulating network request delay
+  //   await Future.delayed(Duration(seconds: 1));
+  //
+  //   List<ProductModel> fetchedOrders = List.generate(10, (index) => index + (_currentPage - 1) * 10);
+  //
+  //   setState(() {
+  //     products.addAll(fetchedOrders);
+  //     _isLoading = false;
+  //     if (fetchedOrders.length < 10) {
+  //       _hasMoreData = false;
+  //     }
+  //   });
+  // }
+  //
+  // Future<void> _fetchMoreOrders() async {
+  //   _currentPage++;
+  //   await _fetchOrders();
+  // }
   @override
   void dispose() {
     // TODO: implement dispose
@@ -60,7 +84,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
           store = appState.store;
           return PopScope(
             canPop: false,
-            onPopInvoked: (bool didPop) {
+            onPopInvokedWithResult: (bool didPop, result) {
+              if (didPop) {
+                return;
+              }
               context.read<AppBloc>().add(
                     const NavigateToHomeScreen(),
                   );
@@ -119,6 +146,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     );
                   } else if (state is ProductsByStoreIdLoaded) {
                     if (state.products != null) {
+                      // _fetchOrders();
+                      // _scrollController.addListener(() {
+                      //   if (_scrollController.position.pixels ==
+                      //       _scrollController.position.maxScrollExtent && !_isLoading && _hasMoreData) {
+                      //     _fetchMoreOrders();
+                      //   }
+                      // });
                       products = state.products!;
                       List<ProductModel> productList = [];
                       productList = _isSearching ? _searchList : products;
@@ -132,7 +166,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           final double price = productList[item].price;
                           final double qty = productList[item].size;
                           final String? image = productList[item].image;
-                          final double notifySize = productList[item].notifySize!;
+                          final double notifySize = productList[item].notifySize;
                           return Slidable(
                             // Specify a key if the Slidable is dismissible.
                             key: const ValueKey(0),
@@ -189,7 +223,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               margin: EdgeInsets.only(bottom: 10),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20).r,
-                              color: notifySize == qty ? CupertinoColors.systemRed : notifySize == qty /2 ? CupertinoColors.systemOrange : CupertinoColors.systemGreen,
+                                color: notifySize == qty
+                                    ? CupertinoColors.systemRed
+                                    : notifySize == qty / 2
+                                        ? CupertinoColors.systemOrange
+                                        : CupertinoColors.systemGreen,
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
