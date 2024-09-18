@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -9,6 +10,9 @@ import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:multi_selection_filter/multi_selection_filter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -17,6 +21,7 @@ import 'package:uv_pos/features/presentation/pages/sale/receipt_detail.dart';
 import 'package:uv_pos/features/presentation/widgets/order_detail_bottom_sheet.dart';
 import 'package:uv_pos/features/presentation/widgets/order_list_group_header_date.dart';
 import 'package:uv_pos/features/presentation/widgets/sale_product_price.dart';
+import 'package:uv_pos/generated/assets.dart';
 
 class OrderListScreen extends StatefulWidget {
   const OrderListScreen({super.key});
@@ -45,13 +50,116 @@ class _OrderListScreenState extends State<OrderListScreen> {
   List<OrderModel> _orderList = [];
   bool _isSearching = false;
   bool _isSearchTap = false;
+  String? _fileName;
 
   NumberFormat formatAmount = NumberFormat.currency(
     locale: 'uz_UZ',
     symbol: 'UZS',
   );
 
-  Map<String, bool> orderFilterMap = {};
+  Map<String, bool> orderFilterMap = {
+    'customer_name': false,
+    'employee_name': false,
+  };
+
+  Future<void> _createOrderExcel({
+    required String? uid,
+    required String? userImg,
+    required String? fullName,
+    required String? phoneNumber,
+    required String? dateOfBirth,
+    required double orderId,
+    required double carId,
+    required String carName,
+    required double rentalPrice,
+    required String rentalStartDate,
+    required String rentalEndDate,
+    required String orderCreatedTime,
+    required String fillingAddress,
+    required String returnAddress,
+  }) async {
+    final workbook = xlsio.Workbook();
+    final sheet = workbook.worksheets[0];
+    // Set column widths
+    sheet.columns[1]?.width = 50;
+    sheet.columns[2]?.width = 300;
+    sheet.columns[3]?.width = 50;
+    sheet.columns[4]?.width = 100;
+    sheet.columns[5]?.width = 100;
+    sheet.columns[6]?.width = 150;
+
+    // Set header row style
+    final xlsio.Range headerRange = sheet.getRangeByName('B3');
+    headerRange.setText("№");
+    headerRange.bAutofitText;
+
+    final xlsio.Range headerRange2 = sheet.getRangeByName('C3');
+    headerRange2.setText("Maxsulot nomi(ish, xizmat)");
+    headerRange2.bAutofitText;
+    headerRange.cellStyle.hAlign = xlsio.HAlignType.center;
+    headerRange.cellStyle.vAlign = xlsio.VAlignType.center;
+    headerRange.cellStyle.bold = true;
+    headerRange.cellStyle.fontSize = 12;
+    headerRange.cellStyle.backColorRgb  = Colors.teal;
+    headerRange.cellStyle.borders.all.colorRgb = Colors.black;
+    headerRange.cellStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
+
+    headerRange.cellStyle.fontColorRgb = Colors.white;
+    sheet.getRangeByName('D3').setText("Miqdor");
+    sheet.getRangeByName('E3').setText("O'l. bir.");
+    sheet.getRangeByName('F3').setText("Baxosi");
+    sheet.getRangeByName('G3').setText("Umumiy Summa");
+
+    // Apply header row style
+
+
+    // Fill data (replace with your actual data)
+    final List<List<String>> data = [
+      ['1', 'tGMVhWDUZINjpp18mYBNvWe7', '2', 'https://firebasestorage.googleapis', 'Sulaymon O\'rinov', '+998 (99) 966 68 86'],
+      ['5', '1996-12-14 00:00:00.000', '7940636', '70', 'Mercedes AMG GT S 2021', '60000'],
+      // Add more rows as needed
+    ];
+    //
+    // for (int i = 0; i < data.length; i++) {
+    //   final row = sheet.rows[i + 2];
+    //   for (int j = 0; j < data[i].length; j++) {
+    //     row[j].text = data[i][j];
+    //   }
+    // }
+
+    // Apply data row style
+
+
+    // workSheet.importList(_orderList, 3, 3, true);
+    // workSheet.getRangeByName('B3').setText('№');
+    // workSheet.getRangeByName('C3').setText('Maxsulot nomi(ish, xizmat');
+    // workSheet.getRangeByName('D3').setText('Miqdor');
+    // workSheet.getRangeByName('E3').setText('O\'lchov birligi');
+    // workSheet.getRangeByName('F3').setText('Baxosi');
+    // workSheet.getRangeByName('G3').setText('Umumiy summa');
+    for (int i = 1; i <= 10; i++) {
+      sheet.getRangeByName('B${3 + i}').setNumber(i.toDouble());
+      sheet.getRangeByName('C${3 + i}').setText('maxsulot nomi $i');
+      sheet.getRangeByName('D${3 + i}').setNumber(i.toDouble());
+      sheet.getRangeByName('E${3 + i}').setText('dona');
+      sheet.getRangeByName('F${3 + i}').setNumber(123);
+      sheet.getRangeByName('G${3 + i}').setNumber(123 * i.toDouble());
+    }
+    final dataRange = sheet.getRangeByName('A2:F' + (data.length + 1).toString());
+    dataRange.cellStyle.hAlign = xlsio.HAlignType.left;
+    dataRange.cellStyle.vAlign = xlsio.VAlignType.center;
+    dataRange.cellStyle.borders.all.colorRgb = Colors.black;
+    dataRange.cellStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
+    final bytes = workbook.saveAsStream();
+    workbook.dispose();
+    final path = (await getApplicationSupportDirectory()).path;
+
+     final fileName = '$path/Report-$rentalStartDate.xlsx';
+    final file = File(fileName);
+    final xfile = XFile(fileName);
+    await file
+      ..writeAsBytes(bytes, flush: true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +207,42 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   },
                   icon: const Icon(Icons.search),
                 ),
-                _buildFilterDialogWidget(context, store),
+                IconButton(
+                  onPressed: () async {
+                    String date = DateTime.now().toIso8601String();
+                    _createOrderExcel(
+                      uid: '1',
+                      userImg: '2',
+                      fullName: 's',
+                      phoneNumber: '1',
+                      dateOfBirth: '2',
+                      orderId: 546,
+                      carId: 8,
+                      carName: 'carName',
+                      rentalPrice: 6787,
+                      rentalStartDate: date,
+                      rentalEndDate: 'rentalEndDate',
+                      orderCreatedTime: 'orderCreatedTime',
+                      fillingAddress: 'fillingAddress',
+                      returnAddress: 'returnAddress',
+                    );
+                    final path = (await getApplicationSupportDirectory()).path;
+                    final fileName = '$path/Report-$date.xlsx';
+                    final result = await Share.shareXFiles([XFile(fileName)], text: 'Hisobot');
+                    log(result.toString() + '----> result error');
+                    if (result.status == ShareResultStatus.success) {
+                      log(_fileName!);
+                      print('Thank you for sharing the picture!');
+                    }
+                    // _showReportDialog(context);
+                  },
+                  icon: Image.asset(
+                    Assets.imagesExcell,
+                    width: 18.r,
+                  ),
+                ),
+                SizedBox(width: 10.w)
+                // _buildFilterDialogWidget(context, store),
               ],
               bottom: PreferredSize(
                 preferredSize: Size(size.width, _isSearchTap ? 60.h : 30.h),
@@ -143,7 +286,6 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   for (var order in orders) {
                     orderTotalAmount += order.totalAmount;
                   }
-                  setState(() {});
                 }
               },
               builder: (context, orderState) {
@@ -162,7 +304,6 @@ class _OrderListScreenState extends State<OrderListScreen> {
                           () => false,
                         ),
                       );
-                  setState(() {});
                   return GroupedListView<OrderModel, DateTime>(
                     controller: _scrollController,
                     elements: orderList,
@@ -236,9 +377,6 @@ class _OrderListScreenState extends State<OrderListScreen> {
             ),
           ),
         );
-        // } else {
-        //   return ErrorWidget('Not found');
-        // }
       },
     );
   }
@@ -253,10 +391,6 @@ class _OrderListScreenState extends State<OrderListScreen> {
   }
 
   Widget _buildFilterDialogWidget(BuildContext context, StoreModel? store) {
-    // DateTime date = order.orderDate;
-    // String formattedDate = DateFormat(
-    //   'd/MM/yyyy, HH:mm:ss',
-    // ).format(date);
     return Align(
       alignment: Alignment.center,
       child: MultiSelectionFilter(
@@ -543,6 +677,57 @@ class _OrderListScreenState extends State<OrderListScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showReportDialog(BuildContext context) {
+    showAdaptiveDialog(
+      context: context,
+      builder: (context) {
+        return _buildShowReportDialogWidget(context);
+      },
+    );
+  }
+
+  SimpleDialog _buildShowReportDialogWidget(BuildContext context) {
+    // DateTime date = order.orderDate;
+    // String formattedDate = DateFormat(
+    //   'd/MM/yyyy, HH:mm:ss',
+    // ).format(date);
+    return SimpleDialog(
+      contentPadding: EdgeInsets.zero,
+      titlePadding: EdgeInsets.zero,
+      clipBehavior: Clip.hardEdge,
+      title: Container(
+        clipBehavior: Clip.none,
+        color: Colors.blueGrey.withAlpha(100),
+        width: double.infinity,
+        height: 40.h,
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Text(
+                    'Select date range',
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+          ],
+        ),
+      ),
+      children: [],
     );
   }
 }

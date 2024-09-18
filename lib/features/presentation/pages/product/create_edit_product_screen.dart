@@ -10,7 +10,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/core/helpers/image_helper.dart';
-import 'package:uv_pos/features/data/remote/models/product_measurement_type.dart';
+import 'package:uv_pos/features/data/remote/models/product_measurement_unit.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
@@ -54,7 +54,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   // late MobileScannerController scannerController;
   String? image = '';
   String? barcode = '';
-  String? _selectedValue = ProductMeasurementType.dona.name;
+  String? _selectedValue = ProductMeasurementUnit.dona.name;
   String? _productName;
   String? _productBarcode;
   String? _productDescription;
@@ -214,7 +214,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         _productDiscountController.text = product?.discount.toString() ?? (_productDiscount != null ? _productDiscount.toString() : '');
         _productSizeController.text = product?.size.toString() ?? (_productSize != null ? _productSize.toString() : '');
         _productNotifySizeController.text = product?.notifySize.toString() ?? (_productNotifySize != null ? _productNotifySize.toString() : '');
-        _selectedValue = product?.productMeasurementType ?? ProductMeasurementType.dona.name;
+        _selectedValue = product?.productMeasurementUnit ?? ProductMeasurementUnit.dona.name;
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (bool didPop, result) {
@@ -262,7 +262,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                         discount: double.parse(_productDiscountController.text),
                         size: double.parse(_productSizeController.text),
                         notifySize: double.parse(_productNotifySizeController.text),
-                        productMeasurementType: _selectedValue!,
+                        productMeasurementUnit: _selectedValue!,
                         storeId: store!.id,
                       );
                       if (!appState.isEdit) {
@@ -426,7 +426,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                                 textEditingController: _productDiscountController,
                               ),
                               StoreTextField(
-                                hintText: 'O\'lcham',
+                                hintText: 'Miqdor',
                                 textInputType: TextInputType.number,
                                 icon: Icons.notifications,
                                 textEditingController: _productSizeController,
@@ -443,7 +443,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                                     fit: FlexFit.tight,
                                     child: DropdownButtonFormField<String>(
                                       decoration: InputDecoration(
-                                        labelText: 'O\'lchov turini tanlang',
+                                        labelText: 'O\'lchov birligi',
                                       ),
                                       value: _selectedValue,
                                       items: productMeasurementTypes.map<DropdownMenuItem<String>>(
@@ -471,7 +471,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                               ),
                               SizedBox(height: 12.h),
                               StoreTextField(
-                                hintText: 'Ogohlantiruvchi o\'lcham',
+                                hintText: 'Ogohlantiruvchi miqdor',
                                 textInputType: TextInputType.number,
                                 icon: Icons.notifications,
                                 textEditingController: _productNotifySizeController,
@@ -491,5 +491,5 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     );
   }
 
-  List<String> productMeasurementTypes = ProductMeasurementType.values.map((value) => value.name).toList();
+  List<String> productMeasurementTypes = ProductMeasurementUnit.values.map((value) => value.name).toList();
 }

@@ -2,6 +2,7 @@
 class Assets {
   Assets._();
 
+  static const String imagesExcell = 'assets/images/excell.png';
   static const String imagesImageBg = 'assets/images/image_bg.png';
   static const String soundsBeep = 'assets/sounds/beep.mp3';
 

@@ -8,7 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/data/remote/models/product_measurement_type.dart';
+import 'package:uv_pos/features/data/remote/models/product_measurement_unit.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
@@ -161,7 +161,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20).r,
                         itemCount: productList.length,
                         itemBuilder: (context, item) {
-                          final String pmt = productList[item].productMeasurementType!;
+                          final String pmt = productList[item].productMeasurementUnit!;
                           final String name = productList[item].name;
                           final double price = productList[item].price;
                           final double qty = productList[item].size;
@@ -280,7 +280,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Size:  ${pmt == ProductMeasurementType.dona.name ? qty.toInt().toString() + ' dona' : pmt == ProductMeasurementType.kg.name ? qty.toString() + 'kg' : pmt == ProductMeasurementType.l.name ? qty.toString() + 'l' : qty.toString() + 'm'}',
+                                        'Size:  ${pmt == ProductMeasurementUnit.dona.name ? qty.toInt().toString() + ' dona' : pmt == ProductMeasurementUnit.kg.name ? qty.toString() + 'kg' : pmt == ProductMeasurementUnit.l.name ? qty.toString() + 'l' : qty.toString() + 'm'}',
                                         style: const TextStyle(
                                           color: Colors.black,
                                           fontSize: 15,
@@ -288,7 +288,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Ogohlantirish:  ${pmt == ProductMeasurementType.dona.name ? notifySize.toInt().toString() + ' dona' : pmt == ProductMeasurementType.kg.name ? notifySize.toString() + 'kg' : pmt == ProductMeasurementType.l.name ? notifySize.toString() + 'l' : notifySize.toString() + 'm'}',
+                                        'Ogohlantirish:  ${pmt == ProductMeasurementUnit.dona.name ? notifySize.toInt().toString() + ' dona' : pmt == ProductMeasurementUnit.kg.name ? notifySize.toString() + 'kg' : pmt == ProductMeasurementUnit.l.name ? notifySize.toString() + 'l' : notifySize.toString() + 'm'}',
                                         style: const TextStyle(
                                           color: Colors.black,
                                           fontSize: 15,

@@ -144,10 +144,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   Future<void> _onOrderAmountDiscounting(OrderDiscountedEvent event, Emitter<OrderState> emit) async {
     final currentState = state;
     if (currentState is UpdatedOrderProducts) {
-      List<ProductModel> poducts = currentState.products!;
+      List<ProductModel> products = currentState.products!;
       emit(
         OrderDiscountState(
-          products: poducts,
+          products: products,
           discount: event.discount,
           isFlat: event.isFlat,
         ),

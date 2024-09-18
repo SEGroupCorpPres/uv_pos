@@ -14,7 +14,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
-import 'package:uv_pos/features/data/remote/models/product_measurement_type.dart';
+import 'package:uv_pos/features/data/remote/models/product_measurement_unit.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/stock_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -100,7 +100,6 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     // Start listening to the barcode events.
     _subscription = scannerController.barcodes.listen(_handleBarcode);
     if (kDebugMode) {}
-
     // Start the scanner initially.
     if (!scannerController.value.isRunning) {
       _startScanner();
@@ -588,7 +587,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       const Center(child: CircularProgressIndicator.adaptive());
     }
     if (orderState is OrderCreated) {
-      _showSuccessfullDialog(
+      _showSuccessFullDialog(
         context,
         orderState.user!,
         orderState.store,
@@ -727,12 +726,27 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                             _orderBlocListener(context, orderState, products, appState);
                           },
                           builder: (context, orderState) {
+                            log(orderState.toString());
                             if (orderState is OrderCreating) {
                               return const Center(
                                 child: CircularProgressIndicator.adaptive(),
                               );
                             } else if (orderState is OrderError) {
-                              return ErrorWidget(orderState.error);
+                              return Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey,
+                                      offset: Offset(0, 0),
+                                      spreadRadius: 1,
+                                      blurRadius: 2,
+                                      blurStyle: BlurStyle.inner,
+                                    ),
+                                  ],
+                                ),
+                                height: isScannerRunning ? size.height * .34 : size.height * .64,
+                              );
                             } else if (orderState is UpdatedOrderProducts || orderState is OrderDiscountState) {
                               List<ProductModel> products = orderState is UpdatedOrderProducts
                                   ? orderState.products ?? []
@@ -763,7 +777,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                       itemCount: products.length,
                                       itemBuilder: (context, item) {
                                         ProductModel product = products[item];
-                                        String pmt = product.productMeasurementType!;
+                                        String pmt = product.productMeasurementUnit!;
                                         return CupertinoListTile(
                                           onTap: () {
                                             BlocProvider.of<ProductBloc>(context).add(FetchProductByIdEvent(product.id));
@@ -880,13 +894,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   AddProduct(searchedProduct.copyWith(size: 1)),
                 );
               });
+              searchProductList.clear();
               Navigator.pop(context);
             },
             bgColor: Colors.blue,
           ),
-          SizedBox(
-            height: 10,
-          ),
+          SizedBox(height: 10),
           TextFormField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -962,7 +975,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                           width: double.infinity,
                                           height: 55.h,
                                           child: Text(
-                                            '${entry.value.name}  \n${formatAmount.format(entry.value.price)} \n ${entry.value.productMeasurementType == ProductMeasurementType.dona.name ? entry.value.size.toInt().toString() + ' dona' : entry.value.productMeasurementType == ProductMeasurementType.kg.name ? entry.value.size.toString() + 'kg' : entry.value.productMeasurementType == ProductMeasurementType.l.name ? entry.value.size.toString() + 'l' : entry.value.size.toString() + 'm'}',
+                                            '${entry.value.name}  \n${formatAmount.format(entry.value.price)} \n ${entry.value.productMeasurementUnit == ProductMeasurementUnit.dona.name ? entry.value.size.toInt().toString() + ' dona' : entry.value.productMeasurementUnit == ProductMeasurementUnit.kg.name ? entry.value.size.toString() + 'kg' : entry.value.productMeasurementUnit == ProductMeasurementUnit.l.name ? entry.value.size.toString() + 'l' : entry.value.size.toString() + 'm'}',
                                             style: TextStyle(color: Colors.white, fontSize: 12.sp),
                                             textAlign: TextAlign.center,
                                           ),
@@ -979,7 +992,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   ),
                 );
               } else {
-                return ErrorWidget('Product Not found');
+                return Text('Product Not found');
               }
             },
           ),
@@ -1154,9 +1167,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   ),
                 ],
               ),
-              SizedBox(
-                height: 5.h,
-              ),
+              SizedBox(height: 5.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1277,9 +1288,22 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 log('order is $order');
                 late StockModel stock;
                 for (var product in products) {
-                  stock = StockModel(id: product.id, storeId: store.id, size: product.size, mesurementType: product.productMeasurementType ?? ProductMeasurementType.dona.toString(), product: product);
-                  BlocProvider.of<StockBloc>(context)
-                      .add(AddUpdateStockProduct(product.id, product.size, product.productMeasurementType ?? ProductMeasurementType.dona.toString(), product, stock: stock));
+                  stock = StockModel(
+                    id: product.id,
+                    storeId: store.id,
+                    size: product.size,
+                    mesurementType: product.productMeasurementUnit ?? ProductMeasurementUnit.dona.toString(),
+                    product: product,
+                  );
+                  BlocProvider.of<StockBloc>(context).add(
+                    AddUpdateStockProduct(
+                      product.id,
+                      product.size,
+                      product.productMeasurementUnit ?? ProductMeasurementUnit.dona.toString(),
+                      product,
+                      stock: stock,
+                    ),
+                  );
                   BlocProvider.of<ProductBloc>(context).add(UpdateProductQuantity(product: product, store: store, size: product.size));
                 }
                 Navigator.pop(context);
@@ -1292,7 +1316,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 isFlat.value = false;
                 discount = 0;
                 setState(() {});
-                // _showSuccessfullDialog(context, employee, store, order);
+                // _showSuccessFullDialog(context, employee, store, order);
               },
               child: const Text('Confirm'),
             ),
@@ -1302,16 +1326,16 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showSuccessfullDialog(BuildContext context, UserModel employee, StoreModel store, OrderModel order) {
+  void _showSuccessFullDialog(BuildContext context, UserModel employee, StoreModel store, OrderModel order) {
     showAdaptiveDialog(
       context: context,
       builder: (context) {
-        return _buildSuccessfullDialogWidget(context, employee, store, order);
+        return _buildSuccessFullDialogWidget(context, employee, store, order);
       },
     );
   }
 
-  SimpleDialog _buildSuccessfullDialogWidget(BuildContext context, UserModel? employee, StoreModel? store, OrderModel order) {
+  SimpleDialog _buildSuccessFullDialogWidget(BuildContext context, UserModel? employee, StoreModel? store, OrderModel order) {
     DateTime date = order.orderDate;
     String formattedDate = DateFormat(
       'd/MM/yyyy, HH:mm:ss',
@@ -1411,9 +1435,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                   ),
                 ],
               ),
-              SizedBox(
-                height: 5.h,
-              ),
+              SizedBox(height: 5.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1531,7 +1553,13 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               ),
               SizedBox(width: 10.w),
               TextButton.icon(
-                style: TextButton.styleFrom(backgroundColor: CupertinoColors.activeBlue, minimumSize: Size(100.w, 30.h)),
+                style: TextButton.styleFrom(
+                  backgroundColor: CupertinoColors.activeBlue,
+                  minimumSize: Size(
+                    100.w,
+                    30.h,
+                  ),
+                ),
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(
                   Icons.print,

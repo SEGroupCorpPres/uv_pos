@@ -13,7 +13,7 @@ class ProductModel extends Equatable {
   final double notifySize;
   final String? image;
   final String storeId;
-  final String? productMeasurementType;
+  final String? productMeasurementUnit;
 
   const ProductModel({
     required this.id,
@@ -26,7 +26,7 @@ class ProductModel extends Equatable {
     required this.size,
     required this.discount,
     required this.notifySize,
-    this.productMeasurementType,
+    this.productMeasurementUnit,
     this.image,
     required this.storeId,
   });
@@ -44,7 +44,7 @@ class ProductModel extends Equatable {
         discount,
         size,
         notifySize,
-        productMeasurementType,
+        productMeasurementUnit,
         image,
         storeId,
       ];
@@ -61,7 +61,7 @@ class ProductModel extends Equatable {
       discount: double.tryParse(data['discount'].toString())!,
       size: double.tryParse(data['size'].toString())!,
       notifySize: double.tryParse(data['notify_size'].toString())!,
-      productMeasurementType: data['product_measurement_type'],
+      productMeasurementUnit: data['product_measurement_unit'],
       image: data['image'],
       storeId: data['store_id'],
     );
@@ -80,7 +80,7 @@ class ProductModel extends Equatable {
       'discount': discount,
       'size': size,
       'notify_size': notifySize,
-      'product_measurement_type': productMeasurementType,
+      'product_measurement_unit': productMeasurementUnit,
       'image': image,
       'store_id': storeId,
     };
@@ -96,7 +96,7 @@ class ProductModel extends Equatable {
     double? cost,
     double? size,
     double? notifySize,
-    String? productMeasurementType,
+    String? productMeasurementUnit,
     String? image,
     String? storeId,
     double? discount,
@@ -112,7 +112,7 @@ class ProductModel extends Equatable {
       discount: discount ?? this.discount,
       size: size ?? this.size,
       notifySize: notifySize ?? this.notifySize,
-      productMeasurementType: productMeasurementType ?? this.productMeasurementType,
+      productMeasurementUnit: productMeasurementUnit ?? this.productMeasurementUnit,
       image: image ?? this.image,
       storeId: storeId ?? this.storeId,
     );
@@ -133,7 +133,7 @@ class ProductModel extends Equatable {
           other.discount == discount &&
           other.size == size &&
           other.notifySize == notifySize &&
-          other.productMeasurementType == productMeasurementType &&
+          other.productMeasurementUnit == productMeasurementUnit &&
           other.image == image &&
           other.storeId == storeId;
 
@@ -149,7 +149,7 @@ class ProductModel extends Equatable {
         discount.hashCode ^
         size.hashCode ^
         notifySize.hashCode ^
-        productMeasurementType.hashCode ^
+        productMeasurementUnit.hashCode ^
         image.hashCode ^
         storeId.hashCode;
   }
