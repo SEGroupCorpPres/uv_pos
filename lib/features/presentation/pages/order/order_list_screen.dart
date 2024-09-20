@@ -1,8 +1,10 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:excel/excel.dart' as excel;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -10,9 +12,10 @@ import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:multi_selection_filter/multi_selection_filter.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -78,87 +81,73 @@ class _OrderListScreenState extends State<OrderListScreen> {
     required String fillingAddress,
     required String returnAddress,
   }) async {
-    final workbook = xlsio.Workbook();
-    final sheet = workbook.worksheets[0];
-    // Set column widths
-    sheet.columns[1]?.width = 50;
-    sheet.columns[2]?.width = 300;
-    sheet.columns[3]?.width = 50;
-    sheet.columns[4]?.width = 100;
-    sheet.columns[5]?.width = 100;
-    sheet.columns[6]?.width = 150;
+    // Assets faylini yuklash
+    ByteData data = await rootBundle.load(Assets.docSalesReport);
+    List<int> bytesList = data.buffer.asUint8List();
+    // Excel faylini o'qish (excel paketi orqali)
+    excel.Excel excelFile = excel.Excel.decodeBytes(bytesList);
+    excel.Sheet sheet = excelFile['Sheet1']; // Birinchi varaqni olish
 
-    // Set header row style
-    final xlsio.Range headerRange = sheet.getRangeByName('B3');
-    headerRange.setText("№");
-    headerRange.bAutofitText;
+    excel.CellStyle cellStyle = excel.CellStyle(
+      // backgroundColorHex: excel.ExcelColor.red,
+      leftBorder: excel.Border(
+        borderStyle: excel.BorderStyle.Thin,
+        borderColorHex: excel.ExcelColor.black,
+      ),
+      rightBorder: excel.Border(
+        borderStyle: excel.BorderStyle.Medium,
+        borderColorHex: excel.ExcelColor.black,
+      ),
+      topBorder: excel.Border(
+        borderStyle: excel.BorderStyle.Thin,
+        borderColorHex: excel.ExcelColor.black,
+      ),
+      bottomBorder: excel.Border(
+        borderStyle: excel.BorderStyle.Thin,
+        borderColorHex: excel.ExcelColor.black,
+      ),
+    );
+    for (int i = 0; i < 10; i++) {
+      // excel.Data cellA = sheet.cell(excel.CellIndex.indexByString('A${9 + i}'));
+      // excel.Data cellB = sheet.cell(excel.CellIndex.indexByString('B${9 + i}'));
+      // excel.Data cellC = sheet.cell(excel.CellIndex.indexByString('C${9 + i}'));
+      // excel.Data cellD = sheet.cell(excel.CellIndex.indexByString('E${9 + i}'));
+      // excel.Data cellE = sheet.cell(excel.CellIndex.indexByString('D${9 + i}'));
+      // excel.Data cellF = sheet.cell(excel.CellIndex.indexByString('F${9 + i}'));
 
-    final xlsio.Range headerRange2 = sheet.getRangeByName('C3');
-    headerRange2.setText("Maxsulot nomi(ish, xizmat)");
-    headerRange2.bAutofitText;
-    headerRange.cellStyle.hAlign = xlsio.HAlignType.center;
-    headerRange.cellStyle.vAlign = xlsio.VAlignType.center;
-    headerRange.cellStyle.bold = true;
-    headerRange.cellStyle.fontSize = 12;
-    headerRange.cellStyle.backColorRgb  = Colors.teal;
-    headerRange.cellStyle.borders.all.colorRgb = Colors.black;
-    headerRange.cellStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
+      sheet.updateCell(excel.CellIndex.indexByString('A${9 + i}'), excel.IntCellValue(i), cellStyle: cellStyle);
+      sheet.updateCell(excel.CellIndex.indexByString('B${9 + i}'), excel.TextCellValue('Maxsulot Nomi $i'), cellStyle: cellStyle);
+      sheet.updateCell(excel.CellIndex.indexByString('C${9 + i}'), excel.DoubleCellValue(i.toDouble()), cellStyle: cellStyle);
+      sheet.updateCell(excel.CellIndex.indexByString('D${9 + i}'), excel.TextCellValue('dona'), cellStyle: cellStyle);
+      sheet.updateCell(excel.CellIndex.indexByString('E${9 + i}'), excel.DoubleCellValue(i.toDouble()), cellStyle: cellStyle);
+      sheet.updateCell(excel.CellIndex.indexByString('F${9 + i}'), excel.DoubleCellValue(i * 100), cellStyle: cellStyle);
 
-    headerRange.cellStyle.fontColorRgb = Colors.white;
-    sheet.getRangeByName('D3').setText("Miqdor");
-    sheet.getRangeByName('E3').setText("O'l. bir.");
-    sheet.getRangeByName('F3').setText("Baxosi");
-    sheet.getRangeByName('G3').setText("Umumiy Summa");
+      // cellA.value = excel.IntCellValue(i);
+      // cellB.value = excel.TextCellValue('Maxsulot nomi $i');
+      // cellC.value = excel.DoubleCellValue(i.toDouble());
+      // cellD.value = excel.TextCellValue('dona');
+      // cellE.value = excel.DoubleCellValue(i.toDouble());
+      // cellF.value = excel.DoubleCellValue(i * 100);
 
-    // Apply header row style
-
-
-    // Fill data (replace with your actual data)
-    final List<List<String>> data = [
-      ['1', 'tGMVhWDUZINjpp18mYBNvWe7', '2', 'https://firebasestorage.googleapis', 'Sulaymon O\'rinov', '+998 (99) 966 68 86'],
-      ['5', '1996-12-14 00:00:00.000', '7940636', '70', 'Mercedes AMG GT S 2021', '60000'],
-      // Add more rows as needed
-    ];
-    //
-    // for (int i = 0; i < data.length; i++) {
-    //   final row = sheet.rows[i + 2];
-    //   for (int j = 0; j < data[i].length; j++) {
-    //     row[j].text = data[i][j];
-    //   }
-    // }
-
-    // Apply data row style
-
-
-    // workSheet.importList(_orderList, 3, 3, true);
-    // workSheet.getRangeByName('B3').setText('№');
-    // workSheet.getRangeByName('C3').setText('Maxsulot nomi(ish, xizmat');
-    // workSheet.getRangeByName('D3').setText('Miqdor');
-    // workSheet.getRangeByName('E3').setText('O\'lchov birligi');
-    // workSheet.getRangeByName('F3').setText('Baxosi');
-    // workSheet.getRangeByName('G3').setText('Umumiy summa');
-    for (int i = 1; i <= 10; i++) {
-      sheet.getRangeByName('B${3 + i}').setNumber(i.toDouble());
-      sheet.getRangeByName('C${3 + i}').setText('maxsulot nomi $i');
-      sheet.getRangeByName('D${3 + i}').setNumber(i.toDouble());
-      sheet.getRangeByName('E${3 + i}').setText('dona');
-      sheet.getRangeByName('F${3 + i}').setNumber(123);
-      sheet.getRangeByName('G${3 + i}').setNumber(123 * i.toDouble());
+      if (i != 9) {
+        sheet.insertRow(9 + i);
+      }
     }
-    final dataRange = sheet.getRangeByName('A2:F' + (data.length + 1).toString());
-    dataRange.cellStyle.hAlign = xlsio.HAlignType.left;
-    dataRange.cellStyle.vAlign = xlsio.VAlignType.center;
-    dataRange.cellStyle.borders.all.colorRgb = Colors.black;
-    dataRange.cellStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    final bytes = workbook.saveAsStream();
-    workbook.dispose();
+    // Saving the file
+
+    //stopwatch.reset();
+    List<int>? fileBytes = excelFile.save();
+
     final path = (await getApplicationSupportDirectory()).path;
 
-     final fileName = '$path/Report-$rentalStartDate.xlsx';
-    final file = File(fileName);
-    final xfile = XFile(fileName);
-    await file
-      ..writeAsBytes(bytes, flush: true);
+    final file = '$path/Report-$rentalStartDate.xlsx';
+    //print('saving executed in ${stopwatch.elapsed}');
+    if (fileBytes != null) {
+      log('save excel');
+      File(join(file))
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(fileBytes);
+    }
   }
 
   @override
@@ -210,7 +199,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                 IconButton(
                   onPressed: () async {
                     String date = DateTime.now().toIso8601String();
-                    _createOrderExcel(
+                    await _createOrderExcel(
                       uid: '1',
                       userImg: '2',
                       fullName: 's',
@@ -228,16 +217,18 @@ class _OrderListScreenState extends State<OrderListScreen> {
                     );
                     final path = (await getApplicationSupportDirectory()).path;
                     final fileName = '$path/Report-$date.xlsx';
+                    log(fileName);
+                    // OpenFilex.open(fileName);
                     final result = await Share.shareXFiles([XFile(fileName)], text: 'Hisobot');
                     log(result.toString() + '----> result error');
                     if (result.status == ShareResultStatus.success) {
-                      log(_fileName!);
+                      log(fileName);
                       print('Thank you for sharing the picture!');
                     }
                     // _showReportDialog(context);
                   },
                   icon: Image.asset(
-                    Assets.imagesExcell,
+                    Assets.imagesExcel,
                     width: 18.r,
                   ),
                 ),

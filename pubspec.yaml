@@ -59,7 +59,8 @@ dependencies:
   grouped_list: ^6.0.0
   platform: ^3.1.5
   file: ^7.0.0
-  # opne file
+  open_filex: ^4.5.0
+  # open file
   image_picker: ^1.1.2
   image:
   image_cropper: ^5.0.1
@@ -75,12 +76,13 @@ dependencies:
   #wave animation loading
   flutter_spinkit: ^5.2.1
 
+  excel: ^4.0.6
+  barcode: ^2.2.8
+  flutter_svg: ^2.0.10+1
   # syncfusion
   syncfusion_flutter_charts: ^26.2.10
   syncfusion_flutter_barcodes: ^26.2.8
   syncfusion_flutter_xlsio:
-  barcode: ^2.2.8
-  flutter_svg: ^2.0.10+1
   #Toast
   fluttertoast: ^8.2.6
   multi_selection_filter: ^0.0.6
@@ -170,4 +172,5 @@ flutter:
     - assets/
     - assets/images/
     - assets/sounds/
+    - assets/doc/
 
