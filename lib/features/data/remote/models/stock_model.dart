@@ -1,31 +1,38 @@
 import 'package:equatable/equatable.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
+
+import 'order_product_model.dart';
 
 class StockModel extends Equatable {
   const StockModel({
     required this.id,
     required this.storeId,
     required this.product,
-    required this.size,
-    required this.mesurementType,
+    // required this.size,
+    // required this.measurementUnit,
   });
 
   @override
   // TODO: implement props
-  List<Object?> get props => [id, storeId, size];
+  List<Object?> get props => [
+        id,
+        storeId,
+        // size,
+        // measurementUnit,
+        product,
+      ];
   final String id;
   final String storeId;
-  final ProductModel product;
-  final double size;
-  final String mesurementType;
+  final OrderProductModel product;
+  // final double size;
+  // final String measurementUnit;
 
   factory StockModel.fromMap(Map<String, dynamic> data) {
     return StockModel(
       id: data['id'] as String,
       storeId: data['store_id'] as String,
-      product: ProductModel.fromMap(data['product']),
-      size: data['size'] as double,
-      mesurementType: data['mesurement_type'] as String,
+      product: OrderProductModel.fromMap(data['product']),
+      // size: data['size'] as double,
+      // measurementUnit: data['measurement_unit'] as String,
     );
   }
 
@@ -34,25 +41,25 @@ class StockModel extends Equatable {
     return {
       'id': id,
       'store_id': storeId,
-      'product': product.toMap(),
-      'size': size,
-      'mesurement_type': mesurementType,
+      'product': product,
+      // 'size': size,
+      // 'measurement_unit': measurementUnit,
     };
   }
 
   StockModel copyWith({
     String? id,
     String? storeId,
-    ProductModel? product,
-    double? size,
-    String? mesurementType,
+    OrderProductModel? product,
+    // double? size,
+    // String? measurementUnit,
   }) {
     return StockModel(
       id: id ?? this.id,
       storeId: storeId ?? this.storeId,
       product: product ?? this.product,
-      size: size ?? this.size,
-      mesurementType: mesurementType ?? this.mesurementType,
+      // size: size ?? this.size,
+      // measurementUnit: measurementUnit ?? this.measurementUnit,
     );
   }
 }

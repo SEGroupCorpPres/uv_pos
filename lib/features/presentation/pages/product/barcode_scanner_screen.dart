@@ -45,7 +45,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      onPopInvokedWithResult: (bool didPop, result) {
         context.read<AppBloc>().add(
               const NavigateToCreateProductScreen(),
             );
@@ -72,7 +72,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
               BlocProvider.of<AppBloc>(context).add(
                 NavigateToCreateProductScreen(
                   productState.product,
-                  productState.product.barcode,
+                  productState.product.meta.barcode,
                   true,
                 ),
               );

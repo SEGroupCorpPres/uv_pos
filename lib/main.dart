@@ -35,7 +35,7 @@ Future<void> main() async {
         ),
         BlocProvider(create: (context) => StoreBloc(storeRepository)),
         BlocProvider(create: (context) => ProductBloc(productRepository)),
-        BlocProvider(create: (context) => OrderBloc(orderRepository, productRepository)),
+        BlocProvider(create: (context) => OrderBloc(orderRepository,)),
         BlocProvider(create: (context) => StockBloc(stockRepository)),
       ],
       child: const App(),

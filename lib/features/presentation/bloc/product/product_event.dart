@@ -75,21 +75,21 @@ class FetchProductByBarcodeEvent extends ProductEvent {
 }
 
 class UpdateProductQuantity extends ProductEvent {
-  final ProductModel product;
+  final String productId;
   final StoreModel store;
   final double size;
   final List<ProductModel>? notifyProductsList;
 
 
   const UpdateProductQuantity({
-    required this.product,
+    required this.productId,
     required this.store,
     required this.size,
     this.notifyProductsList
   });
 
   @override
-  List<Object?> get props => [product, store, size, notifyProductsList];
+  List<Object?> get props => [productId, store, size, notifyProductsList];
 }
 
 class FilterProductList extends ProductEvent {

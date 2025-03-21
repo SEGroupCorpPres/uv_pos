@@ -30,8 +30,9 @@
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="fullSensor"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            tools:ignore="DiscouragedApi" />
+            android:theme="@style/Ucrop.CropTheme"
+            tools:ignore="DiscouragedApi"/> <!-- This line is updated -->
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

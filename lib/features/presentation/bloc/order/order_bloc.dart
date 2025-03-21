@@ -3,20 +3,20 @@ import 'dart:developer';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uv_pos/features/data/remote/models/order_model.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
+import 'package:uv_pos/features/data/remote/models/order_product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/data/remote/models/user_model.dart';
 import 'package:uv_pos/features/domain/repositories/order_repository.dart';
-import 'package:uv_pos/features/domain/repositories/product_repository.dart';
 
 part 'order_event.dart';
 part 'order_state.dart';
 
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final OrderRepository _orderRepository;
-  final ProductRepository _productRepository;
 
-  OrderBloc(this._orderRepository, this._productRepository) : super(OrderInitial()) {
+  OrderBloc(
+    this._orderRepository,
+  ) : super(OrderInitial()) {
     on<LoadOrdersEvent>(_fetchOrderList);
     on<FetchOrderByIdEvent>(_fetchOrderById);
     on<CreateOrderEvent>(_createOrder);
@@ -87,16 +87,16 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       if (currentState.products != null || currentState.products!.isNotEmpty) {
         final existingProductIndex = currentState.products!.indexWhere((product) => product.id == event.product.id);
         if (existingProductIndex != -1) {
-          final updatedProducts = List<ProductModel>.from(currentState.products!);
+          final updatedProducts = List<OrderProductModel>.from(currentState.products!);
           final existingProduct = updatedProducts[existingProductIndex];
-          updatedProducts[existingProductIndex] = existingProduct.copyWith(size: existingProduct.size + 1);
+          updatedProducts[existingProductIndex] = existingProduct.copyWith(quantity: existingProduct.quantity + 1);
           emit(UpdatedOrderProducts(products: updatedProducts));
         } else {
-          final updatedProducts = List<ProductModel>.from(currentState.products!)..add(event.product);
+          final updatedProducts = List<OrderProductModel>.from(currentState.products!)..add(event.product);
           emit(UpdatedOrderProducts(products: updatedProducts));
         }
       } else {
-        final updatedProducts = List<ProductModel>.from(currentState.products!)..add(event.product);
+        final updatedProducts = List<OrderProductModel>.from(currentState.products!)..add(event.product);
         emit(UpdatedOrderProducts(products: updatedProducts));
       }
     } else {
@@ -107,9 +107,9 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   Future<void> _onRemoveProduct(RemoveProduct event, Emitter<OrderState> emit) async {
     if (state is UpdatedOrderProducts) {
       final state = this.state as UpdatedOrderProducts;
-      List<ProductModel> products = state.products!.where((product) => product.id != event.productId).toList();
+      List<OrderProductModel> products = state.products!.where((product) => product.id != event.productId).toList();
       log('$products');
-      emit(UpdatedOrderProducts(products: List<ProductModel>.from(products)));
+      emit(UpdatedOrderProducts(products: List<OrderProductModel>.from(products)));
     }
   }
 
@@ -122,14 +122,14 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         log('this is a $state');
         final updatedProducts = currentState.products!.map(
           (product) {
-            return product.id == event.product.id ? product.copyWith(size: event.size) : product;
+            return product.id == event.product.id ? product.copyWith(quantity: event.stock) : product;
           },
         ).toList();
         for (var product in updatedProducts) {
           log('$product');
         }
         log('$updatedProducts');
-        emit(UpdatedOrderProducts(products: List<ProductModel>.from(updatedProducts)));
+        emit(UpdatedOrderProducts(products: List<OrderProductModel>.from(updatedProducts)));
         log('state: $currentState');
       } else {
         emit(UpdatedOrderProducts(products: [event.product]));
@@ -144,7 +144,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   Future<void> _onOrderAmountDiscounting(OrderDiscountedEvent event, Emitter<OrderState> emit) async {
     final currentState = state;
     if (currentState is UpdatedOrderProducts) {
-      List<ProductModel> products = currentState.products!;
+      List<OrderProductModel> products = currentState.products!;
       emit(
         OrderDiscountState(
           products: products,

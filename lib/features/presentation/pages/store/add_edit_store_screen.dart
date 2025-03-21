@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/core/helpers/image_helper.dart';
+import 'package:uv_pos/core/helpers/image_resizer.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
 import 'package:uv_pos/features/presentation/bloc/store/store_bloc.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_button.dart';
@@ -77,42 +78,44 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
     preferences.remove('store_address');
   }
 
-  Future<void> _cupertinoStyleCameraCapture() async {
-    final List<XFile> files = await imageHelper.pickImage(source: ImageSource.camera);
-    if (files.isNotEmpty) {
-      final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
-      if (croppedFile != null) {
-        setState(() {
-          _name = _storeNameTextEditingController.text;
-          _description = _storeDescriptionTextEditingController.text;
-          _phone = _storePhoneTextEditingController.text;
-          _address = _storeAddressTextEditingController.text;
-          _image = File(croppedFile.path);
-        });
-      }
-    }
-  }
-
-  Future<void> _cupertinoStyleGalleryImageUpload() async {
-    final List<XFile> files = await imageHelper.pickImage();
-    if (files.isNotEmpty) {
-      if (files.length == 1) {
-        final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
-        if (croppedFile != null) {
-          setState(() {
-            _name = _storeNameTextEditingController.text;
-            _description = _storeDescriptionTextEditingController.text;
-            _phone = _storePhoneTextEditingController.text;
-            _address = _storeAddressTextEditingController.text;
-            _image = File(croppedFile.path);
-          });
-        }
-      } else {}
-    }
-  }
+  //
+  // Future<void> _cupertinoStyleCameraCapture() async {
+  //   final List<XFile> files = await imageHelper.pickImage(source: ImageSource.camera, maxResolution: 600);
+  //   if (files.isNotEmpty) {
+  //     final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
+  //     if (croppedFile != null) {
+  //       setState(() {
+  //         _name = _storeNameTextEditingController.text;
+  //         _description = _storeDescriptionTextEditingController.text;
+  //         _phone = _storePhoneTextEditingController.text;
+  //         _address = _storeAddressTextEditingController.text;
+  //         _image = File(croppedFile.path);
+  //       });
+  //     }
+  //   }
+  // }
+  //
+  // Future<void> _cupertinoStyleGalleryImageUpload() async {
+  //   final List<XFile> files = await imageHelper.pickImage(maxResolution: 600);
+  //   if (files.isNotEmpty) {
+  //     if (files.length == 1) {
+  //       final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
+  //       if (croppedFile != null) {
+  //         setState(() {
+  //           _name = _storeNameTextEditingController.text;
+  //           _description = _storeDescriptionTextEditingController.text;
+  //           _phone = _storePhoneTextEditingController.text;
+  //           _address = _storeAddressTextEditingController.text;
+  //           _image = resizeImage(File(croppedFile.path), 600, 600);
+  //
+  //         });
+  //       }
+  //     } else {}
+  //   }
+  // }
 
   Future<void> _takingAPictureWithACameraInMaterialStyle() async {
-    final List<XFile> files = await imageHelper.pickImage(source: ImageSource.camera);
+    final List<XFile> files = await imageHelper.pickImage(source: ImageSource.camera, maxResolution: 600);
     if (files.isNotEmpty) {
       final croppedFile = await imageHelper.crop(file: files.single, cropStyle: CropStyle.rectangle);
       if (croppedFile != null) {
@@ -121,14 +124,14 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
           _description = _storeDescriptionTextEditingController.text;
           _phone = _storePhoneTextEditingController.text;
           _address = _storeAddressTextEditingController.text;
-          _image = File(croppedFile.path);
+          _image = resizeImage(File(croppedFile.path), 600, 600);
         });
       }
     }
   }
 
   Future<void> _uploadingAPictureFromTheGalleryInMaterialStyle() async {
-    final List<XFile> files = await imageHelper.pickImage();
+    final List<XFile> files = await imageHelper.pickImage(maxResolution: 600);
     if (files.isNotEmpty) {
       if (files.length == 1) {
         final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
@@ -138,7 +141,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
             _description = _storeDescriptionTextEditingController.text;
             _phone = _storePhoneTextEditingController.text;
             _address = _storeAddressTextEditingController.text;
-            _image = File(croppedFile.path);
+            _image = resizeImage(File(croppedFile.path), 600, 600);
           });
         }
       } else {}
@@ -170,7 +173,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    MediaQuery.sizeOf(context);
+    final Size size = MediaQuery.sizeOf(context);
 
     return PopScope(
       canPop: false,
@@ -256,7 +259,11 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                 },
                 builder: (context, state) {
                   if (state is StoreCreating) {
-                    return const Center(child: CircularProgressIndicator.adaptive());
+                    return Container(
+                      width: size.width,
+                      height: ScreenUtil.defaultSize.height,
+                      child: Center(child: CircularProgressIndicator.adaptive()),
+                    );
                   }
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20).r,
@@ -356,7 +363,8 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                                   title: 'Pick an Image',
                                   icon: Icons.image,
                                   onPressed: () {
-                                    Platform.isIOS ? _cupertinoStyleGalleryImageUpload() : _uploadingAPictureFromTheGalleryInMaterialStyle();
+                                    // Platform.isIOS ? _cupertinoStyleGalleryImageUpload() :
+                                    _uploadingAPictureFromTheGalleryInMaterialStyle();
                                   },
                                 ),
                                 StoreButton(
@@ -365,7 +373,8 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                                   onPressed: () {
                                     _saveFields(_storeNameTextEditingController.text, _storeDescriptionTextEditingController.text, _storePhoneTextEditingController.text,
                                         _storeAddressTextEditingController.text);
-                                    Platform.isIOS ? _cupertinoStyleCameraCapture() : _takingAPictureWithACameraInMaterialStyle();
+                                    // Platform.isIOS ? _cupertinoStyleCameraCapture() :
+                                    _takingAPictureWithACameraInMaterialStyle();
                                   },
                                 ),
                               ],

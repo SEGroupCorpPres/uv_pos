@@ -1,12 +1,13 @@
 import 'package:equatable/equatable.dart';
 
+import 'order_product_model.dart';
 import 'product_model.dart';
 
 class OrderModel extends Equatable implements Comparable<OrderModel> {
   final String id;
   final String customerName;
   final String employeeName;
-  final List<ProductModel> productList;
+  final List<OrderProductModel> productList;
   final double totalAmount;
   final DateTime orderDate;
   final String? barcode;
@@ -36,7 +37,7 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
       id: data['id'],
       customerName: data['customer_anme'],
       employeeName: data['employee_name'],
-      productList: (data['product_list'] as List<dynamic>).map((item) => ProductModel.fromMap(item)).toList(),
+      productList: (data['product_list'] as List<dynamic>).map((item) => OrderProductModel.fromMap(item)).toList(),
       totalAmount: data['total_amount'],
       orderDate: DateTime.parse(data['order_date']),
       storeId: data['store_id'],
@@ -66,7 +67,7 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
     String? id,
     String? customerName,
     String? employeeName,
-    List<ProductModel>? productList,
+    List<OrderProductModel>? productList,
     double? totalAmount,
     DateTime? orderDate,
     String? storeId,

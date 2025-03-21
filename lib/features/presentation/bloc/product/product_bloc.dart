@@ -158,9 +158,9 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     List<ProductModel>? notifyProductsList;
 
     try {
-      ProductModel? oldProduct = await _productRepository.getProductById(event.product.id);
+      ProductModel? oldProduct = await _productRepository.getProductById(event.productId);
       if (oldProduct != null) {
-        updatingProduct = event.product.copyWith(size: oldProduct.size - event.size);
+        updatingProduct = oldProduct.copyWith(size: oldProduct.stock - event.size);
         notifyProductsList = event.notifyProductsList;
       }
       await _productRepository.updateProduct(updatingProduct!);
@@ -168,7 +168,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       final products = await _productRepository.getProductsByStoreId(event.store);
 
       if (updatedProduct != null) {
-        if (updatedProduct.size <= updatedProduct.notifySize) {
+        if (updatedProduct.stock <= updatedProduct.notifySize) {
           notifyProductsList?.add(updatedProduct);
         }
         emit(ProductUpdated(product: updatedProduct, notifyProductsList: notifyProductsList));

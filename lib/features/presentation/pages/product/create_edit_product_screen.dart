@@ -6,10 +6,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:uv_pos/core/helpers/image_helper.dart';
+import 'package:uv_pos/core/helpers/image_resizer.dart';
+import 'package:uv_pos/features/data/remote/models/dimensions_model.dart';
+import 'package:uv_pos/features/data/remote/models/meta_model.dart';
 import 'package:uv_pos/features/data/remote/models/product_measurement_unit.dart';
 import 'package:uv_pos/features/data/remote/models/product_model.dart';
 import 'package:uv_pos/features/data/remote/models/store_model.dart';
@@ -17,7 +21,6 @@ import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_button.dart';
 import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
 import 'package:uv_pos/generated/assets.dart';
-import 'package:image/image.dart' as img;
 
 class CreateProductScreen extends StatefulWidget {
   const CreateProductScreen({super.key});
@@ -39,12 +42,11 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   late final TextEditingController _productBarcodeController = TextEditingController();
   late final TextEditingController _productDescriptionController = TextEditingController();
   late final TextEditingController _productVendorController = TextEditingController();
-
+  late final TextEditingController _productMeasurementUnitController = TextEditingController();
   late final TextEditingController _productPriceController = TextEditingController();
   late final TextEditingController _productDiscountController = TextEditingController();
-
   late final TextEditingController _productCostController = TextEditingController();
-  late final TextEditingController _productSizeController = TextEditingController();
+  late final TextEditingController _productStockController = TextEditingController();
   late final TextEditingController _productNotifySizeController = TextEditingController();
 
   File? _image;
@@ -87,10 +89,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           _productCost = double.tryParse(_productCostController.text);
           _productDiscount = double.tryParse(_productDiscountController.text);
 
-          _productSize = double.tryParse(_productSizeController.text);
+          _productSize = double.tryParse(_productStockController.text);
           _productNotifySize = double.tryParse(_productNotifySizeController.text);
           _image = resizeImage(File(croppedFile.path), 600, 600);
-
         });
       }
     }
@@ -107,15 +108,12 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             _productBarcode = _productBarcodeController.text;
             _productDescription = _productDescriptionController.text;
             _productVendor = _productVendorController.text;
-
             _productPrice = double.tryParse(_productPriceController.text);
             _productCost = double.tryParse(_productCostController.text);
             _productDiscount = double.tryParse(_productDiscountController.text);
-
-            _productSize = double.tryParse(_productSizeController.text);
+            _productSize = double.tryParse(_productStockController.text);
             _productNotifySize = double.tryParse(_productNotifySizeController.text);
             _image = resizeImage(File(croppedFile.path), 600, 600);
-
           });
         }
       } else {}
@@ -132,15 +130,12 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           _productBarcode = _productBarcodeController.text;
           _productDescription = _productDescriptionController.text;
           _productVendor = _productVendorController.text;
-
           _productPrice = double.tryParse(_productPriceController.text);
           _productCost = double.tryParse(_productCostController.text);
           _productDiscount = double.tryParse(_productDiscountController.text);
-
-          _productSize = double.tryParse(_productSizeController.text);
+          _productSize = double.tryParse(_productStockController.text);
           _productNotifySize = double.tryParse(_productNotifySizeController.text);
           _image = resizeImage(File(croppedFile.path), 600, 600);
-
         });
       }
     }
@@ -162,7 +157,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             _productCost = double.tryParse(_productCostController.text);
             _productDiscount = double.tryParse(_productDiscountController.text);
 
-            _productSize = double.tryParse(_productSizeController.text);
+            _productSize = double.tryParse(_productStockController.text);
             _productNotifySize = double.tryParse(_productNotifySizeController.text);
             _image = resizeImage(File(croppedFile.path), 600, 600);
           });
@@ -170,13 +165,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       } else {}
     }
   }
-  File resizeImage(File file, int width, int height) {
-    final image = img.decodeImage(file.readAsBytesSync())!;
-    final resizedImage = img.copyResize(image, width: width, height: height);
-    final resizedFile = File('${file.path}_resized.png')
-      ..writeAsBytesSync(img.encodePng(resizedImage));
-    return resizedFile;
-  }
+
+
+
   Future<void> createEditProduct() async {}
 
   @override
@@ -200,7 +191,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           }
           if (appState.product != null) {
             product = appState.product;
-            _productBarcodeController.text = product?.barcode ?? '';
+            _productBarcodeController.text = product?.meta.barcode ?? '';
           }
         } else {
           log('product barcode is: ${appState.barcode}');
@@ -211,8 +202,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         _productVendorController.text = product?.vendor ?? _productVendor ?? '';
         _productPriceController.text = product?.price.toString() ?? (_productPrice != null ? _productPrice.toString() : '');
         _productCostController.text = product?.cost.toString() ?? (_productCost != null ? _productCost.toString() : '');
-        _productDiscountController.text = product?.discount.toString() ?? (_productDiscount != null ? _productDiscount.toString() : '');
-        _productSizeController.text = product?.size.toString() ?? (_productSize != null ? _productSize.toString() : '');
+        _productDiscountController.text = product?.discountPercentage.toString() ?? (_productDiscount != null ? _productDiscount.toString() : '');
+        _productStockController.text = product?.stock.toString() ?? (_productSize != null ? _productSize.toString() : '');
         _productNotifySizeController.text = product?.notifySize.toString() ?? (_productNotifySize != null ? _productNotifySize.toString() : '');
         _selectedValue = product?.productMeasurementUnit ?? ProductMeasurementUnit.dona.name;
         return PopScope(
@@ -243,27 +234,57 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                 TextButton.icon(
                   onPressed: () {
                     if (_formKey.currentState?.validate() ?? false) {
+                      final createdDate = Timestamp.now();
+
                       String id = '';
                       if (!appState.isEdit) {
-                        final createdDate = Timestamp.now();
                         id = createdDate.microsecondsSinceEpoch.toString();
                       } else {
-                        image = appState.product!.image;
+                        image = appState.product!.thumbnail;
                         id = appState.product!.id;
                       }
+                      final Meta meta = Meta(
+                        createdAt: createdDate.toString(),
+                        updatedAt: Timestamp.now().toString(),
+                        qrCode: '',
+                        barcode: _productBarcodeController.text,
+                      );
+                      final Dimensions dimensions = Dimensions(
+                        width: 0,
+                        height: 0,
+                        depth: 0,
+                      );
                       final product = ProductModel(
                         id: id,
                         name: _productNameController.text,
-                        barcode: _productBarcodeController.text,
+                        meta: meta,
                         description: _productDescriptionController.text,
                         vendor: _productVendorController.text,
                         price: double.parse(_productPriceController.text),
                         cost: double.parse(_productCostController.text),
-                        discount: double.parse(_productDiscountController.text),
-                        size: double.parse(_productSizeController.text),
+                        discountPercentage: double.parse(_productDiscountController.text),
+                        stock: double.parse(_productStockController.text),
                         notifySize: double.parse(_productNotifySizeController.text),
                         productMeasurementUnit: _selectedValue!,
                         storeId: store!.id,
+                        createdAt: '',
+                        updatedAt: '',
+                        tags: [],
+                        brand: '',
+                        sku: '',
+                        weight: 0,
+                        dimensions: dimensions,
+                        warrantyInformation: '',
+                        shippingInformation: '',
+                        availabilityStatus: '',
+                        reviews: [],
+                        returnPolicy: '',
+                        minimumOrderQuantity: 0,
+                        images: [],
+                        thumbnail: '',
+                        startDiscountDate: '',
+                        endDiscountDate: '',
+                        category: '',
                       );
                       if (!appState.isEdit) {
                         context.read<ProductBloc>().add(CreateProductEvent(product, _image, store));
@@ -426,10 +447,22 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                                 textEditingController: _productDiscountController,
                               ),
                               StoreTextField(
+                                hintText: 'Chegirma boshlanish vaqti',
+                                textInputType: TextInputType.number,
+                                icon: Icons.discount,
+                                textEditingController: _productDiscountController,
+                              ),
+                              StoreTextField(
+                                hintText: 'Chegirma tugash vaqti',
+                                textInputType: TextInputType.number,
+                                icon: Icons.discount,
+                                textEditingController: _productDiscountController,
+                              ),
+                              StoreTextField(
                                 hintText: 'Miqdor',
                                 textInputType: TextInputType.number,
                                 icon: Icons.notifications,
-                                textEditingController: _productSizeController,
+                                textEditingController: _productStockController,
                               ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

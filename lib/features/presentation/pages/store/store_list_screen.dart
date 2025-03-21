@@ -194,7 +194,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
                       child: Text('No record found'),
                     );
                   } else if (state is StoreLoading) {
-                    return const Center(
+                    return Center(
                       child: CircularProgressIndicator.adaptive(),
                     );
                   } else if (state is StoreError) {

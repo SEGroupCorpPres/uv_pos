@@ -70,7 +70,7 @@ class OrderDeleting extends OrderState {}
 class OrderDeleted extends OrderState {}
 
 class OrderDiscountState extends OrderState {
-  final List<ProductModel>? products;
+  final List<OrderProductModel>? products;
   final double discount;
   final bool isFlat;
 
@@ -86,7 +86,7 @@ class OrderDiscountState extends OrderState {
 }
 
 class ProductAddToOrder extends OrderState {
-  final List<ProductModel> products;
+  final List<OrderProductModel> products;
 
   const ProductAddToOrder(this.products);
 
@@ -97,7 +97,7 @@ class ProductAddToOrder extends OrderState {
 
 class UpdatedOrderProducts extends OrderState {
   final int? qty;
-  final List<ProductModel>? products;
+  final List<OrderProductModel>? products;
 
   const UpdatedOrderProducts({this.qty, this.products});
 

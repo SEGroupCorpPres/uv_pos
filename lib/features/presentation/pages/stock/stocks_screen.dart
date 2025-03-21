@@ -32,6 +32,8 @@ class _StocksScreenState extends State<StocksScreen> {
   List<StockModel> _stockList = [];
   bool _isSearching = false;
   bool _isSearchTap = false;
+  double stock = 0;
+
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +47,7 @@ class _StocksScreenState extends State<StocksScreen> {
       },
       child: PopScope(
         canPop: false,
-        onPopInvoked: (bool didPop) {
+        onPopInvokedWithResult: (bool didPop, result) {
           context.read<AppBloc>().add(
                 const NavigateToHomeScreen(),
               );
@@ -139,7 +141,7 @@ class _StocksScreenState extends State<StocksScreen> {
                           ],
                         ),
                         subtitle: Text(
-                          'Qty: ${stock.size}',
+                          'Qty: ${stock.product.quantity}',
                           style: TextStyle(color: Colors.black, fontSize: 13.sp),
                         ),
                       ),

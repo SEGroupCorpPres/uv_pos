@@ -1,5 +1,7 @@
+import 'dart:developer';
+
+import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AppBlocObserver extends BlocObserver {
   @override
@@ -7,7 +9,7 @@ class AppBlocObserver extends BlocObserver {
     // TODO: implement onEvent
     super.onEvent(bloc, event);
     if (kDebugMode) {
-      print('bloc--> $bloc; event--> $event ');
+      log('BLoC----> $bloc; \n\n Event----> $event ');
     }
   }
 
@@ -15,7 +17,7 @@ class AppBlocObserver extends BlocObserver {
   void onTransition(Bloc bloc, Transition transition) {
     super.onTransition(bloc, transition);
     if (kDebugMode) {
-      print('bloc--> $bloc; transition--> $transition');
+      log('BLoC----> $bloc; \n\n Transition----> $transition');
     }
   }
 
@@ -24,7 +26,7 @@ class AppBlocObserver extends BlocObserver {
     // TODO: implement onChange
     super.onChange(bloc, change);
     if (kDebugMode) {
-      print('bloc--> $bloc; change--> $change');
+      log('BLoC----> $bloc; \n\n Change----> $change');
     }
   }
 
@@ -33,7 +35,7 @@ class AppBlocObserver extends BlocObserver {
     // TODO: implement onError
     super.onError(bloc, error, stackTrace);
     if (kDebugMode) {
-      print('bloc--> $bloc; error--> $error; stackTrace--> $stackTrace');
+      log('BLoC----> $bloc; \n\nError----> $error; \n\n StackTrace----> $stackTrace');
     }
   }
 
@@ -42,7 +44,7 @@ class AppBlocObserver extends BlocObserver {
     // TODO: implement onCreate
     super.onCreate(bloc);
     if (kDebugMode) {
-      print('create bloc--> $bloc');
+      log('Create BloC----> $bloc');
     }
   }
 
@@ -52,7 +54,7 @@ class AppBlocObserver extends BlocObserver {
     super.onClose(bloc);
 
     if (kDebugMode) {
-      print('close bloc--> $bloc');
+      print('Close BLoC----> $bloc');
     }
   }
 }

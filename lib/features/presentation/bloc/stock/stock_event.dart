@@ -19,15 +19,22 @@ class FetchStockByStoreId extends StockEvent {
 
 class AddUpdateStockProduct extends StockEvent {
   final StockModel stock;
-  final ProductModel product;
-  final String productId;
+  final OrderProductModel product;
+  final String storeId;
   final double size;
-  final String mesurementType;
 
-  const AddUpdateStockProduct(this.productId, this.size, this.mesurementType, this.product, {required this.stock});
+  // final String measurementUnit;
+
+  const AddUpdateStockProduct(
+    this.storeId,
+    this.size,
+    // this.measurementUnit,
+    this.product, {
+    required this.stock,
+  });
 
   @override
-  List<Object> get props => [stock, product, productId, size];
+  List<Object> get props => [stock, product, storeId, size];
 }
 
 class RemoveStockProduct extends StockEvent {

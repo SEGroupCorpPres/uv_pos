@@ -59,11 +59,12 @@ class ImageHelper {
     // Crop image
     return await _imageCropper.cropImage(
       sourcePath: file.path,
-      cropStyle: cropStyle,
       compressQuality: 100,
       uiSettings: [
-        IOSUiSettings(),
-        AndroidUiSettings(),
+        IOSUiSettings(
+          cropStyle: cropStyle
+        ),
+        AndroidUiSettings(cropStyle: cropStyle),
       ],
     );
   }

@@ -33,8 +33,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     defaultConfig {
@@ -61,7 +61,7 @@ android {
         // Use this dependency to bundle the model with your app
         implementation 'com.google.mlkit:barcode-scanning:17.3.0'
         // Use this dependency to use the dynamically downloaded model in Google Play Services
-        implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+        implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
         implementation("com.google.firebase:firebase-analytics")
         implementation 'com.google.firebase:firebase-auth'
         implementation 'com.google.firebase:firebase-firestore'

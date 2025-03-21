@@ -1,34 +1,71 @@
 import 'package:equatable/equatable.dart';
+import 'package:uv_pos/features/data/remote/models/dimensions_model.dart';
+import 'package:uv_pos/features/data/remote/models/meta_model.dart';
+import 'package:uv_pos/features/data/remote/models/review_model.dart';
 
 class ProductModel extends Equatable {
   final String id;
   final String name;
-  final String? barcode;
   final String? description;
+  final String? category;
+  final double stock;
+  final List<String>? tags;
+  final String? brand;
+  final String sku;
+  final int? weight;
+  final Dimensions dimensions;
+  final String? warrantyInformation;
+  final String shippingInformation;
+  final String availabilityStatus;
+  final List<Review>? reviews;
+  final String? returnPolicy;
+  final int minimumOrderQuantity;
+  final Meta meta;
+  final List<String> images;
+  final String? thumbnail;
   final String vendor;
   final double price;
   final double cost;
-  final double discount;
-  final double size;
+  final double discountPercentage;
   final double notifySize;
-  final String? image;
   final String storeId;
+  final String? startDiscountDate;
+  final String? endDiscountDate;
   final String? productMeasurementUnit;
+  final String createdAt;
+  final String updatedAt;
 
   const ProductModel({
     required this.id,
     required this.name,
-    this.barcode,
     this.description,
     required this.vendor,
     required this.price,
-    required this.cost,
-    required this.size,
-    required this.discount,
     required this.notifySize,
+    required this.cost,
     this.productMeasurementUnit,
-    this.image,
+    this.endDiscountDate,
+    this.startDiscountDate,
     required this.storeId,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.discountPercentage,
+    required this.stock,
+    required this.tags,
+    required this.brand,
+    required this.sku,
+    required this.weight,
+    required this.dimensions,
+    required this.warrantyInformation,
+    required this.shippingInformation,
+    required this.availabilityStatus,
+    required this.reviews,
+    required this.returnPolicy,
+    required this.minimumOrderQuantity,
+    required this.meta,
+    required this.images,
+    required this.category,
+    required this.thumbnail,
   });
 
   @override
@@ -36,34 +73,68 @@ class ProductModel extends Equatable {
   List<Object?> get props => [
         id,
         name,
-        barcode,
         description,
         vendor,
         price,
         cost,
-        discount,
-        size,
         notifySize,
+        startDiscountDate,
+        endDiscountDate,
         productMeasurementUnit,
-        image,
         storeId,
+        createdAt,
+        updatedAt,
+        discountPercentage,
+        stock,
+        tags,
+        brand,
+        sku,
+        weight,
+        dimensions,
+        warrantyInformation,
+        shippingInformation,
+        availabilityStatus,
+        reviews,
+        returnPolicy,
+        minimumOrderQuantity,
+        meta,
+        images,
+        category,
+        thumbnail,
       ];
 
   factory ProductModel.fromMap(Map<String, dynamic> data) {
     return ProductModel(
       id: data['id'],
       name: data['name'],
-      barcode: data['bar_code'],
+      category: data["category"],
       description: data['description'],
       vendor: data['vendor'],
       price: double.tryParse(data['price'].toString())!,
       cost: double.tryParse(data['cost'].toString())!,
-      discount: double.tryParse(data['discount'].toString())!,
-      size: double.tryParse(data['size'].toString())!,
+      discountPercentage: double.tryParse(data['discount_percentage'].toString())!,
+      startDiscountDate: data['start_discount_date'],
+      endDiscountDate: data['end_discount_date'],
+      stock: double.tryParse(data['stock'].toString())!,
       notifySize: double.tryParse(data['notify_size'].toString())!,
       productMeasurementUnit: data['product_measurement_unit'],
-      image: data['image'],
+      thumbnail: data['thumbnail'],
       storeId: data['store_id'],
+      createdAt: data['created_at'],
+      updatedAt: data['updated_at'],
+      tags: List<String>.from(data["tags"].map((x) => x)),
+      brand: data["brand"],
+      sku: data["sku"],
+      weight: data["weight"],
+      dimensions: Dimensions.fromMap(data["dimensions"]),
+      warrantyInformation: data["warranty_information"],
+      shippingInformation: data["shipping_information"],
+      availabilityStatus: data["availability_status"],
+      reviews: List<Review>.from(data["reviews"].map((x) => Review.fromMap(x))),
+      returnPolicy: data["return_policy"],
+      minimumOrderQuantity: data["minimum_order_quantity"],
+      meta: Meta.fromMap(data["meta"]),
+      images: List<String>.from(data["images"].map((x) => x)),
     );
   }
 
@@ -72,27 +143,62 @@ class ProductModel extends Equatable {
     return {
       'id': id,
       'name': name,
-      'bar_code': barcode,
       'description': description,
       'vendor': vendor,
       'price': price,
       'cost': cost,
-      'discount': discount,
-      'size': size,
+      'start_discount_date': startDiscountDate,
+      'end_discount_date': endDiscountDate,
       'notify_size': notifySize,
       'product_measurement_unit': productMeasurementUnit,
-      'image': image,
       'store_id': storeId,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+      "stock": stock,
+      "tags": List<dynamic>.from(tags?.map(( String?x) => x) ?? []),
+      "brand": brand,
+      "sku": sku,
+      "weight": weight,
+      "dimensions": dimensions.toMap(),
+      "warranty_information": warrantyInformation,
+      "shipping_information": shippingInformation,
+      "availability_status": availabilityStatus,
+      "reviews": List<dynamic>.from(reviews?.map((x) => x.toMap()) ?? []),
+      "return_policy": returnPolicy,
+      "minimum_order_quantity": minimumOrderQuantity,
+      "meta": meta.toMap(),
+      "images": List<dynamic>.from(images.map((x) => x)),
+      "thumbnail": thumbnail,
+      "category": category,
+      "discount_percentage": discountPercentage,
     };
   }
 
   ProductModel copyWith({
+    String? category,
+    double? price,
+    double? discountPercentage,
+    double? rating,
+    double? stock,
+    List<String>? tags,
+    String? brand,
+    String? sku,
+    int? weight,
+    Dimensions? dimensions,
+    String? warrantyInformation,
+    String? shippingInformation,
+    String? availabilityStatus,
+    List<Review>? reviews,
+    String? returnPolicy,
+    int? minimumOrderQuantity,
+    Meta? meta,
+    List<String>? images,
+    String? thumbnail,
     String? id,
     String? name,
     String? barcode,
     String? description,
     String? vendor,
-    double? price,
     double? cost,
     double? size,
     double? notifySize,
@@ -100,57 +206,42 @@ class ProductModel extends Equatable {
     String? image,
     String? storeId,
     double? discount,
+    String? startDiscountDate,
+    String? endDiscountDate,
+    String? createdAt,
+    String? updatedAt,
   }) {
     return ProductModel(
       id: id ?? this.id,
       name: name ?? this.name,
-      barcode: barcode ?? this.barcode,
       description: description ?? this.description,
       vendor: vendor ?? this.vendor,
       price: price ?? this.price,
       cost: cost ?? this.cost,
-      discount: discount ?? this.discount,
-      size: size ?? this.size,
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      category: category ?? this.category,
+      startDiscountDate: startDiscountDate ?? this.startDiscountDate,
+      endDiscountDate: endDiscountDate ?? this.endDiscountDate,
       notifySize: notifySize ?? this.notifySize,
       productMeasurementUnit: productMeasurementUnit ?? this.productMeasurementUnit,
-      image: image ?? this.image,
       storeId: storeId ?? this.storeId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      stock: stock ?? this.stock,
+      tags: tags ?? this.tags,
+      brand: brand ?? this.brand,
+      sku: sku ?? this.sku,
+      weight: weight ?? this.weight,
+      dimensions: dimensions ?? this.dimensions,
+      warrantyInformation: warrantyInformation ?? this.warrantyInformation,
+      shippingInformation: shippingInformation ?? this.shippingInformation,
+      availabilityStatus: availabilityStatus ?? this.availabilityStatus,
+      reviews: reviews ?? this.reviews,
+      returnPolicy: returnPolicy ?? this.returnPolicy,
+      minimumOrderQuantity: minimumOrderQuantity ?? this.minimumOrderQuantity,
+      meta: meta ?? this.meta,
+      images: images ?? this.images,
+      thumbnail: thumbnail ?? this.thumbnail,
     );
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ProductModel &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          other.name == name &&
-          other.barcode == barcode &&
-          other.description == description &&
-          other.vendor == vendor &&
-          other.price == price &&
-          other.cost == cost &&
-          other.discount == discount &&
-          other.size == size &&
-          other.notifySize == notifySize &&
-          other.productMeasurementUnit == productMeasurementUnit &&
-          other.image == image &&
-          other.storeId == storeId;
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-        name.hashCode ^
-        barcode.hashCode ^
-        description.hashCode ^
-        vendor.hashCode ^
-        price.hashCode ^
-        cost.hashCode ^
-        discount.hashCode ^
-        size.hashCode ^
-        notifySize.hashCode ^
-        productMeasurementUnit.hashCode ^
-        image.hashCode ^
-        storeId.hashCode;
   }
 }

@@ -164,8 +164,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           final String pmt = productList[item].productMeasurementUnit!;
                           final String name = productList[item].name;
                           final double price = productList[item].price;
-                          final double qty = productList[item].size;
-                          final String? image = productList[item].image;
+                          final double qty = productList[item].stock;
+                          final String? image = productList[item].thumbnail;
                           final double notifySize = productList[item].notifySize;
                           return Slidable(
                             // Specify a key if the Slidable is dismissible.
@@ -186,7 +186,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                   onPressed: (context) => BlocProvider.of<AppBloc>(context).add(
                                     NavigateToCreateProductScreen(
                                       productList[item],
-                                      productList[item].barcode,
+                                      productList[item].meta.barcode,
                                       true,
                                       store,
                                     ),
