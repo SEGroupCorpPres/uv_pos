@@ -1,13 +1,4 @@
-import 'dart:developer';
-import 'dart:io';
-
-import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/core/helpers/image_helper.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/domain/repositories/product_repository.dart';
+import '../bloc.dart';
 
 part 'product_event.dart';
 part 'product_state.dart';
@@ -22,7 +13,6 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     on<FilterProductList>(fetchFilteredProductList);
     on<CreateProductEvent>(createProduct);
     on<UpdateProductEvent>(updateProduct);
-    on<UpdateProductQuantity>(updateProductQuantity);
     on<DeleteProductEvent>(deleteProduct);
   }
 
@@ -30,14 +20,14 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       emit(ProductLoading());
       if (kDebugMode) {
-        print('store is ${event.store}');
+        log('store is ${event.storeID}');
       }
-      final products = await _productRepository.getProductsByStoreId(event.store!);
+      final products = await _productRepository.getProducts(event.storeID);
       if (kDebugMode) {
-        print('first product is $products');
+        log('first product is $products');
       }
       if (products.isNotEmpty) {
-        emit(ProductsByStoreIdLoaded(products: products));
+        emit(ProductsLoaded(products: products));
       } else {
         emit(ProductNotFound());
       }
@@ -50,11 +40,12 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       emit(ProductLoading());
       if (kDebugMode) {
-        print('store is ${event.store}');
+        log('store is ${event.storeID}');
       }
-      final products = await _productRepository.getProductsByStoreIdWithFilter(event.store, event.filter);
+      final products =
+          await _productRepository.getProductsWithFilter(event.storeID, event.filter);
       if (kDebugMode) {
-        print('first product is $products');
+        log('first product is $products');
       }
       if (products.isNotEmpty) {
         emit(FilteredProductList(filteredProducts: products));
@@ -80,15 +71,16 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     }
   }
 
-  Future<void> onFetchProductByBarcode(FetchProductByBarcodeEvent event, Emitter<ProductState> emit) async {
+  Future<void> onFetchProductByBarcode(
+      FetchProductByBarcodeEvent event, Emitter<ProductState> emit) async {
     try {
       emit(ProductLoading());
       if (kDebugMode) {
-        print(event.barcode);
+        log(event.barcode);
       }
       final product = await _productRepository.getProductByBarcode(event.barcode);
       if (kDebugMode) {
-        print(product);
+        log(product.toString());
       }
       if (product != null) {
         emit(ProductSearchByBarcodeLoaded(product: product));
@@ -106,18 +98,19 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       emit(ProductCreating());
       String? imageUrl;
       if (event.imageFile != null) {
-        imageUrl = await ImageHelper().uploadImageToStorage(event.imageFile!, 'products/${event.product.id}.jpg');
-        productModel = event.product.copyWith(image: imageUrl);
+        imageUrl = await ImageHelper()
+            .uploadImageToStorage(event.imageFile!, 'products/${event.product.id}.jpg');
+        productModel = event.product.copyWith(thumbnail: imageUrl);
       } else {
         productModel = event.product;
       }
-      await _productRepository.createProduct(productModel, event.store);
+      await _productRepository.createProduct(productModel);
       final createdProduct = await _productRepository.getProductById(productModel.id);
-      final products = await _productRepository.getProductsByStoreId(event.store);
+      final products = await _productRepository.getProducts(event.storeID);
 
       if (createdProduct != null) {
         emit(ProductCreated(product: createdProduct));
-        emit(ProductsByStoreIdLoaded(products: products));
+        emit(ProductsLoaded(products: products));
       } else {
         emit(const ProductError(error: 'Failed to create Product.'));
       }
@@ -132,47 +125,20 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       emit(ProductUpdating());
       if (event.imageFile != null) {
-        final imageUrl = await ImageHelper().uploadImageToStorage(event.imageFile!, 'products/${event.product.id}.jpg');
-        productModel = event.product.copyWith(image: imageUrl);
+        final imageUrl = await ImageHelper()
+            .uploadImageToStorage(event.imageFile!, 'products/${event.product.id}.jpg');
+        productModel = event.product.copyWith(thumbnail: imageUrl);
       } else {
         productModel = event.product;
       }
       log(productModel.toString());
       await _productRepository.updateProduct(productModel);
       final updatedProduct = await _productRepository.getProductById(productModel.id);
-      final products = await _productRepository.getProductsByStoreId(event.store);
+      final products = await _productRepository.getProducts(event.storeID);
 
       if (updatedProduct != null) {
         emit(ProductUpdated(product: updatedProduct));
-        emit(ProductsByStoreIdLoaded(products: products));
-      } else {
-        emit(ProductNotFound());
-      }
-    } catch (e) {
-      emit(ProductError(error: e.toString()));
-    }
-  }
-
-  Future<void> updateProductQuantity(UpdateProductQuantity event, Emitter<ProductState> emit) async {
-    late ProductModel? updatingProduct;
-    List<ProductModel>? notifyProductsList;
-
-    try {
-      ProductModel? oldProduct = await _productRepository.getProductById(event.productId);
-      if (oldProduct != null) {
-        updatingProduct = oldProduct.copyWith(size: oldProduct.stock - event.size);
-        notifyProductsList = event.notifyProductsList;
-      }
-      await _productRepository.updateProduct(updatingProduct!);
-      final updatedProduct = await _productRepository.getProductById(updatingProduct.id);
-      final products = await _productRepository.getProductsByStoreId(event.store);
-
-      if (updatedProduct != null) {
-        if (updatedProduct.stock <= updatedProduct.notifySize) {
-          notifyProductsList?.add(updatedProduct);
-        }
-        emit(ProductUpdated(product: updatedProduct, notifyProductsList: notifyProductsList));
-        emit(ProductsByStoreIdLoaded(products: products));
+        emit(ProductsLoaded(products: products));
       } else {
         emit(ProductNotFound());
       }
@@ -185,10 +151,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       emit(ProductDeleting());
       await _productRepository.deleteProduct(event.productId);
-      final products = await _productRepository.getProductsByStoreId(event.store);
+      final products = await _productRepository.getProducts(event.storeID);
 
       emit(ProductDeleted());
-      emit(ProductsByStoreIdLoaded(products: products));
+      emit(ProductsLoaded(products: products));
     } catch (e) {
       emit(ProductError(error: e.toString()));
     }

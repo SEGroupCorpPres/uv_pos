@@ -1,14 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:uv_pos/features/data/remote/models/order_model.dart';
-import 'package:uv_pos/features/data/remote/models/order_product_model.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/presentation/widgets/order/order_detail_bottom_sheet_popup_menu.dart';
 
-import 'package:uv_pos/generated/assets.dart';
+import 'order.dart';
 
 class OrderDetailBottomSheet extends StatelessWidget {
   final OrderModel order;
@@ -164,7 +158,9 @@ class OrderDetailBottomSheet extends StatelessWidget {
                                         color: Colors.grey,
                                         image: DecorationImage(
                                           fit: BoxFit.cover,
-                                          image: product.thumbnail != null ? NetworkImage(product.thumbnail!) : const AssetImage(Assets.imagesImageBg),
+                                          image: product.thumbnail != null
+                                              ? NetworkImage(product.thumbnail!)
+                                              : const AssetImage(Assets.imagesImageBg),
                                         ),
                                       ),
                                     ),

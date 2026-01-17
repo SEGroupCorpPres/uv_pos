@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:uv_pos/features/data/remote/models/user_model.dart';
+
+import 'repository.dart';
 
 class UserRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;

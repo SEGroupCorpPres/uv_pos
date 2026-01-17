@@ -1,0 +1,44 @@
+{
+  "alert": {
+    "success": "Успешный",
+    "error": "Ошибка",
+    "warning": "Предупреждение",
+    "info": "Информация"
+  },
+  "auth_page": {
+    "form": {
+      "name_label": "Имя",
+      "email_label": "Электронная почта",
+      "password_label": "Пароль",
+      "confirm_password_label": "Подтверждение",
+      "name_helper_text": "Введите ваше имя",
+      "email_helper_text": "Ваша электронная почта",
+      "password_helper_text": "Введите пароль",
+      "confirm_password_helper_text": "8-16 символов",
+      "name_error_text": "Имя обязательно",
+      "email_error_text": "Требуется электронная почта",
+      "password_error_text": "Требуется пароль",
+      "confirm_password_error_text": "Требуется подтверждение пароля",
+      "password_mismatch_error_text": "Пароль не совпадает"
+    },
+    "sign_in": "Вход",
+    "registration": "Регистрация",
+    "login": "Войти",
+    "sign_up": "Зарегистрироваться",
+    "forgot_password": "Забыли пароль",
+    "login_success": "Вход выполнен успешно",
+    "register_success": "Регистрация успешно завершена",
+    "login_error": "Не удалось войти",
+    "register_error": "Регистрация не удалась"
+  },
+  "home_page": {
+    "gallery": "Галерея",
+    "create": "Создать ",
+    "edit": "Редактирование",
+    "delete": "Удалить"
+  },
+  "paint_page": {
+    "title": "Новое изображение",
+    "title_edit": "Редактирование"
+  }
+}

@@ -1,19 +1,12 @@
-import 'dart:io';
+import 'printer.dart';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
+
 
 class AddPrintersScreen extends StatefulWidget {
   const AddPrintersScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: AddPrintersScreen(),
-        )
-      : const MaterialPage(
+  static Page page() => const MaterialPage(
           child: AddPrintersScreen(),
         );
 
@@ -47,7 +40,7 @@ class _AddPrintersScreenState extends State<AddPrintersScreen> {
     final Size size = MediaQuery.sizeOf(context);
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      onPopInvokedWithResult: (bool didPop, result) {
         context.read<AppBloc>().add(
            NavigateToPrintersScreen(),
         );

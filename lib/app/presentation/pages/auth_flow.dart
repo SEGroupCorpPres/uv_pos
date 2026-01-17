@@ -1,30 +1,9 @@
 // main.dart
-import 'package:flow_builder/flow_builder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/app/presentation/pages/check_email_screen.dart';
-import 'package:uv_pos/app/presentation/pages/loading_screen.dart';
-import 'package:uv_pos/app/presentation/pages/login_screen.dart';
-import 'package:uv_pos/app/presentation/pages/registration_screen.dart';
-import 'package:uv_pos/features/presentation/pages/home/home_screen.dart';
-import 'package:uv_pos/features/presentation/pages/order/order_list_screen.dart';
-import 'package:uv_pos/features/presentation/pages/printer/add_printers_screen.dart';
-import 'package:uv_pos/features/presentation/pages/printer/printers_screen.dart';
-import 'package:uv_pos/features/presentation/pages/product/barcode_scanner_screen.dart';
-import 'package:uv_pos/features/presentation/pages/product/create_edit_product_screen.dart';
-import 'package:uv_pos/features/presentation/pages/product/product_list_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/report_by_customers_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/report_by_dates_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/report_by_employees_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/reports_screen.dart';
-import 'package:uv_pos/features/presentation/pages/report/sale_report_screen.dart';
-import 'package:uv_pos/features/presentation/pages/sale/sale_screen.dart';
-import 'package:uv_pos/features/presentation/pages/setting/settings_screen.dart';
-import 'package:uv_pos/features/presentation/pages/stock/stocks_screen.dart';
-import 'package:uv_pos/features/presentation/pages/store/add_edit_store_screen.dart';
-import 'package:uv_pos/features/presentation/pages/store/store_list_screen.dart';
+import 'package:uv_pos/features/presentation/pages/stock/add_edit_stock_screen.dart';
+
+import 'pages.dart';
 
 class AuthFlow extends StatelessWidget {
   const AuthFlow({super.key});
@@ -62,7 +41,7 @@ List<Page> onGenerateAuthPages(AppState state, List<Page> pages) {
       return [AddPrintersScreen.page()];
     case AppStatus.printersScreen:
       return [PrintersScreen.page()];
-    case AppStatus.createProductScreen:
+    case AppStatus.createEditProductScreen:
       return [CreateProductScreen.page()];
     case AppStatus.barcodeScannerScreen:
       return [BarcodeScannerScreen.page()];
@@ -84,6 +63,8 @@ List<Page> onGenerateAuthPages(AppState state, List<Page> pages) {
       return [SettingsScreen.page()];
     case AppStatus.stocksScreen:
       return [StocksScreen.page()];
+    case AppStatus.addEditStockScreen:
+      return [AddEditStockScreen.page()];
     case AppStatus.addEditStoreScreen:
       return [AddEditStoreScreen.page()];
     case AppStatus.storeListScreen:
@@ -92,4 +73,3 @@ List<Page> onGenerateAuthPages(AppState state, List<Page> pages) {
       return [LoadingScreen.page()];
   }
 }
-

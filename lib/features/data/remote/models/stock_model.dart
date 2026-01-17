@@ -1,14 +1,19 @@
-import 'package:equatable/equatable.dart';
 
-import 'order_product_model.dart';
+import 'model.dart';
 
 class StockModel extends Equatable {
   const StockModel({
     required this.id,
     required this.storeId,
-    required this.product,
-    // required this.size,
-    // required this.measurementUnit,
+    required this.productId,
+    required this.name,
+    required this.branchId,
+    required this.qty,
+    required this.minQty,
+    required this.lastRestockDate,
+    required this.lastOutDate,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   @override
@@ -16,50 +21,90 @@ class StockModel extends Equatable {
   List<Object?> get props => [
         id,
         storeId,
-        // size,
-        // measurementUnit,
-        product,
+        productId,
+        name,
+        branchId,
+        qty,
+        minQty,
+        lastRestockDate,
+        lastOutDate,
+        createdAt,
+        updatedAt,
       ];
   final String id;
   final String storeId;
-  final OrderProductModel product;
+  final String productId;
+  final String name;
+  final String branchId;
+  final double qty;
+  final double minQty;
+  final DateTime lastRestockDate;
+  final DateTime lastOutDate;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
   // final double size;
   // final String measurementUnit;
 
-  factory StockModel.fromMap(Map<String, dynamic> data) {
+  factory StockModel.fromMap(Map<String, dynamic> data, String dataID) {
     return StockModel(
-      id: data['id'] as String,
+      id: dataID,
       storeId: data['store_id'] as String,
-      product: OrderProductModel.fromMap(data['product']),
-      // size: data['size'] as double,
-      // measurementUnit: data['measurement_unit'] as String,
+      productId: data['product_id'] as String,
+      name: data['name'] as String,
+      branchId: data['branch_id'] as String,
+      qty: data['qty'] as double,
+      minQty: data['min_qty'] as double,
+      lastRestockDate: data['last_restock_date'] as DateTime,
+      lastOutDate: data['last_out_date'] as DateTime,
+      createdAt: data['created_at'] as DateTime,
+      updatedAt: data['updated_at'] as DateTime,
     );
   }
+
 
   // Convert Store instance to map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'store_id': storeId,
-      'product': product,
-      // 'size': size,
-      // 'measurement_unit': measurementUnit,
+      'product_id': productId,
+      'name': name,
+      'branch_id': branchId,
+      'qty': qty,
+      'min_qty': minQty,
+      'last_restock_date': lastRestockDate,
+      'last_out_date': lastOutDate,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
     };
   }
 
   StockModel copyWith({
     String? id,
     String? storeId,
-    OrderProductModel? product,
-    // double? size,
-    // String? measurementUnit,
+    String? productId,
+    String? name,
+    String? branchId,
+    double? qty,
+    double? minQty,
+    DateTime? lastRestockDate,
+    DateTime? lastOutDate,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return StockModel(
       id: id ?? this.id,
       storeId: storeId ?? this.storeId,
-      product: product ?? this.product,
-      // size: size ?? this.size,
-      // measurementUnit: measurementUnit ?? this.measurementUnit,
+      productId: productId ?? this.productId,
+      name: name ?? this.name,
+      branchId: branchId ?? this.branchId,
+      qty: qty ?? this.qty,
+      minQty: minQty ?? this.minQty,
+      lastRestockDate: lastRestockDate ?? this.lastRestockDate,
+      lastOutDate: lastOutDate ?? this.lastOutDate,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

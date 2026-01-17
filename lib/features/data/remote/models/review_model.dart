@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'model.dart';
 class Review {
   final int rating;
   final String comment;

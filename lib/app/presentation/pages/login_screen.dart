@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       final email = _loginController.text;
       final password = _passwordController.text;
-      context.read<AppBloc>().add(AuthLoggedIn(email, password));
+      context.read<AppBloc>().add(AuthLoggedIn(email: email,password:  password));
     }
   }
 

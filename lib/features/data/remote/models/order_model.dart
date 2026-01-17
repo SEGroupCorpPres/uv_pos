@@ -1,7 +1,5 @@
-import 'package:equatable/equatable.dart';
 
-import 'order_product_model.dart';
-import 'product_model.dart';
+import 'model.dart';
 
 class OrderModel extends Equatable implements Comparable<OrderModel> {
   final String id;
@@ -29,15 +27,28 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
   });
 
   @override
-  List<Object?> get props => [id, customerName, employeeName, productList, totalAmount, orderDate, storeId, barcode, qrcode, discountPrice];
+  List<Object?> get props => [
+        id,
+        customerName,
+        employeeName,
+        productList,
+        totalAmount,
+        orderDate,
+        storeId,
+        barcode,
+        qrcode,
+        discountPrice
+      ];
 
   // Factory constructor to create an Order instance from a map (if needed)
   factory OrderModel.fromMap(Map<String, dynamic> data) {
     return OrderModel(
       id: data['id'],
-      customerName: data['customer_anme'],
+      customerName: data['customer_name'],
       employeeName: data['employee_name'],
-      productList: (data['product_list'] as List<dynamic>).map((item) => OrderProductModel.fromMap(item)).toList(),
+      productList: (data['product_list'] as List<dynamic>)
+          .map((item) => OrderProductModel.fromMap(item))
+          .toList(),
       totalAmount: data['total_amount'],
       orderDate: DateTime.parse(data['order_date']),
       storeId: data['store_id'],
@@ -46,6 +57,7 @@ class OrderModel extends Equatable implements Comparable<OrderModel> {
       qrcode: data['qrcode'],
     );
   }
+
 
   // Convert Order instance to map (if needed)
   Map<String, dynamic> toMap() {

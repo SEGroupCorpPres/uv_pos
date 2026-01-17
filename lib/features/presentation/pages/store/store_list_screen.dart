@@ -1,28 +1,14 @@
-import 'dart:io';
-
-import 'package:animated_search_bar/animated_search_bar.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/core/helpers/session_ending.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/domain/repositories/store_repository.dart';
-import 'package:uv_pos/features/presentation/bloc/store/store_bloc.dart';
+
+import 'store.dart';
 
 class StoreListScreen extends StatefulWidget {
   const StoreListScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: StoreListScreen(),
-        )
-      : const MaterialPage(
-          child: StoreListScreen(),
-        );
+  static Page page() => const MaterialPage(
+        child: StoreListScreen(),
+      );
 
   @override
   State<StoreListScreen> createState() => _StoreListScreenState();
@@ -114,7 +100,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
         ),
         body: SafeArea(
           child: BlocBuilder<AppBloc, AppState>(
-            buildWhen: (appPrev, appCurrent) => appPrev.user == appCurrent.user,
+            buildWhen: (appPrev, appCurrent) => appPrev.userID == appCurrent.userID,
             builder: (context, appState) {
               return BlocBuilder<StoreBloc, StoreState>(
                 buildWhen: (prev, current) => prev != current,
@@ -132,8 +118,11 @@ class _StoreListScreenState extends State<StoreListScreen> {
                         final storeItemImage = storeList[item].imageUrl;
                         return CupertinoListTile(
                           onTap: () async {
-                            BlocProvider.of<AppBloc>(context).add(NavigateToHomeScreen(storeList[item]));
-                            BlocProvider.of<StoreBloc>(context).add(FetchStoreByIdEvent(storeList[item]));
+                            BlocProvider.of<AppBloc>(context)
+                                .add(NavigateToHomeScreen(storeID: storeList[item].id));
+                            BlocProvider.of<UserBloc>(context).add(FetchUserByIdEvent(appState.userID!));
+                            BlocProvider.of<StoreBloc>(context)
+                                .add(FetchStoreByIdEvent(storeList[item]));
                             SharedPreferences preferences = await SharedPreferences.getInstance();
                             await preferences.setString('store_id', storeList[item].id);
                           },
@@ -179,7 +168,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
                           ),
                           trailing: IconButton(
                             onPressed: () => BlocProvider.of<AppBloc>(context).add(
-                              NavigateToAddEditStoreScreen(_list[item], true),
+                              NavigateToAddEditStoreScreen(storeID: _list[item].id, isEdit: true),
                             ),
                             icon: const Icon(
                               Icons.edit,
@@ -217,7 +206,7 @@ class _StoreListScreenState extends State<StoreListScreen> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => BlocProvider.of<AppBloc>(context).add(
-            const NavigateToAddEditStoreScreen(),
+            const NavigateToAddEditStoreScreen(storeID: null),
           ),
           child: const Icon(Icons.add),
         ),
@@ -242,7 +231,8 @@ class _StoreListScreenState extends State<StoreListScreen> {
           children: [
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.grey, minimumSize: Size(100.w, 40.h)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey, minimumSize: Size(100.w, 40.h)),
               child: const Text(
                 'Cancel',
                 style: TextStyle(color: Colors.white),
@@ -253,7 +243,8 @@ class _StoreListScreenState extends State<StoreListScreen> {
               onPressed: () {
                 BlocProvider.of<AppBloc>(context).add(AuthLoggedOut());
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, minimumSize: Size(100.w, 40.h)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red, minimumSize: Size(100.w, 40.h)),
               child: const Text(
                 'Logout',
                 style: TextStyle(color: Colors.white),

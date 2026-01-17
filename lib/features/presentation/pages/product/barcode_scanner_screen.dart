@@ -1,12 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
+
+import 'product.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -31,7 +26,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    scannerController = MobileScannerController(detectionSpeed: DetectionSpeed.noDuplicates, autoStart: true);
+    scannerController =
+        MobileScannerController(detectionSpeed: DetectionSpeed.noDuplicates, autoStart: true);
   }
 
   @override
@@ -47,7 +43,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       canPop: false,
       onPopInvokedWithResult: (bool didPop, result) {
         context.read<AppBloc>().add(
-              const NavigateToCreateProductScreen(),
+              const NavigateToCreateEditProductScreen(),
             );
       },
       child: Scaffold(
@@ -55,11 +51,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           automaticallyImplyLeading: true,
           leading: InkWell(
             onTap: () => BlocProvider.of<AppBloc>(context).add(
-               NavigateToCreateProductScreen(
-                 null,
-                 '',
-
-               ),
+              NavigateToCreateEditProductScreen(
+                null,
+                '',
+              ),
             ),
             child: Icon(Icons.adaptive.arrow_back),
           ),
@@ -70,8 +65,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           listener: (context, productState) {
             if (productState is ProductSearchByBarcodeLoaded) {
               BlocProvider.of<AppBloc>(context).add(
-                NavigateToCreateProductScreen(
-                  productState.product,
+                NavigateToCreateEditProductScreen(
+                  productState.product.id,
                   productState.product.meta.barcode,
                   true,
                 ),
@@ -79,7 +74,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             }
             if (productState is ProductNotFound) {
               BlocProvider.of<AppBloc>(context).add(
-                NavigateToCreateProductScreen(
+                NavigateToCreateEditProductScreen(
                   null,
                   barcode,
                   false,

@@ -11,6 +11,7 @@ class StoreTextField extends StatelessWidget {
     this.onSaved,
     this.onTap,
     this.textInputType = TextInputType.text,
+    this.initialValue,
   });
 
   final String hintText;
@@ -21,6 +22,7 @@ class StoreTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final VoidCallback? onTap;
   final ValueChanged<String?>? onSaved;
+  final String? initialValue;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +47,7 @@ class StoreTextField extends StatelessWidget {
             child: TextFormField(
               keyboardType: textInputType,
               onTap: onTap,
+              initialValue: initialValue,
               controller: textEditingController,
               obscureText: isPassword,
               validator: validator,

@@ -1,45 +1,20 @@
-import 'dart:async';
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:barcode/barcode.dart' as barcode;
+// import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart' hide Barcode;
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/data/remote/models/order_model.dart';
-import 'package:uv_pos/features/data/remote/models/order_product_model.dart';
-import 'package:uv_pos/features/data/remote/models/product_measurement_unit.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/data/remote/models/stock_model.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/data/remote/models/user_model.dart';
-import 'package:uv_pos/features/presentation/bloc/order/order_bloc.dart';
-import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
-import 'package:uv_pos/features/presentation/bloc/stock/stock_bloc.dart';
-import 'package:uv_pos/features/presentation/pages/sale/receipt_detail.dart';
-import 'package:uv_pos/features/presentation/widgets/sale_button.dart';
-import 'package:uv_pos/features/presentation/widgets/sale_product_price.dart';
-import 'package:uv_pos/features/presentation/widgets/scanner_error.dart';
-import 'package:uv_pos/features/presentation/widgets/store/add_product_dialog.dart';
-import 'package:uv_pos/generated/assets.dart';
+import 'package:flutter_thermal_printer/flutter_thermal_printer.dart' hide Barcode;
+import 'package:flutter_thermal_printer/utils/printer.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'sale.dart';
 
 class SaleScreen extends StatefulWidget {
   const SaleScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: SaleScreen(),
-        )
-      : const MaterialPage(
-          child: SaleScreen(),
-        );
+  static Page page() => const MaterialPage(
+        child: SaleScreen(),
+      );
 
   @override
   State<SaleScreen> createState() => _SaleScreenState();
@@ -67,7 +42,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   List<ProductModel> searchProductList = [];
   final List<ProductModel> _searchList = [];
   List<ProductModel> _productList = [];
-  List<ProductModel> _notifyProductList = [];
+
+  // List<ProductModel> _notifyProductList = [];
   Barcode? _barcode;
   double productAmount = 0;
   double orderSubTotalAmount = 0;
@@ -91,6 +67,30 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   // List<int> productQuantities = [];
   late OrderModel? order;
   DateTime dateTime = DateTime.now();
+  final _flutterThermalPrinterPlugin = FlutterThermalPrinter.instance;
+  StreamSubscription<List<Printer>>? _devicesStreamSubscription;
+  List<Printer> printers = [];
+
+  // Get Printer List
+  void startScan() async {
+    _devicesStreamSubscription?.cancel();
+    await _flutterThermalPrinterPlugin.getPrinters(connectionTypes: [
+      ConnectionType.USB,
+      ConnectionType.BLE,
+    ]);
+    _devicesStreamSubscription =
+        _flutterThermalPrinterPlugin.devicesStream.listen((List<Printer> event) {
+      log(event.map((e) => e.name).toList().toString());
+      setState(() {
+        printers = event;
+        printers.removeWhere((element) => element.name == null || element.name == '');
+      });
+    });
+  }
+
+  stopScan() {
+    _flutterThermalPrinterPlugin.stopScan();
+  }
 
   @override
   void initState() {
@@ -105,12 +105,16 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     if (!scannerController.value.isRunning) {
       _startScanner();
     }
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      startScan();
+    });
   }
 
   // Function to generate Barcode or QR Code
   String generateBarcode(String value, String type) {
     final barcodeType = type == 'barcode' ? barcode.Barcode.code128() : barcode.Barcode.qrCode();
-    final svg = barcodeType.toSvg(value, width: type == 'barcode' ? 200 : 100, height: 100, fontHeight: 12.sp);
+    final svg = barcodeType.toSvg(value,
+        width: type == 'barcode' ? 200 : 100, height: 100, fontHeight: 12.sp);
     return svg;
   }
 
@@ -128,7 +132,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
         });
       } catch (e) {
         if (kDebugMode) {
-          print("Error starting scanner: $e");
+          log("Error starting scanner: $e");
         }
       }
     }
@@ -138,13 +142,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     if (isScannerRunning) {
       try {
         await scannerController.stop();
-        log('scanner is ${scannerController.value.isRunning}');
         setState(() {
           isScannerRunning = false;
         });
       } catch (e) {
         if (kDebugMode) {
-          print("Error stopping scanner: $e");
+          log("Error stopping scanner: $e");
         }
       }
     }
@@ -166,10 +169,6 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
 
       // Process the first detected barcode
       String code = barcodes.barcodes.first.rawValue ?? "Unknown";
-      if (kDebugMode) {
-        print("Scanned Code: $code");
-      }
-
       // Simulate some processing delay
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
@@ -212,6 +211,53 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
   //     }
   //   }
   // }
+  Future<Uint8List> generateFiscalReceiptPdf() async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Center(
+                  child: pw.Text('GOLD MARKET',
+                      style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold))),
+              pw.Text('STIR: 305123456'),
+              pw.Text('Manzil: Toshkent, Chilonzor-5, 25-uy'),
+              pw.Text('Tel: +998 90 123-45-67'),
+              pw.SizedBox(height: 10),
+              pw.Divider(),
+              pw.Text('FISKAL CHEK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+              pw.Text('Sana: 2025-05-08    Vaqt: 14:32:20'),
+              pw.Text('Chek №: 0000456    Operator: Azimov O.'),
+              pw.Divider(),
+              pw.Text('Pepsi 1.5L gazli ichimlik'),
+              pw.Text('2.00 litr x 6,000 UZS                     12,000'),
+              pw.Text('Farmfresh Tuxum 10 dona'),
+              pw.Text('2.00 dona x 1,500 UZS                     3,000'),
+              pw.Text('➤ Chegirma: -500 UZS', style: pw.TextStyle(color: PdfColors.red)),
+              pw.Text('Shakar Oq Kristall 1kg'),
+              pw.Text('1.50 kg x 9,000 UZS                      13,500'),
+              pw.Divider(),
+              pw.Text('Ara-summa:                            28,500 UZS'),
+              pw.Text('Umumiy chegirma:                        -500 UZS'),
+              pw.Text('QQS (12%):                              3,360 UZS'),
+              pw.Text('To‘lov turi: Naqd'),
+              pw.Text('Umumiy to‘lov:                        28,000 UZS'),
+              pw.Divider(),
+              pw.Text('Fiskal belgi: 7AB3-C4D1-EF89'),
+              pw.Text('[QR KOD: joy ajratilgan]'),
+              pw.Divider(),
+              pw.Center(child: pw.Text('RAHMAT! YANA KELING!')),
+            ],
+          );
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -259,18 +305,6 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showAddCustomerDialog(BuildContext context) {
-    showAdaptiveDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return _addCustomerDialog(context);
-      },
-      useSafeArea: false,
-      traversalEdgeBehavior: TraversalEdgeBehavior.leaveFlutterView,
-    );
-  }
-
   Widget _enterDiscountDialog(BuildContext context) {
     return SimpleDialog(
       children: [
@@ -281,7 +315,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               valueListenable: isFlat,
               builder: (context, value, child) {
                 return ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: value ? Colors.blue : Colors.white),
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: value ? Colors.blue : Colors.white),
                   onPressed: () {
                     isFlat.value = true;
                   },
@@ -301,7 +336,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               valueListenable: isFlat,
               builder: (context, value, child) {
                 return ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: !value ? Colors.blue : Colors.white),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: !value ? Colors.blue : Colors.white),
                   onPressed: () {
                     isFlat.value = false;
                   },
@@ -344,9 +380,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             ElevatedButton(
               onPressed: () {
                 discount = double.tryParse(_discountController.text)!;
-                BlocProvider.of<OrderBloc>(context).add(OrderDiscountedEvent(discount: discount, isFlat: isFlat.value));
-                log(isFlat.value.toString());
-                log(discount.toString());
+                BlocProvider.of<OrderBloc>(context)
+                    .add(OrderDiscountedEvent(discount: discount, isFlat: isFlat.value));
+                if (kDebugMode) {
+                  log(isFlat.value.toString());
+                  log(discount.toString());
+                }
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -361,48 +400,23 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _addCustomerDialog(BuildContext context) {
-    return SimpleDialog(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(10.0).r,
-          child: TextField(
-            controller: _customerController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Customer name',
-              hintStyle: TextStyle(color: Colors.grey),
-            ),
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            const SizedBox(width: 20),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  customerName = _customerController.text;
-                });
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text(
-                'Ok',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ],
+  void _showAddCustomerDialog(BuildContext context) {
+    showAdaptiveDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AddCustomerDialog(
+          customerController: _customerController,
+          onPressed: () {
+            setState(() {
+              customerName = _customerController.text;
+            });
+            Navigator.pop(context);
+          },
+        );
+      },
+      useSafeArea: false,
+      traversalEdgeBehavior: TraversalEdgeBehavior.leaveFlutterView,
     );
   }
 
@@ -420,12 +434,13 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             BlocBuilder<ProductBloc, ProductState>(
               builder: (context, prodState) {
                 if (prodState is ProductByIdLoaded) {
-                  if (prodState.product.stock > 0) {
+                  if (1 > 0) {
                     return IconButton(
                       onPressed: () {
                         if (int.tryParse(_productQtyController.text)! >= 1) {
                           setState(() {
-                            _productQtyController.text = (int.tryParse(_productQtyController.text)! - 1).toString();
+                            _productQtyController.text =
+                                (int.tryParse(_productQtyController.text)! - 1).toString();
                           });
                         }
                       },
@@ -453,15 +468,20 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             ),
             BlocBuilder<ProductBloc, ProductState>(
               builder: (context, productState) {
-                log('change qty dialog: prodState: $productState');
+                if (kDebugMode) {
+                  log('change qty dialog: prodState: $productState');
+                }
                 if (productState is ProductByIdLoaded) {
-                  log('prodState prod: $productState');
-                  log('product: $orderProduct');
-                  if (productState.product.stock > orderProduct.quantity) {
+                  if (kDebugMode) {
+                    log('prodState prod: $productState');
+                    log('product: $orderProduct');
+                  }
+                  if (14 > orderProduct.quantity) {
                     return IconButton(
                       onPressed: () {
                         setState(() {
-                          _productQtyController.text = (int.tryParse(_productQtyController.text)! + 1).toString();
+                          _productQtyController.text =
+                              (int.tryParse(_productQtyController.text)! + 1).toString();
                         });
                       },
                       icon: const Icon(Icons.add),
@@ -521,59 +541,60 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     AppState appState,
   ) {
     if (productState is ProductNotFound) {
-      _showAddNewProductDialog(
-        context,
-        _barcode!.rawValue!,
-        null,
-        false,
-        appState.store,
-      );
+      // _showAddNewProductDialog(
+      //   context,
+      //   _barcode!.rawValue!,
+      //   null,
+      //   false,
+      //   appState.storeID,
+      // );
     }
-    if (productState is ProductsByStoreIdLoaded) {
+    if (productState is ProductsLoaded) {
       _productList = productState.products ?? [];
     }
     if (productState is ProductSearchByBarcodeLoaded) {
       OrderProductModel orderProduct = OrderProductModel(
         id: productState.product.id,
         name: productState.product.name,
-        price: productState.product.price,
+        price: productState.product.sellingPrice,
         thumbnail: productState.product.thumbnail,
         quantity: 1,
-        totalProductPrice: productState.product.price,
-        discountedTotalPrice: productState.product.price,
+        totalProductPrice: productState.product.sellingPrice,
+        discountedTotalPrice: productState.product.sellingPrice,
         discountPercentage: 0,
-        productMeasurementUnit: productState.product.productMeasurementUnit!,
+        productMeasurementUnit: productState.product.unit!,
       );
 
-      if (productState.product.stock > 0) {
-        if (!containsProduct(products, productState.product)) {
-          BlocProvider.of<OrderBloc>(context).add(
-            AddProduct(orderProduct),
-          );
-        } else {
-          double qty = 0;
-          for (var product in products) {
-            if (product.id == productState.product.id && product.quantity < productState.product.stock) {
-              qty = product.quantity;
-              BlocProvider.of<OrderBloc>(context).add(
-                UpdateOrderProductQuantity(
-                  product: orderProduct,
-                  stock: qty + 1,
-                ),
-              );
-              break;
-            }
-          }
-        }
-      } else {
-        _showAddNewProductDialog(
-          context,
-          productState.product.meta.barcode,
-          productState.product,
-          true,
-          appState.store,
-        );
-      }
+      // if (productState.product.stock > 0) {
+      //   if (!containsProduct(products, productState.product)) {
+      //     BlocProvider.of<OrderBloc>(context).add(
+      //       AddProduct(orderProduct),
+      //     );
+      //   } else {
+      //     double qty = 0;
+      //     for (var product in products) {
+      //       if (product.id == productState.product.id &&
+      //           product.quantity < productState.product.stock) {
+      //         qty = product.quantity;
+      //         BlocProvider.of<OrderBloc>(context).add(
+      //           UpdateOrderProductQuantity(
+      //             product: orderProduct,
+      //             stock: qty + 1,
+      //           ),
+      //         );
+      //         break;
+      //       }
+      //     }
+      //   }
+      // } else {
+      //   _showAddNewProductDialog(
+      //     context,
+      //     productState.product.meta.barcode,
+      //     productState.product,
+      //     true,
+      //     appState.store,
+      //   );
+      // }
     }
   }
 
@@ -600,15 +621,17 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       const Center(child: CircularProgressIndicator.adaptive());
     }
     if (orderState is OrderCreated) {
-      _showSuccessFullDialog(
-        context,
-        orderState.user!,
-        orderState.store,
-        orderState.order,
-      );
+      // _showSuccessFullDialog(
+      //   context,
+      //   orderState.uid!,
+      //   orderState.storeID,
+      //   orderState.order,
+      // );
     }
     if (orderState is OrderDiscountState) {
-      orderTotalAmount = orderState.isFlat ? orderSubTotalAmount - orderState.discount : (1 - orderState.discount / 100) * orderSubTotalAmount;
+      orderTotalAmount = orderState.isFlat
+          ? orderSubTotalAmount - orderState.discount
+          : (1 - orderState.discount / 100) * orderSubTotalAmount;
     }
   }
 
@@ -623,13 +646,13 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     OrderProductModel orderProduct = OrderProductModel(
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: product.sellingPrice,
       thumbnail: product.thumbnail,
       quantity: 1,
-      totalProductPrice: product.price,
-      discountedTotalPrice: product.price,
+      totalProductPrice: product.sellingPrice,
+      discountedTotalPrice: product.sellingPrice,
       discountPercentage: 0,
-      productMeasurementUnit: product.productMeasurementUnit!,
+      productMeasurementUnit: product.unit!,
     );
 
     return products.contains(orderProduct);
@@ -679,8 +702,9 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               actions: [
                 IconButton(
                   onPressed: () {
-                    BlocProvider.of<ProductBloc>(context).add(FilterProductList(store: appState.store!, filter: ''));
-                    _buildShowModalBottomSheet(context, appState.store!);
+                    BlocProvider.of<ProductBloc>(context)
+                        .add(FilterProductList(storeID: appState.storeID!, filter: ''));
+                    _buildShowModalBottomSheet(context, appState.storeID!);
                   },
                   icon: const Icon(Icons.search),
                 ),
@@ -730,7 +754,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                     FetchProductByBarcodeEvent(barCodes.first.rawValue!),
                                   );
                                 },
-                                errorBuilder: (context, error, child) {
+                                errorBuilder: (context, error, ) {
                                   if (kDebugMode) {
                                     print(error);
                                   }
@@ -772,13 +796,16 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                 ),
                                 height: isScannerRunning ? size.height * .34 : size.height * .64,
                               );
-                            } else if (orderState is UpdatedOrderProducts || orderState is OrderDiscountState) {
+                            } else if (orderState is UpdatedOrderProducts ||
+                                orderState is OrderDiscountState) {
                               List<OrderProductModel> products = orderState is UpdatedOrderProducts
                                   ? orderState.products ?? []
                                   : orderState is OrderDiscountState
                                       ? orderState.products ?? []
                                       : [];
-                              log('Builder: $orderState builder and producs: $products');
+                              if (kDebugMode) {
+                                log('Builder: $orderState builder and products: $products');
+                              }
                               return Column(
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -796,7 +823,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                         ),
                                       ],
                                     ),
-                                    height: isScannerRunning ? size.height * .34 : size.height * .64,
+                                    height:
+                                        isScannerRunning ? size.height * .34 : size.height * .64,
                                     child: ListView.builder(
                                       padding: EdgeInsets.zero,
                                       itemCount: products.length,
@@ -805,19 +833,22 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                         String pmt = product.productMeasurementUnit;
                                         return CupertinoListTile(
                                           onTap: () {
-                                            BlocProvider.of<ProductBloc>(context).add(FetchProductByIdEvent(product.id));
+                                            BlocProvider.of<ProductBloc>(context)
+                                                .add(FetchProductByIdEvent(product.id));
                                             _showChangeProductQtyDialog(
                                               context,
                                               product,
                                             );
                                           },
                                           leadingSize: 40.r,
-                                          leading: DecoratedBox(
+                                          leading: Container(
                                             decoration: BoxDecoration(
                                               borderRadius: BorderRadius.circular(10),
                                               color: Colors.grey,
                                               image: DecorationImage(
-                                                image: product.thumbnail != null ? NetworkImage(product.thumbnail!) : const AssetImage(Assets.imagesImageBg),
+                                                image: product.thumbnail != null
+                                                    ? NetworkImage(product.thumbnail!)
+                                                    : const AssetImage(Assets.imagesImageBg),
                                               ),
                                             ),
                                           ),
@@ -832,7 +863,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                           trailing: SizedBox(
                                             height: 32.sp,
                                             child: Text(
-                                              formatAmount.format((product.quantity * product.price)),
+                                              formatAmount
+                                                  .format((product.quantity * product.price)),
                                               style: TextStyle(fontSize: 15.sp),
                                             ),
                                           ),
@@ -864,7 +896,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                       ),
                       BlocBuilder<OrderBloc, OrderState>(
                         builder: (context, orderState) {
-                          if (orderState is OrderDiscountState || orderState is UpdatedOrderProducts) {
+                          if (orderState is OrderDiscountState ||
+                              orderState is UpdatedOrderProducts) {
                             List<OrderProductModel> products = orderState is UpdatedOrderProducts
                                 ? orderState.products!
                                 : orderState is OrderDiscountState
@@ -887,7 +920,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  Future<dynamic> _buildShowModalBottomSheet(BuildContext context, StoreModel store) {
+  Future<dynamic> _buildShowModalBottomSheet(BuildContext context, String storeID) {
     return showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -898,12 +931,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       anchorPoint: const Offset(0, .8),
       useSafeArea: true,
       builder: (context) {
-        return _buildSearchBottomSheet(context, store);
+        return _buildSearchBottomSheet(context, storeID);
       },
     );
   }
 
-  Container _buildSearchBottomSheet(BuildContext context, StoreModel store) {
+  Container _buildSearchBottomSheet(BuildContext context, String storeID) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       width: double.infinity,
@@ -918,13 +951,13 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 OrderProductModel orderProduct = OrderProductModel(
                   id: searchedProduct.id,
                   name: searchedProduct.name,
-                  price: searchedProduct.price,
+                  price: searchedProduct.sellingPrice,
                   thumbnail: searchedProduct.thumbnail,
                   quantity: 1,
-                  totalProductPrice: searchedProduct.price,
-                  discountedTotalPrice: searchedProduct.price,
+                  totalProductPrice: searchedProduct.sellingPrice,
+                  discountedTotalPrice: searchedProduct.sellingPrice,
                   discountPercentage: 0,
-                  productMeasurementUnit: searchedProduct.productMeasurementUnit!,
+                  productMeasurementUnit: 'son',
                 );
 
                 BlocProvider.of<OrderBloc>(context).add(
@@ -955,7 +988,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
             ),
             onChanged: (value) {
               _searchList.clear();
-              BlocProvider.of<ProductBloc>(context).add(FilterProductList(filter: value, store: store));
+              BlocProvider.of<ProductBloc>(context)
+                  .add(FilterProductList(filter: value, storeID: storeID));
             },
           ),
           SizedBox(height: 10.h),
@@ -972,10 +1006,12 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 var state = productState;
                 _productList = state.filteredProducts;
                 return SizedBox(
+                  width: double.infinity,
                   height: MediaQuery.sizeOf(context).height * .6.h,
                   child: SingleChildScrollView(
                     controller: _searchScrollController,
                     child: Wrap(
+                      runAlignment: WrapAlignment.start,
                       alignment: WrapAlignment.start,
                       children: _productList
                           .asMap()
@@ -1005,19 +1041,19 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                                           ),
                                         ),
                                       ),
-                                      Align(
-                                        alignment: Alignment.bottomCenter,
-                                        child: Container(
-                                          color: Colors.black45.withValues(alpha: .5),
-                                          width: double.infinity,
-                                          height: 55.h,
-                                          child: Text(
-                                            '${entry.value.name}  \n${formatAmount.format(entry.value.price)} \n ${entry.value.productMeasurementUnit == ProductMeasurementUnit.dona.name ? entry.value.stock.toInt().toString() + ' dona' : entry.value.productMeasurementUnit == ProductMeasurementUnit.kg.name ? entry.value.stock.toString() + 'kg' : entry.value.productMeasurementUnit == ProductMeasurementUnit.l.name ? entry.value.stock.toString() + 'l' : entry.value.stock.toString() + 'm'}',
-                                            style: TextStyle(color: Colors.white, fontSize: 12.sp),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      ),
+                                      // Align(
+                                      //   alignment: Alignment.bottomCenter,
+                                      //   child: Container(
+                                      //     color: Colors.black45.withValues(alpha: .5),
+                                      //     width: double.infinity,
+                                      //     height: 55.h,
+                                      //     child: Text(
+                                      //       '${entry.value.name}  \n${formatAmount.format(entry.value.sellingPrice)} \n ${entry.value.unit == ProductMeasurementUnit.dona.name ? entry.value.stock.toInt().toString() + ' dona' : entry.value.productMeasurementUnit == ProductMeasurementUnit.kg.name ? entry.value.stock.toString() + 'kg' : entry.value.productMeasurementUnit == ProductMeasurementUnit.l.name ? entry.value.stock.toString() + 'l' : entry.value.stock.toString() + 'm'}',
+                                      //       style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                                      //       textAlign: TextAlign.center,
+                                      //     ),
+                                      //   ),
+                                      // ),
                                     ],
                                   ),
                                 ),
@@ -1038,7 +1074,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  Container buildSaleButtons(Size size, BuildContext context, AppState appState, List<OrderProductModel> products) {
+  Container buildSaleButtons(
+      Size size, BuildContext context, AppState appState, List<OrderProductModel> products) {
     return Container(
       decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.black38))),
       width: double.infinity,
@@ -1047,13 +1084,16 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
           children: [
             Column(
               children: [
-                SaleProductPrice(title: 'Sub Total', price: formatAmount.format(orderSubTotalAmount)),
+                SaleProductPrice(
+                    title: 'Sub Total', price: formatAmount.format(orderSubTotalAmount)),
                 SaleProductPrice(
                   title: 'Discount',
                   procedure: !isFlat.value
                       ? discount
                       : orderSubTotalAmount != 0
-                          ? double.tryParse(((orderTotalAmount - orderSubTotalAmount) * 100 / orderSubTotalAmount).toStringAsFixed(3))
+                          ? double.tryParse(
+                              ((orderTotalAmount - orderSubTotalAmount) * 100 / orderSubTotalAmount)
+                                  .toStringAsFixed(3))
                           : 0,
                   discountingPrice: formatAmount.format(orderSubTotalAmount - orderTotalAmount),
                 ),
@@ -1095,10 +1135,10 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                     title: 'Pay',
                     onPressed: () {
                       if (products.isNotEmpty) {
-                        _showPayingDialog(context, appState.user!, appState.store!, products);
+                        _showPayingDialog(context, appState.userID!, appState.storeID!, products);
                       }
                       if (kDebugMode) {
-                        print(scannerController.value.isRunning);
+                        log(scannerController.value.isRunning.toString());
                       }
                     },
                     bgColor: Colors.green,
@@ -1112,16 +1152,18 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showPayingDialog(BuildContext context, UserModel employee, StoreModel store, List<OrderProductModel> products) {
+  void  _showPayingDialog(BuildContext context, String uid, String storeID,
+      List<OrderProductModel> products) {
     showAdaptiveDialog(
       context: context,
       builder: (context) {
-        return _buildPayingDialogWidget(context, employee, store, products);
+        return _buildPayingDialogWidget(context, uid, storeID, products);
       },
     );
   }
 
-  SimpleDialog _buildPayingDialogWidget(BuildContext context, UserModel? employee, StoreModel? store, List<OrderProductModel> products) {
+  SimpleDialog _buildPayingDialogWidget(BuildContext context, String? uid,
+      String? storeID, List<OrderProductModel> products) {
     log(_customerController.text);
     return SimpleDialog(
       titlePadding: EdgeInsets.zero,
@@ -1146,7 +1188,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
         Column(
           children: [
             Text(
-              store!.name,
+              storeID!,
               textAlign: TextAlign.center,
               softWrap: true,
               style: TextStyle(
@@ -1156,7 +1198,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               ),
             ),
             Text(
-              store.phone,
+              storeID,
               textAlign: TextAlign.center,
               softWrap: true,
               style: TextStyle(
@@ -1165,7 +1207,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
               ),
             ),
             Text(
-              store.address,
+              storeID,
               textAlign: TextAlign.center,
               softWrap: true,
               style: TextStyle(
@@ -1218,7 +1260,7 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   Text(
-                    employee!.displayName ?? '',
+                    uid!,
                     textAlign: TextAlign.center,
                     softWrap: true,
                     style: TextStyle(
@@ -1312,41 +1354,42 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                 OrderModel order = OrderModel(
                   id: createdTime.microsecondsSinceEpoch.toString(),
                   customerName: customerName,
-                  employeeName: employee.displayName ?? '',
+                  employeeName: uid,
                   productList: products,
                   totalAmount: orderTotalAmount,
                   orderDate: createdTime,
                   discountPrice: orderSubTotalAmount - orderTotalAmount,
-                  storeId: store.id,
+                  storeId: storeID,
                 );
-                orderBarcode = generateBarcode('INV${createdTime.microsecondsSinceEpoch.toString()}', 'barcode');
+                orderBarcode = generateBarcode(
+                    'INV${createdTime.microsecondsSinceEpoch.toString()}', 'barcode');
                 orderQrcode = generateBarcode(order.toString(), 'qrcode');
                 order = order.copyWith(barcode: orderBarcode, qrcode: orderQrcode);
-                log('order is $order');
+                if (kDebugMode) {
+                  log('order is $order');
+                }
                 late StockModel stock;
                 for (OrderProductModel product in products) {
                   stock = StockModel(
                     id: product.id,
-                    storeId: store.id,
-                    // size: product.quantity,
-                    // measurementUnit: product.productMeasurementUnit,
-                    product: product,
+                    storeId: storeID,
+                    productId: product.id,
+                    qty: product.quantity,
+                    name: product.name,
+                    createdAt: Timestamp.now(),
+                    updatedAt: Timestamp.now(),
+                    branchId: storeID,
+                    minQty: 0,
+                    lastOutDate: Timestamp.now(),
+                    lastRestockDate: Timestamp.now(),
                   );
 
-                  BlocProvider.of<StockBloc>(context).add(
-                    AddUpdateStockProduct(
-                      product.id,
-                      product.quantity,
-                      // product.productMeasurementUnit,
-                      product,
-                      stock: stock,
-                    ),
-                  );
-                  BlocProvider.of<ProductBloc>(context).add(UpdateProductQuantity(productId: product.id, store: store, size: product.quantity));
+                  BlocProvider.of<StockBloc>(context).add(UpdateStockEvent(
+                      stock: stock, storeID: storeID));
                 }
                 Navigator.pop(context);
                 BlocProvider.of<OrderBloc>(context).add(
-                  CreateOrderEvent(order, store, employee),
+                  CreateOrderEvent(order, storeID, uid),
                 );
                 BlocProvider.of<OrderBloc>(context).add(ClearProductList());
                 orderSubTotalAmount = 0;
@@ -1364,7 +1407,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showSuccessFullDialog(BuildContext context, UserModel employee, StoreModel store, OrderModel order) {
+  void _showSuccessFullDialog(
+      BuildContext context, UserModel employee, StoreModel store, OrderModel order) {
     showAdaptiveDialog(
       context: context,
       builder: (context) {
@@ -1373,7 +1417,8 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
     );
   }
 
-  SimpleDialog _buildSuccessFullDialogWidget(BuildContext context, UserModel? employee, StoreModel? store, OrderModel order) {
+  SimpleDialog _buildSuccessFullDialogWidget(
+      BuildContext context, UserModel? employee, StoreModel? store, OrderModel order) {
     DateTime date = order.orderDate;
     String formattedDate = DateFormat(
       'd/MM/yyyy, HH:mm:ss',
@@ -1598,7 +1643,11 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
                     30.h,
                   ),
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () async {
+                  // final printer = PrinterService();
+                  // await printer.printReceipt();
+                  Navigator.pop(context);
+                },
                 icon: const Icon(
                   Icons.print,
                   color: Colors.white,
@@ -1627,12 +1676,88 @@ class _SaleScreenState extends State<SaleScreen> with WidgetsBindingObserver {
       builder: (context) {
         return AddProductDialog(
           scannerController: scannerController,
-          product: product,
+          productID: product!.id,
           barcode: barcode,
           isEdit: isEdit,
-          store: store,
+          storeID: store!.id,
         );
       },
     );
   }
+
+  Future<List<int>> _generateReceipt() async {
+    final profile = await CapabilityProfile.load();
+    final generator = Generator(PaperSize.mm80, profile);
+    List<int> bytes = [];
+    bytes += generator.text(
+      "Teste Network print",
+      styles: const PosStyles(
+        bold: true,
+        height: PosTextSize.size3,
+        width: PosTextSize.size3,
+      ),
+    );
+    bytes += generator.cut();
+    return bytes;
+  }
+
+  Widget receiptWidget(String printerType) {
+    return SizedBox(
+      width: 550,
+      child: Material(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: Text(
+                  'FLUTTER THERMAL PRINTER',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Divider(thickness: 2),
+              const SizedBox(height: 10),
+              _buildReceiptRow('Item', 'Price'),
+              const Divider(),
+              _buildReceiptRow('Apple', '\$1.00'),
+              _buildReceiptRow('Banana', '\$0.50'),
+              _buildReceiptRow('Orange', '\$0.75'),
+              const Divider(thickness: 2),
+              _buildReceiptRow('Total', '\$2.25', isBold: true),
+              const SizedBox(height: 20),
+              _buildReceiptRow('Printer Type', printerType),
+              const SizedBox(height: 50),
+              const Center(
+                child: Text(
+                  'Thank you for your purchase!',
+                  style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Widget _buildReceiptRow(String leftText, String rightText, {bool isBold = false}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          leftText,
+          style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+        ),
+        Text(
+          rightText,
+          style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+        ),
+      ],
+    ),
+  );
 }

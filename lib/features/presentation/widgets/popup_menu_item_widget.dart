@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:uv_pos/features/data/local/models/popup_menu_item_model.dart';
+
+import 'widgets.dart';
 
 class PopupMenuItemWidget extends StatelessWidget {
   const PopupMenuItemWidget({
-    super.key, required this.itemModel,
+    super.key,
+    required this.itemModel,
   });
 
   final PopupMenuItemModel itemModel;

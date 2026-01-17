@@ -1,12 +1,4 @@
-import 'dart:developer';
-
-import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/features/data/remote/models/order_model.dart';
-import 'package:uv_pos/features/data/remote/models/order_product_model.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/data/remote/models/user_model.dart';
-import 'package:uv_pos/features/domain/repositories/order_repository.dart';
+import '../bloc.dart';
 
 part 'order_event.dart';
 part 'order_state.dart';
@@ -19,6 +11,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) : super(OrderInitial()) {
     on<LoadOrdersEvent>(_fetchOrderList);
     on<FetchOrderByIdEvent>(_fetchOrderById);
+    on<FetchOrdersByDatesEvent>(_fetchOrdersByDates);
+    on<FetchOrdersByCustomerNameEvent>(_fetchOrdersByCustomerName);
+    on<UpdateOrderEvent>(updateOrder);
+    on<DeleteOrderEvent>(deleteOrder);
     on<CreateOrderEvent>(_createOrder);
     on<AddProduct>(_onAddProduct);
     on<RemoveProduct>(_onRemoveProduct);
@@ -32,6 +28,45 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       print('event.storeID is  ------>  ${event.storeID}');
       emit(OrderLoading());
       final orders = await _orderRepository.getOrdersForDateByStoreId(event.storeID!, event.date);
+      print('orders is  ------>  $orders');
+
+      if (orders.isNotEmpty) {
+        emit(OrdersFromDateByStoreIDLoaded(orders: orders));
+      } else {
+        emit(OrderNotFound());
+      }
+    } catch (e) {
+      emit(OrderError(error: e.toString()));
+    }
+  }
+
+  // filter orders by date
+  Future<void> _fetchOrdersByDates(FetchOrdersByDatesEvent event, Emitter<OrderState> emit) async {
+    try {
+      print('event.storeID is  ------>  ${event.storeID}');
+      emit(OrderLoading());
+      final orders = await _orderRepository.filterOrdersByDate(
+          startDate: event.startDate, endDate: event.endDate, storeID: event.storeID);
+      print('orders is  ------>  $orders');
+
+      if (orders.isNotEmpty) {
+        emit(OrdersFromDateByStoreIDLoaded(orders: orders));
+      } else {
+        emit(OrderNotFound());
+      }
+    } catch (e) {
+      emit(OrderError(error: e.toString()));
+    }
+  }
+
+  // fetch orders by customer name
+  Future<void> _fetchOrdersByCustomerName(
+      FetchOrdersByCustomerNameEvent event, Emitter<OrderState> emit) async {
+    try {
+      print('event.storeID is  ------>  ${event.storeID}');
+      emit(OrderLoading());
+      final orders = await _orderRepository.filterOrdersByCustomerName(
+          customerName: event.customerName, storeID: event.storeID);
       print('orders is  ------>  $orders');
 
       if (orders.isNotEmpty) {
@@ -64,13 +99,13 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       await _orderRepository.createOrder(event.order);
       final createdOrder = await _orderRepository.getOrderById(event.order);
       final orders = await _orderRepository.getOrdersForDateByStoreId(
-        event.store.id,
+        event.storeID,
         event.order.orderDate,
       );
       log(createdOrder.toString());
 
       if (createdOrder != null) {
-        emit(OrderCreated(order: createdOrder, store: event.store, user: event.user));
+        emit(OrderCreated(order: createdOrder, storeID: event.storeID, uid: event.uid));
         emit(OrdersFromDateByStoreIDLoaded(orders: orders));
         // emit(const UpdatedOrderProducts(products: []));
       } else {
@@ -85,18 +120,22 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     final currentState = state;
     if (currentState is UpdatedOrderProducts) {
       if (currentState.products != null || currentState.products!.isNotEmpty) {
-        final existingProductIndex = currentState.products!.indexWhere((product) => product.id == event.product.id);
+        final existingProductIndex =
+            currentState.products!.indexWhere((product) => product.id == event.product.id);
         if (existingProductIndex != -1) {
           final updatedProducts = List<OrderProductModel>.from(currentState.products!);
           final existingProduct = updatedProducts[existingProductIndex];
-          updatedProducts[existingProductIndex] = existingProduct.copyWith(quantity: existingProduct.quantity + 1);
+          updatedProducts[existingProductIndex] =
+              existingProduct.copyWith(quantity: existingProduct.quantity + 1);
           emit(UpdatedOrderProducts(products: updatedProducts));
         } else {
-          final updatedProducts = List<OrderProductModel>.from(currentState.products!)..add(event.product);
+          final updatedProducts = List<OrderProductModel>.from(currentState.products!)
+            ..add(event.product);
           emit(UpdatedOrderProducts(products: updatedProducts));
         }
       } else {
-        final updatedProducts = List<OrderProductModel>.from(currentState.products!)..add(event.product);
+        final updatedProducts = List<OrderProductModel>.from(currentState.products!)
+          ..add(event.product);
         emit(UpdatedOrderProducts(products: updatedProducts));
       }
     } else {
@@ -107,13 +146,15 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   Future<void> _onRemoveProduct(RemoveProduct event, Emitter<OrderState> emit) async {
     if (state is UpdatedOrderProducts) {
       final state = this.state as UpdatedOrderProducts;
-      List<OrderProductModel> products = state.products!.where((product) => product.id != event.productId).toList();
+      List<OrderProductModel> products =
+          state.products!.where((product) => product.id != event.productId).toList();
       log('$products');
       emit(UpdatedOrderProducts(products: List<OrderProductModel>.from(products)));
     }
   }
 
-  Future<void> _onUpdateProductQuantity(UpdateOrderProductQuantity event, Emitter<OrderState> emit) async {
+  Future<void> _onUpdateProductQuantity(
+      UpdateOrderProductQuantity event, Emitter<OrderState> emit) async {
     log('this is a $event');
 
     try {
@@ -122,7 +163,9 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         log('this is a $state');
         final updatedProducts = currentState.products!.map(
           (product) {
-            return product.id == event.product.id ? product.copyWith(quantity: event.stock) : product;
+            return product.id == event.product.id
+                ? product.copyWith(quantity: event.stock)
+                : product;
           },
         ).toList();
         for (var product in updatedProducts) {
@@ -141,7 +184,8 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     }
   }
 
-  Future<void> _onOrderAmountDiscounting(OrderDiscountedEvent event, Emitter<OrderState> emit) async {
+  Future<void> _onOrderAmountDiscounting(
+      OrderDiscountedEvent event, Emitter<OrderState> emit) async {
     final currentState = state;
     if (currentState is UpdatedOrderProducts) {
       List<OrderProductModel> products = currentState.products!;

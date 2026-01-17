@@ -1,20 +1,14 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
+
+import 'settings.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-    child: SettingsScreen(),
-  )
-      : const MaterialPage(
-    child: SettingsScreen(),
-  );
+
+  static Page page() => const MaterialPage(
+        child: SettingsScreen(),
+      );
+
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
@@ -63,10 +57,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final Size size = MediaQuery.sizeOf(context);
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      onPopInvokedWithResult: (bool didPop, result) {
         context.read<AppBloc>().add(
-          const NavigateToHomeScreen(),
-        );
+              const NavigateToHomeScreen(),
+            );
       },
       child: Scaffold(
         appBar: AppBar(
@@ -82,8 +76,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           actions: [
             TextButton.icon(
               onPressed: () => BlocProvider.of<AppBloc>(context).add(
-        const NavigateToHomeScreen(),
-      ),
+                const NavigateToHomeScreen(),
+              ),
               icon: const Icon(Icons.save),
               label: const Text('Save'),
             ),

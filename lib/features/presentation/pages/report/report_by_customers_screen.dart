@@ -1,9 +1,8 @@
-import 'dart:io';
+import 'report.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+
 
 class ReportByCustomersScreen extends StatefulWidget {
   const ReportByCustomersScreen({super.key});
@@ -45,7 +44,7 @@ class _ReportByCustomersScreenState extends State<ReportByCustomersScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      onPopInvokedWithResult: (bool didPop, result) {
         context.read<AppBloc>().add(
            NavigateToReportsScreen(),
         );

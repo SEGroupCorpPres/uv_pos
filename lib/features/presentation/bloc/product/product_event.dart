@@ -9,47 +9,47 @@ abstract class ProductEvent extends Equatable {
 }
 
 class LoadProductsEvent extends ProductEvent {
-  final StoreModel? store;
+  final String storeID;
 
-  const LoadProductsEvent([this.store]);
+  const LoadProductsEvent({required this.storeID});
 
   @override
   // TODO: implement props
-  List<Object?> get props => [store];
+  List<Object?> get props => [storeID];
 }
 
 class CreateProductEvent extends ProductEvent {
   final ProductModel product;
-  final StoreModel store;
+  final String storeID;
 
   final File? imageFile;
 
-  const CreateProductEvent(this.product, this.imageFile, this.store);
+  const CreateProductEvent( this.imageFile,{required this.product, required this.storeID});
 
   @override
-  List<Object?> get props => [product, store, imageFile];
+  List<Object?> get props => [product, storeID, imageFile];
 }
 
 class UpdateProductEvent extends ProductEvent {
   final ProductModel product;
-  final StoreModel store;
+  final String storeID;
 
   final File? imageFile;
 
-  const UpdateProductEvent(this.product, this.imageFile, this.store);
+  const UpdateProductEvent(this.imageFile,{required this.product,  required this.storeID});
 
   @override
-  List<Object?> get props => [product, store];
+  List<Object?> get props => [product, storeID];
 }
 
 class DeleteProductEvent extends ProductEvent {
   final String productId;
-  final StoreModel store;
+  final String storeID;
 
-  const DeleteProductEvent(this.productId, this.store);
+  const DeleteProductEvent({required this.productId, required this.storeID});
 
   @override
-  List<Object?> get props => [productId, store];
+  List<Object?> get props => [productId, storeID];
 }
 
 class FetchProductByIdEvent extends ProductEvent {
@@ -74,31 +74,13 @@ class FetchProductByBarcodeEvent extends ProductEvent {
       ];
 }
 
-class UpdateProductQuantity extends ProductEvent {
-  final String productId;
-  final StoreModel store;
-  final double size;
-  final List<ProductModel>? notifyProductsList;
-
-
-  const UpdateProductQuantity({
-    required this.productId,
-    required this.store,
-    required this.size,
-    this.notifyProductsList
-  });
-
-  @override
-  List<Object?> get props => [productId, store, size, notifyProductsList];
-}
-
 class FilterProductList extends ProductEvent {
-  final StoreModel store;
+  final String storeID;
   final String? filter;
 
-  const FilterProductList({this.filter, required this.store});
+  const FilterProductList({this.filter, required this.storeID});
 
   @override
   // TODO: implement props
-  List<Object?> get props => [filter, store];
+  List<Object?> get props => [filter, storeID];
 }

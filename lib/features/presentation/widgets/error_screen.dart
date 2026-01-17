@@ -7,15 +7,17 @@ class ErrorScreen extends StatelessWidget {
   final Color iconColor;
   final VoidCallback? onRetry;
   final String retryText;
+  final bool isEmpty;
 
   const ErrorScreen({
     Key? key,
-    this.title = 'Error Occurred',
+    this.title = 'Xatolik yuz berdi',
     required this.message,
     this.icon = Icons.error_outline,
     this.iconColor = Colors.red,
     this.onRetry,
     this.retryText = 'Retry',
+    this.isEmpty = false,
   }) : super(key: key);
 
   @override
@@ -28,12 +30,12 @@ class ErrorScreen extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: iconColor,
+              color: isEmpty ? Colors.grey : iconColor,
               size: 60,
             ),
             const SizedBox(height: 16),
             Text(
-              title,
+              isEmpty ? 'Maxsulot topilmadi' : title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -41,7 +43,7 @@ class ErrorScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              message,
+               isEmpty ? 'Iltimos do\'konga maxsulot qo\'shing' : message,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),

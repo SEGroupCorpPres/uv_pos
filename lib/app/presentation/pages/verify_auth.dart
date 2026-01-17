@@ -1,13 +1,10 @@
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:otp_text_field_v2/otp_field_v2.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+
+import 'pages.dart';
 
 class VerifyAuthScreen extends StatefulWidget {
   final String verificationId;
+
   // static Page page() => Platform.isIOS
   //     ? const CupertinoPage(
   //   child: VerifyAuthScreen(verificationId: verificationId),
@@ -15,7 +12,6 @@ class VerifyAuthScreen extends StatefulWidget {
   //     : const MaterialPage(
   //   child: VerifyAuthScreen(verificationId: verificationId),
   // );
-
 
   const VerifyAuthScreen({super.key, required this.verificationId});
 
@@ -45,7 +41,6 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       body: Card(
         child: Padding(
@@ -99,7 +94,7 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
                         if (_formKey.currentState!.validate()) {
                           final otp = otpCode;
                           BlocProvider.of<AppBloc>(context).add(
-                            AuthPhoneOTPVerified(widget.verificationId, otp),
+                            AuthPhoneOTPVerified(verificationId: widget.verificationId, otp: otp),
                           );
                         }
                       },

@@ -43,10 +43,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       // Trigger the registration event in AuthBloc
       context.read<AppBloc>().add(
             AuthRegister(
-              _emailController.text,
-              _passwordController.text,
-              _phoneController.text,
-              _nameController.text,
+              email: _emailController.text,
+              password: _passwordController.text,
+              phoneNumber: _phoneController.text,
+              name: _nameController.text,
             ),
           );
     }

@@ -10,88 +10,121 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  bloc_concurrency: ^0.3.0
+  cached_network_image: ^3.4.1
+  chewie: ^1.13.0
   cupertino_icons: ^1.0.8
+  gap: ^3.0.1
+  gradient_borders: ^1.0.2
+  icons_launcher:
+  safe_device: ^1.3.8
+  skeletonizer: ^2.1.1
+  swipe_to:
+  talker_bloc_logger: ^5.1.2
+  talker_flutter: ^5.1.2
+  talker: ^5.1.5
+  talker_logger: ^5.1.5
+  talker_grpc_logger: ^5.1.5
   flutter_screenutil: ^5.9.3
-  firebase_auth: ^5.5.1
-  firebase_app_check: ^0.3.2+4
-  firebase_storage: ^12.4.4
-  firebase_analytics: ^11.4.4
-  firebase_crashlytics: ^4.3.4
-  cloud_firestore: ^5.6.5
+  encrypt:
+  flutter_secure_storage: ^10.0.0
+  dio: ^5.9.0
+  dartz: ^0.10.1
+  connectivity_plus: ^7.0.0
+  internet_connection_checker_plus: ^2.9.1+2
+  pretty_dio_logger: ^1.4.0
+  pretty_logger: ^1.0.0
+  device_info_plus:     # Get device information
+  uuid: ^4.5.2                # Already added
+  retrofit: ^4.9.1
+  flutter_dotenv: ^6.0.0
+  logger: ^2.6.2
+  dart_jsonwebtoken:
+  jwt_decoder: ^2.0.1
+  flutter_riverpod: ^3.0.3
   flow_builder: ^0.1.0
+  go_router: ^17.0.1
+  get_it: ^9.2.0
   meta:
   intl:
-  flutter_bloc: ^9.1.0
+  flutter_bloc: ^9.1.1
   otp_text_field_v2: ^1.0.3
   equatable: ^2.0.7
-  freezed_annotation: ^3.0.0
+  freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
-  shared_preferences: ^2.5.2
+  shared_preferences: ^2.5.4
   sqflite: ^2.4.2
   rflutter_alert: ^2.0.7
   flutter_typeahead: ^5.2.0
   searchbar_animation: ^0.0.4
-  just_audio: ^0.9.46
-  pdf: ^3.11.3
+  just_audio: ^0.10.5
+  pdf:
   path_provider: ^2.1.5
   grouped_list: ^6.0.0
   platform: ^3.1.6
   file: ^7.0.1
   open_filex: ^4.7.0
+
   # open file
-  image_picker: ^1.1.2
+  image_picker: ^1.2.1
   image:
-  image_cropper: ^9.0.0
+  image_cropper: ^11.0.0
   animated_search_bar: ^2.8.0
+  flutter_staggered_animations: ^1.1.1
+  searchfield: ^1.4.0
+
   #restartApp
   restart_app: ^1.4.0-beta
   social_auth_buttons: ^2.0.2
-  flutter_slidable: ^4.0.0
-  share_plus: ^10.1.4
+  flutter_slidable: ^4.0.3
+  share_plus: ^12.0.1
+
+  toastification: ^3.0.3
+  flutter_local_notifications: ^20.0.0-dev.2
+  easy_localization:
 
   #wave animation loading
-  flutter_spinkit: ^5.2.1
+  flutter_spinkit: ^5.2.2
 
   excel: ^4.0.6
   barcode: ^2.2.9
-  flutter_svg: ^2.0.17
+  flutter_svg: ^2.2.3
+
   # syncfusion
-  syncfusion_flutter_charts: ^28.2.11
-  syncfusion_flutter_barcodes: ^28.2.11
-  syncfusion_flutter_xlsio: ^28.2.11
+  syncfusion_flutter_charts:
+  syncfusion_flutter_barcodes:
+  syncfusion_flutter_xlsio:
+
   #Toast
-  fluttertoast: ^8.2.12
   multi_selection_filter: ^0.0.6
 
   # #splash
   # animated_splash_screen: ^1.2.0
 
   # Qr Code
-  pretty_qr_code: ^3.3.0
-  mobile_scanner: ^6.0.7
+  pretty_qr_code: ^3.5.0
+  mobile_scanner: ^7.1.4
   # for printer
-  esc_pos_utils_plus: ^2.0.4
-
+  flutter_thermal_printer:
+  permission_handler:
   #google
-  google_sign_in: ^6.3.0
-  google_fonts: ^6.2.1
-  googleapis: ^13.2.0
+  google_sign_in: ^7.2.0
+  google_fonts: ^6.3.3
+  googleapis: ^15.0.0
   month_picker_dialog:
-
-
 
 dev_dependencies:
   bloc_test:
   freezed:
-  build_runner: ^2.4.15
-  json_serializable: ^6.9.4
+  build_runner:
+  json_serializable:
   analyzer:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
-  mocktail: ^1.0.4
-  lints: ^5.1.1
+  flutter_lints:
+  mocktail:
+  lints:
+  very_good_analysis: ^10.1.0-rc.2
 
 flutter:
   uses-material-design: true
@@ -100,4 +133,25 @@ flutter:
     - assets/images/
     - assets/sounds/
     - assets/doc/
+    - assets/l10n/
+    - assets/fonts/
+    - assets/fonts/roboto/
+    - assets/fonts/roboto/static/
+    - assets/fonts/press_start_2p/
+    - assets/icons/
+    - assets/config/
 
+  fonts:
+    - family: PressStart2P
+      fonts:
+        - asset: assets/fonts/press_start_2p/PressStart2P-Regular.ttf
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/roboto/Roboto-VariableFont_wdth_wght.ttf
+        - asset: assets/fonts/roboto/Roboto-Italic-VariableFont_wdth_wght.ttf
+          style: italic
+icons_launcher:
+  image_path: "assets/logo.png"
+  platforms:
+    android:
+      enable: true

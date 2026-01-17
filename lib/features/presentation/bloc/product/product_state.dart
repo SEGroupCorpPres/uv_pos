@@ -30,10 +30,10 @@ class ProductSearchByBarcodeLoaded extends ProductState {
   List<Object?> get props => [product];
 }
 
-class ProductsByStoreIdLoaded extends ProductState {
+class ProductsLoaded extends ProductState {
   final List<ProductModel>? products;
 
-  const ProductsByStoreIdLoaded({required this.products});
+  const ProductsLoaded({required this.products});
 
   @override
   List<Object?> get props => [products];
@@ -103,12 +103,3 @@ class FilteredProductList extends ProductState {
   // TODO: implement props
   List<Object?> get props => [filteredProducts];
 }
-
-// class NotifyProductQty extends ProductState {
-//
-//   NotifyProductQty({required this.notifyProductsList});
-//   @override
-//   // TODO: implement props
-//   List<Object?> get props => [notifyProductsList];
-//
-// }

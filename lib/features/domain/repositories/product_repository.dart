@@ -1,14 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
+import 'repository.dart';
+
 
 class ProductRepository {
   CollectionReference productsReference = FirebaseFirestore.instance.collection('products');
 
   ProductRepository();
 
-  Future<String> createProduct(ProductModel productModel, StoreModel storeModel) async {
+  Future<String> createProduct(ProductModel productModel) async {
 // Create a Product document in Firestore
     try {
       // Write Product document to Firestore
@@ -45,12 +44,12 @@ class ProductRepository {
     }
   }
 
-  Future<List<ProductModel>> getProductsByStoreId(StoreModel storeModel) async {
+  Future<List<ProductModel>> getProducts(String storeId) async {
     try {
       QuerySnapshot querySnapshot = await productsReference
           .where(
             'store_id',
-            isEqualTo: storeModel.id,
+            isEqualTo: storeId,
           )
           .get();
 
@@ -66,13 +65,13 @@ class ProductRepository {
     }
   }
 
-  Future<List<ProductModel>> getProductsByStoreIdWithFilter(StoreModel storeModel, String? filter) async {
+  Future<List<ProductModel>> getProductsWithFilter(String storyId, String? filter) async {
     List<QueryDocumentSnapshot> documents = [];
     try {
       QuerySnapshot querySnapshot = await productsReference
           .where(
             'store_id',
-            isEqualTo: storeModel.id,
+            isEqualTo: storyId,
           )
           .get();
       // Filtrlash: name maydonida 'value2' substranti bor hujjatlar
@@ -101,7 +100,7 @@ class ProductRepository {
     try {
       QuerySnapshot querySnapshot = await productsReference
           .where(
-            'bar_code',
+            'meta.barcode',
             isEqualTo: barcode,
           )
           .limit(1)

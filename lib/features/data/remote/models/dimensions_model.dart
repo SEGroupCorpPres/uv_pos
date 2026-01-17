@@ -1,6 +1,5 @@
 
-import 'dart:convert';
-
+import 'model.dart';
 class Dimensions {
   final double? width;
   final double? height;

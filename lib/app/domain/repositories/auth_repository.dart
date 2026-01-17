@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uv_pos/features/data/remote/models/user_model.dart';
+
+import 'repository.dart';
 
 // Repository for handling user authentication and data
 class AuthenticationRepository {
@@ -47,7 +45,8 @@ class AuthenticationRepository {
 
     try {
       // Create user in Firebase Authentication
-      firebase_auth.UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+      firebase_auth.UserCredential userCredential =
+          await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -111,7 +110,7 @@ class AuthenticationRepository {
   // Sign the user out
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
-    await GoogleSignIn().signOut();
+    await GoogleSignIn.instance.signOut();
   }
 
   // Sign in with email and password
@@ -141,7 +140,7 @@ class AuthenticationRepository {
 
   // Sign in with Google
   Future<UserModel> signInWithGoogle() async {
-    final googleUser = await GoogleSignIn().signIn();
+    final googleUser = await GoogleSignIn.signIn();
     if (googleUser == null) {
       throw Exception("Google sign-in aborted");
     }

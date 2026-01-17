@@ -1,28 +1,14 @@
-import 'dart:io';
-
-import 'package:animated_search_bar/animated_search_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:intl/intl.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/data/remote/models/product_measurement_unit.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
+
+import 'product.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: ProductListScreen(),
-        )
-      : const MaterialPage(
-          child: ProductListScreen(),
-        );
+  static Page page() => const MaterialPage(
+        child: ProductListScreen(),
+      );
 
   @override
   State<ProductListScreen> createState() => _ProductListScreenState();
@@ -34,9 +20,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
   late StoreModel? store;
   final List<ProductModel> _searchList = [];
   bool _isSearching = false;
-  int _currentPage = 1;
-  bool _isLoading = false;
-  bool _hasMoreData = true;
   NumberFormat formatAmount = NumberFormat.currency(
     locale: 'uz_UZ',
   );
@@ -47,112 +30,82 @@ class _ProductListScreenState extends State<ProductListScreen> {
     super.initState();
   }
 
-  // Future<void> _fetchOrders() async {
-  //   setState(() => _isLoading = true);
-  //
-  //   // Simulating network request delay
-  //   await Future.delayed(Duration(seconds: 1));
-  //
-  //   List<ProductModel> fetchedOrders = List.generate(10, (index) => index + (_currentPage - 1) * 10);
-  //
-  //   setState(() {
-  //     products.addAll(fetchedOrders);
-  //     _isLoading = false;
-  //     if (fetchedOrders.length < 10) {
-  //       _hasMoreData = false;
-  //     }
-  //   });
-  // }
-  //
-  // Future<void> _fetchMoreOrders() async {
-  //   _currentPage++;
-  //   await _fetchOrders();
-  // }
   @override
   void dispose() {
     // TODO: implement dispose
-    super.dispose();
     _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.sizeOf(context);
-    return BlocBuilder<AppBloc, AppState>(
-      builder: (context, appState) {
-        if (appState.store != null) {
-          store = appState.store;
-          return PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (bool didPop, result) {
-              if (didPop) {
-                return;
-              }
-              context.read<AppBloc>().add(
-                    const NavigateToHomeScreen(),
-                  );
-            },
-            child: Scaffold(
-              appBar: AppBar(
-                automaticallyImplyLeading: true,
-                leading: InkWell(
-                  onTap: () => BlocProvider.of<AppBloc>(context).add(
-                    NavigateToHomeScreen(store),
-                  ),
-                  child: Icon(Icons.adaptive.arrow_back),
-                ),
-                title: AnimatedSearchBar(
-                  label: "Product list",
-                  controller: _searchController,
-                  onChanged: (value) {
-                    _searchList.clear();
-                    for (var i in products) {
-                      if (i.name.toLowerCase().contains(value.toLowerCase())) {
-                        _searchList.add(i);
-                      }
-                      setState(() {
-                        _searchList;
-                        _isSearching = true;
-                      });
-                    }
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, result) {
+        if (didPop) {
+          return;
+        }
+        context.read<AppBloc>().add(
+              const NavigateToHomeScreen(),
+            );
+      },
+      child: Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: true,
+            leading: BlocBuilder<AppBloc, AppState>(
+              builder: (context, state) {
+                return InkWell(
+                  onTap: () {
+                    BlocProvider.of<AppBloc>(context).add(
+                      NavigateToHomeScreen(storeID: state.storeID),
+                    );
+                    BlocProvider.of<UserBloc>(context).add(FetchUserByIdEvent(state.userID!));
                   },
-                  labelStyle: TextStyle(fontSize: 16.sp),
-                  cursorColor: Colors.black,
-                  textInputAction: TextInputAction.done,
-                  searchDecoration: const InputDecoration(
-                    hintText: 'Search',
-                    alignLabelWithHint: true,
-                    fillColor: Colors.white,
-                    focusColor: Colors.white,
-                    hintStyle: TextStyle(color: Colors.black),
-                    border: InputBorder.none,
-                  ),
-                ),
-                centerTitle: false,
-                actions: [
-                  IconButton(
-                    onPressed: () {
-                      BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(store));
-                    },
-                    icon: const Icon(Icons.sync_problem),
-                  ),
-                ],
+                  child: Icon(Icons.adaptive.arrow_back),
+                );
+              },
+            ),
+            title: AnimatedSearchBar(
+              label: "Maxsulotlar ro\'yxati",
+              controller: _searchController,
+              onChanged: (value) {
+                _searchList.clear();
+                for (var i in products) {
+                  if (i.name.toLowerCase().contains(value.toLowerCase())) {
+                    _searchList.add(i);
+                  }
+                  setState(() {
+                    _searchList;
+                    _isSearching = true;
+                  });
+                }
+              },
+              labelStyle: TextStyle(fontSize: 16.sp),
+              cursorColor: Colors.black,
+              textInputAction: TextInputAction.done,
+              searchDecoration: const InputDecoration(
+                hintText: 'Qidiruv',
+                alignLabelWithHint: true,
+                fillColor: Colors.white,
+                focusColor: Colors.white,
+                hintStyle: TextStyle(color: Colors.black),
+                border: InputBorder.none,
               ),
-              body: BlocBuilder<ProductBloc, ProductState>(
+            ),
+            centerTitle: false,
+            actions: _buildProductListScreenAppBarActions(context),
+          ),
+          body: BlocBuilder<AppBloc, AppState>(
+            builder: (context, appState) {
+              return BlocBuilder<ProductBloc, ProductState>(
                 builder: (context, state) {
                   if (state is ProductLoading) {
                     return const Center(
                       child: CircularProgressIndicator.adaptive(),
                     );
-                  } else if (state is ProductsByStoreIdLoaded) {
+                  } else if (state is ProductsLoaded) {
                     if (state.products != null) {
-                      // _fetchOrders();
-                      // _scrollController.addListener(() {
-                      //   if (_scrollController.position.pixels ==
-                      //       _scrollController.position.maxScrollExtent && !_isLoading && _hasMoreData) {
-                      //     _fetchMoreOrders();
-                      //   }
-                      // });
                       products = state.products!;
                       List<ProductModel> productList = [];
                       productList = _isSearching ? _searchList : products;
@@ -161,12 +114,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20).r,
                         itemCount: productList.length,
                         itemBuilder: (context, item) {
-                          final String pmt = productList[item].productMeasurementUnit!;
+                          final String unit = productList[item].unit!;
                           final String name = productList[item].name;
-                          final double price = productList[item].price;
-                          final double qty = productList[item].stock;
-                          final String? image = productList[item].thumbnail;
-                          final double notifySize = productList[item].notifySize;
+                          final double sellingPrice = productList[item].sellingPrice;
+                          final double purchasingPrice = productList[item].purchasePrice;
+                          final String? thumbnail = productList[item].thumbnail;
+                          final String barcode = productList[item].meta.barcode;
+                          final String desc = productList[item].description ?? '';
+                          final String status = productList[item].status;
                           return Slidable(
                             // Specify a key if the Slidable is dismissible.
                             key: const ValueKey(0),
@@ -184,17 +139,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 // A SlidableAction can have an icon and/or a label.
                                 SlidableAction(
                                   onPressed: (context) => BlocProvider.of<AppBloc>(context).add(
-                                    NavigateToCreateProductScreen(
-                                      productList[item],
+                                    NavigateToCreateEditProductScreen(
+                                      productList[item].id,
                                       productList[item].meta.barcode,
                                       true,
-                                      store,
+                                      store!.id,
                                     ),
                                   ),
                                   backgroundColor: Colors.orangeAccent,
                                   foregroundColor: Colors.white,
                                   icon: Icons.edit,
-                                  label: 'Edit',
+                                  label: 'Taxrirlash',
                                 ),
                               ],
                             ),
@@ -207,12 +162,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                   // An action can be bigger than the others.
                                   flex: 2,
                                   onPressed: (context) => BlocProvider.of<ProductBloc>(context).add(
-                                    DeleteProductEvent(productList[item].id, store!),
+                                    DeleteProductEvent(
+                                        productId: productList[item].id, storeID: store!.id),
                                   ),
                                   backgroundColor: Colors.red,
                                   foregroundColor: Colors.white,
                                   icon: Icons.delete,
-                                  label: 'Delete',
+                                  label: 'O\'chirish',
                                 ),
                               ],
                             ),
@@ -223,24 +179,23 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               margin: EdgeInsets.only(bottom: 10),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20).r,
-                                color: notifySize == qty
-                                    ? CupertinoColors.systemRed
-                                    : notifySize == qty / 2
-                                        ? CupertinoColors.systemOrange
-                                        : CupertinoColors.systemGreen,
+                                color: status == 'inactive'
+                                    ? CupertinoColors.systemGreen
+                                    : CupertinoColors.systemGreen,
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  image != null
+                                  thumbnail != null
                                       ? Container(
                                           width: 120.r,
                                           height: 120.r,
                                           decoration: BoxDecoration(
                                             color: Colors.yellowAccent,
                                             borderRadius: BorderRadius.circular(20).r,
-                                            image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
+                                            image: DecorationImage(
+                                                image: NetworkImage(thumbnail), fit: BoxFit.cover),
                                           ),
                                           // margin: const EdgeInsets.only(bottom: 10).h,
                                         )
@@ -253,7 +208,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                           ),
                                           // margin: const EdgeInsets.only(bottom: 10).h,
                                           alignment: Alignment.center,
-                                          child: const Text('No image'),
+                                          child: const Text('Rasm yo\'q'),
                                         ),
                                   SizedBox(width: 15.w),
                                   Column(
@@ -271,8 +226,32 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                           softWrap: true,
                                         ),
                                       ),
+                                      SizedBox(
+                                        width: size.width * .5,
+                                        child: Text(
+                                          'Barcode: $barcode',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          softWrap: true,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: size.width * .5,
+                                        child: Text(
+                                          'Tavsif: $desc',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          softWrap: true,
+                                        ),
+                                      ),
                                       Text(
-                                        'Narxi: ${formatAmount.format(price)}',
+                                        'Sotish narxi: ${formatAmount.format(sellingPrice)}',
                                         style: TextStyle(
                                           color: Colors.black,
                                           fontSize: 15.sp,
@@ -280,15 +259,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Size:  ${pmt == ProductMeasurementUnit.dona.name ? qty.toInt().toString() + ' dona' : pmt == ProductMeasurementUnit.kg.name ? qty.toString() + 'kg' : pmt == ProductMeasurementUnit.l.name ? qty.toString() + 'l' : qty.toString() + 'm'}',
-                                        style: const TextStyle(
+                                        'Sotib olish narxi: ${formatAmount.format(purchasingPrice)}',
+                                        style: TextStyle(
                                           color: Colors.black,
-                                          fontSize: 15,
+                                          fontSize: 15.sp,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                       Text(
-                                        'Ogohlantirish:  ${pmt == ProductMeasurementUnit.dona.name ? notifySize.toInt().toString() + ' dona' : pmt == ProductMeasurementUnit.kg.name ? notifySize.toString() + 'kg' : pmt == ProductMeasurementUnit.l.name ? notifySize.toString() + 'l' : notifySize.toString() + 'm'}',
+                                        'O\'lchov birligi: $unit',
                                         style: const TextStyle(
                                           color: Colors.black,
                                           fontSize: 15,
@@ -304,44 +283,46 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         },
                       );
                     } else {
-                      return const Center(
-                        child: Text('No record found'),
-                      );
+                      return const ErrorScreen(message: 'Maxsulot topilmadi');
                     }
                   } else if (state is ProductNotFound) {
-                    return const Center(
-                      child: Text('No record found'),
-                    );
+                    return const ErrorScreen(message: 'Maxsulot topilmadi', isEmpty: true);
                   } else if (state is ProductError) {
-                    return const Center(
-                      child: Text('Error'),
-                    );
+                    return const ErrorScreen(message: 'Error');
                   } else {
-                    return const Center(
-                      child: Text('No record found'),
-                    );
+                    return const ErrorScreen(message: 'Maxsulot topilmadi');
                   }
                 },
-              ),
-              floatingActionButton: FloatingActionButton(
-                onPressed: () => BlocProvider.of<AppBloc>(context).add(
-                  NavigateToCreateProductScreen(
-                    null,
-                    '',
-                    false,
-                    store,
-                  ),
+              );
+            },
+          ),
+          floatingActionButton: BlocBuilder<AppBloc, AppState>(builder: (context, appState) {
+            return FloatingActionButton(
+              onPressed: () => BlocProvider.of<AppBloc>(context).add(
+                NavigateToCreateEditProductScreen(
+                  null,
+                  '',
+                  false,
+                  appState.storeID,
                 ),
-                child: const Icon(Icons.add),
               ),
-            ),
-          );
-        } else {
-          return const Center(
-            child: Text('Error'),
-          );
-        }
-      },
+              child: const Icon(Icons.add),
+            );
+          })),
     );
+  }
+
+  List<Widget> _buildProductListScreenAppBarActions(BuildContext context) {
+    return [
+      BlocBuilder<AppBloc, AppState>(builder: (context, appState) {
+        return IconButton(
+          onPressed: () {
+            BlocProvider.of<ProductBloc>(context)
+                .add(LoadProductsEvent(storeID: appState.storeID!));
+          },
+          icon: const Icon(Icons.sync_problem),
+        );
+      })
+    ];
   }
 }

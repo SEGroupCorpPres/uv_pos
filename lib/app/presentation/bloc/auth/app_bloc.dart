@@ -1,10 +1,4 @@
-import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/app/domain/repositories/auth_repository.dart';
-import 'package:uv_pos/features/data/remote/models/order_model.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/data/remote/models/user_model.dart';
+import '../bloc.dart';
 
 // Events
 part 'app_event.dart';
@@ -30,7 +24,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<NavigateToOrderListScreen>(_onNavigateOrderListScreen);
     on<NavigateToAddPrintersScreen>(_onNavigateAddPrintersScreen);
     on<NavigateToPrintersScreen>(_onNavigatePrintersScreen);
-    on<NavigateToCreateProductScreen>(_onNavigateCreateProductScreen);
+    on<NavigateToCreateEditProductScreen>(_onNavigateCreateEditProductScreen);
     on<NavigateToBarcodeScannerScreen>(_onNavigateBarcodeScannerScreen);
     on<NavigateToProductListScreen>(_onNavigateProductListScreen);
     on<NavigateToReportByCustomersScreen>(_onNavigateReportByCustomersScreen);
@@ -40,7 +34,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<NavigateToReportsScreen>(_onNavigateReportsScreen);
     on<NavigateToSaleScreen>(_onNavigateSaleScreen);
     on<NavigateToSettingsScreen>(_onNavigateSettingsScreen);
-    on<NavigateToStockScreen>(_onNavigateStocksScreen);
+    on<NavigateToStocksScreen>(_onNavigateStocksScreen);
+    on<NavigateToCreateEditStockScreen>(_onNavigateCreateEditStockScreen);
+
     on<NavigateToAddEditStoreScreen>(_onNavigateAddEditStoreScreen);
     on<NavigateToStoreListScreen>(_onNavigateStoreListScreen);
   }
@@ -50,7 +46,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     if (user != null) {
       emit(state.copyWith(
         status: AppStatus.authenticated,
-        user: user,
+        userID: user.uid,
       ));
     } else {
       emit(state.copyWith(status: AppStatus.unauthenticated));
@@ -68,7 +64,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       emit(
         state.copyWith(
           status: AppStatus.authenticated,
-          user: user,
+          userID: user.uid,
         ),
       );
     } catch (e) {
@@ -100,7 +96,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           credential.verificationId!,
           credential.smsCode!,
         );
-        emit(state.copyWith(status: AppStatus.authenticated, user: user));
+        emit(state.copyWith(status: AppStatus.authenticated, userID: user.uid));
       },
       verificationFailed: (e) {
         emit(
@@ -137,7 +133,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
     try {
       final user = await _authenticationRepository.signInWithGoogle();
-      emit(state.copyWith(status: AppStatus.authenticated, user: user));
+      emit(state.copyWith(status: AppStatus.authenticated, userID: user.uid));
     } catch (e) {
       emit(
         state.copyWith(
@@ -188,7 +184,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.homeScreen,
-        store: event.store,
+        storeID: event.storeID,
       ),
     );
   }
@@ -197,12 +193,13 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.orderListScreen,
-        store: event.store,
+        storeID: event.store!.id,
       ),
     );
   }
 
-  void _onNavigateAddPrintersScreen(NavigateToAddPrintersScreen event, Emitter<AppState> emit) async {
+  void _onNavigateAddPrintersScreen(
+      NavigateToAddPrintersScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
         status: AppStatus.addPrintersScreen,
@@ -218,19 +215,21 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     );
   }
 
-  void _onNavigateCreateProductScreen(NavigateToCreateProductScreen event, Emitter<AppState> emit) async {
+  void _onNavigateCreateEditProductScreen(
+      NavigateToCreateEditProductScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
-        status: AppStatus.createProductScreen,
-        product: event.product,
+        status: AppStatus.createEditProductScreen,
+        productID: event.productID,
         barcode: event.barcode,
         isEdit: event.isEdit,
-        store: event.store,
+        storeID: event.storeID,
       ),
     );
   }
 
-  void _onNavigateBarcodeScannerScreen(NavigateToBarcodeScannerScreen event, Emitter<AppState> emit) async {
+  void _onNavigateBarcodeScannerScreen(
+      NavigateToBarcodeScannerScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
         status: AppStatus.barcodeScannerScreen,
@@ -238,16 +237,18 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     );
   }
 
-  void _onNavigateProductListScreen(NavigateToProductListScreen event, Emitter<AppState> emit) async {
+  void _onNavigateProductListScreen(
+      NavigateToProductListScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
         status: AppStatus.productListScreen,
-        store: event.store,
+        storeID: event.storeID,
       ),
     );
   }
 
-  void _onNavigateReportByCustomersScreen(NavigateToReportByCustomersScreen event, Emitter<AppState> emit) async {
+  void _onNavigateReportByCustomersScreen(
+      NavigateToReportByCustomersScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
         status: AppStatus.reportByCustomersScreen,
@@ -255,7 +256,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     );
   }
 
-  void _onNavigateReportByDatesScreen(NavigateToReportByDatesScreen event, Emitter<AppState> emit) async {
+  void _onNavigateReportByDatesScreen(
+      NavigateToReportByDatesScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
         status: AppStatus.reportByDatesScreen,
@@ -263,7 +265,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     );
   }
 
-  void _onNavigateReportByEmployeeScreen(NavigateToReportByEmployeeScreen event, Emitter<AppState> emit) async {
+  void _onNavigateReportByEmployeeScreen(
+      NavigateToReportByEmployeeScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
         status: AppStatus.reportByEmployeeScreen,
@@ -291,7 +294,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(
       state.copyWith(
         status: AppStatus.saleScreen,
-        store: event.store,
+        storeID: event.storeID,
       ),
     );
   }
@@ -304,20 +307,33 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     );
   }
 
-
-  void _onNavigateStocksScreen(NavigateToStockScreen event, Emitter<AppState> emit) async {
+  void _onNavigateStocksScreen(NavigateToStocksScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
         status: AppStatus.stocksScreen,
       ),
     );
   }
+  void _onNavigateCreateEditStockScreen(
+      NavigateToCreateEditStockScreen event, Emitter<AppState> emit) async {
+    emit(
+      state.copyWith(
+        status: AppStatus.addEditStockScreen,
+        stockID: event.stockID,
 
-  void _onNavigateAddEditStoreScreen(NavigateToAddEditStoreScreen event, Emitter<AppState> emit) async {
+        barcode: event.barcode,
+        isEdit: event.isEdit,
+        storeID: event.storeID,
+      ),
+    );
+  }
+
+  void _onNavigateAddEditStoreScreen(
+      NavigateToAddEditStoreScreen event, Emitter<AppState> emit) async {
     emit(
       state.copyWith(
         status: AppStatus.addEditStoreScreen,
-        store: event.store,
+        storeID: event.storeID,
         isEdit: event.isEdit,
       ),
     );

@@ -1,8 +1,4 @@
-import 'package:meta/meta.dart';
-import 'dart:convert';
-
-
-
+import 'model.dart';
 
 class Meta {
   final String createdAt;

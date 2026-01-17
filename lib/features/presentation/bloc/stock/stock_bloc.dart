@@ -1,57 +1,97 @@
-import 'package:equatable/equatable.dart';
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/features/data/remote/models/order_product_model.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/data/remote/models/stock_model.dart';
-import 'package:uv_pos/features/domain/repositories/stock_repository.dart';
+
+import '../../../../app/domain/repositories/repository.dart';
+import '../../../domain/repositories/stock_repository.dart';
 
 part 'stock_event.dart';
 part 'stock_state.dart';
 
 class StockBloc extends Bloc<StockEvent, StockState> {
-  final StockRepository _stockRepository;
+  final StockRepository repository;
+  StreamSubscription<List<StockModel>>? _stockSubscription;
 
-  StockBloc(this._stockRepository) : super(StockInitial()) {
+  StockBloc(this.repository) : super(StockInitial()) {
     on<FetchStockByStoreId>(_onFetchStock);
-    on<AddUpdateStockProduct>(_onAddUpdateStock);
+    on<LoadStocksEvent>(_onFetchStocks);
+    on<CreateStockEvent>(_onCreateStock);
+    on<UpdateStockEvent>(_onUpdateStock);
+    on<DeleteStockEvent>(_onDeleteStock);
+    on<_StockUpdatedEvent>(_updatedStocks);
+    // on<UpdateProductQuantity>(updateProductQuantity);
+
     // on<RemoveStockProduct>(_onRemoveStockProduct);
     // on<UpdateStockQuantity>(_onUpdateStockQuantity);
   }
 
-  void _onFetchStock(FetchStockByStoreId event, Emitter<StockState> emit) async {
+  Future<void> _onFetchStock(FetchStockByStoreId event, Emitter<StockState> emit) async {
     emit(StockLoading());
     try {
-      final stocks = await _stockRepository.getStocksByStoreId(event.storeId);
-      emit(StockLoaded(stocks));
+      final stock = await repository.getStockById(event.storeId);
+      emit(FetchStockById(stock!));
     } catch (e) {
       emit(StockError(e.toString()));
     }
   }
 
-  void _onAddUpdateStock(AddUpdateStockProduct event, Emitter<StockState> emit) async {
-    StockModel? stock = await _stockRepository.getStockById(event.stock);
-    if (stock == null) {
-      await _stockRepository.createStock(event.stock);
-    } else {
-      final stockModel = StockModel(
-        id: stock.id,
-        storeId: stock.storeId,
-        product: stock.product,
-        // size: stock.size + event.size,
-        // measurementType: stock.measurementType
+  Future<void> _onFetchStocks(LoadStocksEvent event, Emitter<StockState> emit) async {
+    emit(StockLoading());
+    await _stockSubscription?.cancel(); // eski streamni to‘xtatish
+    try {
+      _stockSubscription = repository
+          .fetchStocks() // Firestore stream
+          .listen(
+        (stocks) {
+          add(_StockUpdatedEvent(stocks)); // ichki event
+        },
+        onError: (error) {
+          emit(StockError(error.toString()));
+        },
       );
-      await _stockRepository.updateStock(stockModel);
-    }
-    if (state is StockLoaded) {
-      final state = this.state as StockLoaded;
-      final updatedProducts = List<StockModel>.from(state.stocks)..add(event.stock);
-      try {
-        emit(StockLoaded(updatedProducts));
-      } catch (e) {
-        emit(StockError('Error adding product: $e'));
-      }
+    } catch (e) {
+      emit(StockError(e.toString()));
     }
   }
 
+  Future<void> _updatedStocks(_StockUpdatedEvent event, Emitter<StockState> emit) async {
+    emit(StocksLoaded(event.stocks));
+  }
 
+  Future<void> _onCreateStock(CreateStockEvent event, Emitter<StockState> emit) async {
+    try {
+      await repository.createStock(event.stock);
+    } catch (e) {
+      emit(StockError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateStock(UpdateStockEvent event, Emitter<StockState> emit) async {
+    try {
+      await repository.updateStock(event.stock);
+    } catch (e) {
+      emit(StockError(e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteStock(DeleteStockEvent event, Emitter<StockState> emit) async {
+    try {
+      await repository.deleteStock(event.stockID);
+    } catch (e) {
+      emit(StockError(e.toString()));
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _stockSubscription?.cancel();
+    return super.close();
+  }
+}
+
+// private ichki event
+class _StockUpdatedEvent extends StockEvent {
+  final List<StockModel> stocks;
+
+  _StockUpdatedEvent(this.stocks);
 }

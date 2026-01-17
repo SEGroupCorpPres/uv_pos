@@ -1,37 +1,16 @@
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image/image.dart' as img;
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/core/helpers/image_helper.dart';
-import 'package:uv_pos/core/helpers/image_resizer.dart';
-import 'package:uv_pos/features/data/remote/models/dimensions_model.dart';
-import 'package:uv_pos/features/data/remote/models/meta_model.dart';
-import 'package:uv_pos/features/data/remote/models/product_measurement_unit.dart';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/presentation/bloc/product/product_bloc.dart';
-import 'package:uv_pos/features/presentation/widgets/store/store_button.dart';
-import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
-import 'package:uv_pos/generated/assets.dart';
+import 'package:uv_pos/core/helpers/helpers.dart';
+import 'package:uv_pos/core/helpers/sku_generator.dart';
+
+import 'product.dart';
 
 class CreateProductScreen extends StatefulWidget {
   const CreateProductScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: CreateProductScreen(),
-        )
-      : const MaterialPage(
-          child: CreateProductScreen(),
-        );
+  static Page page() => const MaterialPage(
+        child: CreateProductScreen(),
+      );
 
   @override
   State<CreateProductScreen> createState() => _CreateProductScreenState();
@@ -41,140 +20,191 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   late final TextEditingController _productNameController = TextEditingController();
   late final TextEditingController _productBarcodeController = TextEditingController();
   late final TextEditingController _productDescriptionController = TextEditingController();
-  late final TextEditingController _productVendorController = TextEditingController();
-  late final TextEditingController _productMeasurementUnitController = TextEditingController();
-  late final TextEditingController _productPriceController = TextEditingController();
+  late final TextEditingController _productSellingPriceController = TextEditingController();
+  late final TextEditingController _productPurchasingPriceController = TextEditingController();
   late final TextEditingController _productDiscountController = TextEditingController();
-  late final TextEditingController _productCostController = TextEditingController();
-  late final TextEditingController _productStockController = TextEditingController();
-  late final TextEditingController _productNotifySizeController = TextEditingController();
+  late SKUGenerator skuGenerator;
 
-  File? _image;
+  File? _thumbnail;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'createProductFormKey');
   final ImageHelper imageHelper = ImageHelper();
 
-  // late MobileScannerController scannerController;
   String? image = '';
   String? barcode = '';
-  String? _selectedValue = ProductMeasurementUnit.dona.name;
+  String? _selectedUnit = ProductMeasurementUnit.dona.name;
+  String? _selectedSupplier;
   String? _productName;
   String? _productBarcode;
   String? _productDescription;
-  String? _productVendor;
-  double? _productPrice;
-  double? _productDiscount;
-  double? _productCost;
-  double? _productSize;
-  double? _productNotifySize;
+  double? _productSellingPrice;
+  double? _productPurchasingPrice;
+  List<String>? _productImages;
+  List<String>? _supplierIds;
+  String? _unit;
+  String? _weight;
+  Dimensions? _dimensions;
 
   @override
   void initState() {
     // TODO: implement initState
-    // scannerController = MobileScannerController(detectionSpeed: DetectionSpeed.noDuplicates, autoStart: true);
     super.initState();
   }
 
-  Future<void> _cupertinoStyleCameraCapture() async {
-    final List<XFile> files = await imageHelper.pickImage(source: ImageSource.camera, maxResolution: 600);
-    if (files.isNotEmpty) {
-      final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
-      if (croppedFile != null) {
-        setState(() {
-          _productName = _productNameController.text;
-          _productBarcode = _productBarcodeController.text;
-          _productDescription = _productDescriptionController.text;
-          _productVendor = _productVendorController.text;
+  List<Widget> _buildCreateEditProductScreenAppBarActions({
+    required BuildContext context,
+    required bool isEdit,
+    required String storeID,
+  }) {
+    return [
+      BlocBuilder<ProductBloc, ProductState>(
+        builder: (context, state) {
+          if (isEdit) {
+            if (state is ProductLoading) {
+              return Container();
+            } else if (state is ProductError) {
+              return ErrorWidget(state.error);
+            } else if (state is ProductByIdLoaded) {
+              return TextButton.icon(
+                onPressed: () => _createEditProductMethod(
+                    isEdit: true, productModel: state.product, storeID: storeID),
+                icon: const Icon(Icons.save),
+                label: const Text('Taxrirlash'),
+              );
+            } else {
+              return Container();
+            }
+          } else {
+            return TextButton.icon(
+              onPressed: () =>
+                  _createEditProductMethod(isEdit: false, productModel: null, storeID: storeID),
+              icon: const Icon(Icons.save),
+              label: const Text('Qo\'shish'),
+            );
+          }
+        },
+      ),
+    ];
+  }
 
-          _productPrice = double.tryParse(_productPriceController.text);
-          _productCost = double.tryParse(_productCostController.text);
-          _productDiscount = double.tryParse(_productDiscountController.text);
+  void _createEditProductMethod(
+      {required bool isEdit, required ProductModel? productModel, required String storeID}) {
+    if (_formKey.currentState?.validate() ?? false) {
+      final createdDate = Timestamp.now();
 
-          _productSize = double.tryParse(_productStockController.text);
-          _productNotifySize = double.tryParse(_productNotifySizeController.text);
-          _image = resizeImage(File(croppedFile.path), 600, 600);
-        });
+      String id = '';
+      if (!isEdit) {
+        id = createdDate.microsecondsSinceEpoch.toString();
+      } else {
+        image = productModel!.thumbnail;
+        id = productModel.id;
+      }
+      final Meta meta = Meta(
+        createdAt: createdDate.toString(),
+        updatedAt: Timestamp.now().toString(),
+        qrCode: '',
+        barcode: _productBarcodeController.text,
+      );
+      final Dimensions dimensions = Dimensions(
+        width: 0,
+        height: 0,
+        depth: 0,
+      );
+      skuGenerator = SKUGenerator(
+          categoryCode: '',
+          productName: _productNameController.text,
+          sequenceNumber: _dimensions?.height!.toInt());
+      final product = ProductModel(
+        id: id,
+        name: _productNameController.text,
+        meta: meta,
+        description: _productDescriptionController.text,
+        supplierIds: [],
+        sellingPrice: double.parse(_productSellingPriceController.text),
+        purchasePrice: double.parse(_productPurchasingPriceController.text),
+        unit: _selectedUnit!,
+        storeId: storeID,
+        brand: '',
+        sku: isEdit ? productModel!.sku : skuGenerator.sku,
+        weight: 0,
+        dimensions: dimensions,
+        imageUrls: [],
+        thumbnail: '',
+        categoryId: '',
+        discount: double.parse(_productDiscountController.text.isNotEmpty ? _productDiscountController.text : '0'),
+      );
+      if (!isEdit) {
+        context
+            .read<ProductBloc>()
+            .add(CreateProductEvent(_thumbnail, product: product, storeID: storeID));
+      } else {
+        context
+            .read<ProductBloc>()
+            .add(UpdateProductEvent(_thumbnail, product: product, storeID: storeID));
       }
     }
   }
 
-  Future<void> _cupertinoStyleGalleryImageUpload() async {
-    final List<XFile> files = await imageHelper.pickImage(maxResolution: 600);
-    if (files.isNotEmpty) {
-      if (files.length == 1) {
-        final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
-        if (croppedFile != null) {
-          setState(() {
-            _productName = _productNameController.text;
-            _productBarcode = _productBarcodeController.text;
-            _productDescription = _productDescriptionController.text;
-            _productVendor = _productVendorController.text;
-            _productPrice = double.tryParse(_productPriceController.text);
-            _productCost = double.tryParse(_productCostController.text);
-            _productDiscount = double.tryParse(_productDiscountController.text);
-            _productSize = double.tryParse(_productStockController.text);
-            _productNotifySize = double.tryParse(_productNotifySizeController.text);
-            _image = resizeImage(File(croppedFile.path), 600, 600);
-          });
-        }
-      } else {}
-    }
-  }
-
   Future<void> _takingPictureWithACameraInMaterialStyle() async {
-    final List<XFile> files = await imageHelper.pickImage(source: ImageSource.camera, maxResolution: 600);
+    final List<XFile> files =
+        await imageHelper.pickImage(source: ImageSource.camera, maxResolution: 300);
     if (files.isNotEmpty) {
-      final croppedFile = await imageHelper.crop(file: files.single, cropStyle: CropStyle.rectangle);
+      final croppedFile =
+          await imageHelper.crop(file: files.single, cropStyle: CropStyle.rectangle);
       if (croppedFile != null) {
         setState(() {
           _productName = _productNameController.text;
           _productBarcode = _productBarcodeController.text;
           _productDescription = _productDescriptionController.text;
-          _productVendor = _productVendorController.text;
-          _productPrice = double.tryParse(_productPriceController.text);
-          _productCost = double.tryParse(_productCostController.text);
-          _productDiscount = double.tryParse(_productDiscountController.text);
-          _productSize = double.tryParse(_productStockController.text);
-          _productNotifySize = double.tryParse(_productNotifySizeController.text);
-          _image = resizeImage(File(croppedFile.path), 600, 600);
+          _thumbnail = resizeImage(File(croppedFile.path), 300, 300);
         });
       }
     }
   }
 
   Future<void> _uploadingPictureFromTheGalleryInMaterialStyle() async {
-    final List<XFile> files = await imageHelper.pickImage(maxResolution: 600);
+    final List<XFile> files = await imageHelper.pickImage(maxResolution: 300);
     if (files.isNotEmpty) {
       if (files.length == 1) {
-        final croppedFile = await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
+        final croppedFile =
+            await imageHelper.crop(file: files.first, cropStyle: CropStyle.rectangle);
         if (croppedFile != null) {
           setState(() {
             _productName = _productNameController.text;
             _productBarcode = _productBarcodeController.text;
             _productDescription = _productDescriptionController.text;
-            _productVendor = _productVendorController.text;
-
-            _productPrice = double.tryParse(_productPriceController.text);
-            _productCost = double.tryParse(_productCostController.text);
-            _productDiscount = double.tryParse(_productDiscountController.text);
-
-            _productSize = double.tryParse(_productStockController.text);
-            _productNotifySize = double.tryParse(_productNotifySizeController.text);
-            _image = resizeImage(File(croppedFile.path), 600, 600);
+            _thumbnail = resizeImage(File(croppedFile.path), 300, 300);
           });
         }
       } else {}
     }
   }
 
-
-
-  Future<void> createEditProduct() async {}
+  void _productBlocListener(
+      {required BuildContext context,
+      required ProductState state,
+      required bool isEdit,
+      required String storeID}) {
+    if (state is ProductCreated || state is ProductUpdated) {
+      // Navigate back or show a success message when the product is created
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(!isEdit ? 'Maxsulot bazaga qo\'shildi' : 'Maxsulot tahrirlandi')));
+      BlocProvider.of<AppBloc>(context).add(
+        NavigateToProductListScreen(storeID: storeID),
+      );
+    } else if (state is ProductError) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Xato: ${state.error}')));
+    }
+  }
 
   @override
   void dispose() {
     // TODO: implement dispose
-    // scannerController.dispose();
-
+    _productNameController.dispose();
+    _productBarcodeController.dispose();
+    _productDescriptionController.dispose();
+    _productSellingPriceController.dispose();
+    _productPurchasingPriceController.dispose();
+    _productDiscountController.dispose();
     super.dispose();
   }
 
@@ -183,29 +213,6 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     final Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, appState) {
-        StoreModel? store = appState.store;
-        ProductModel? product;
-        if (appState.isEdit) {
-          if (appState.barcode != null) {
-            _productBarcodeController.text = appState.barcode!;
-          }
-          if (appState.product != null) {
-            product = appState.product;
-            _productBarcodeController.text = product?.meta.barcode ?? '';
-          }
-        } else {
-          log('product barcode is: ${appState.barcode}');
-          _productBarcodeController.text = appState.barcode ?? _productBarcode ?? '';
-        }
-        _productNameController.text = product?.name ?? _productName ?? '';
-        _productDescriptionController.text = product?.description ?? _productDescription ?? '';
-        _productVendorController.text = product?.vendor ?? _productVendor ?? '';
-        _productPriceController.text = product?.price.toString() ?? (_productPrice != null ? _productPrice.toString() : '');
-        _productCostController.text = product?.cost.toString() ?? (_productCost != null ? _productCost.toString() : '');
-        _productDiscountController.text = product?.discountPercentage.toString() ?? (_productDiscount != null ? _productDiscount.toString() : '');
-        _productStockController.text = product?.stock.toString() ?? (_productSize != null ? _productSize.toString() : '');
-        _productNotifySizeController.text = product?.notifySize.toString() ?? (_productNotifySize != null ? _productNotifySize.toString() : '');
-        _selectedValue = product?.productMeasurementUnit ?? ProductMeasurementUnit.dona.name;
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (bool didPop, result) {
@@ -213,7 +220,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
               return;
             }
             context.read<AppBloc>().add(
-                  NavigateToProductListScreen(appState.store),
+                  NavigateToProductListScreen(storeID: appState.storeID),
                 );
           },
           child: Scaffold(
@@ -222,300 +229,52 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
               leading: InkWell(
                 onTap: () {
                   BlocProvider.of<AppBloc>(context).add(
-                    NavigateToProductListScreen(store),
+                    NavigateToProductListScreen(storeID: appState.storeID),
                   );
-                  BlocProvider.of<ProductBloc>(context).add(LoadProductsEvent(store));
+                  BlocProvider.of<ProductBloc>(context)
+                      .add(LoadProductsEvent(storeID: appState.storeID!));
                 },
                 child: Icon(Icons.adaptive.arrow_back),
               ),
-              title: Text(!appState.isEdit ? 'Create Product' : 'Edit Product'),
+              title: Text(!appState.isEdit ? 'Maxsulotni yaratish' : 'Maxsulotni tahrirlash'),
               centerTitle: false,
-              actions: [
-                TextButton.icon(
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      final createdDate = Timestamp.now();
-
-                      String id = '';
-                      if (!appState.isEdit) {
-                        id = createdDate.microsecondsSinceEpoch.toString();
-                      } else {
-                        image = appState.product!.thumbnail;
-                        id = appState.product!.id;
-                      }
-                      final Meta meta = Meta(
-                        createdAt: createdDate.toString(),
-                        updatedAt: Timestamp.now().toString(),
-                        qrCode: '',
-                        barcode: _productBarcodeController.text,
-                      );
-                      final Dimensions dimensions = Dimensions(
-                        width: 0,
-                        height: 0,
-                        depth: 0,
-                      );
-                      final product = ProductModel(
-                        id: id,
-                        name: _productNameController.text,
-                        meta: meta,
-                        description: _productDescriptionController.text,
-                        vendor: _productVendorController.text,
-                        price: double.parse(_productPriceController.text),
-                        cost: double.parse(_productCostController.text),
-                        discountPercentage: double.parse(_productDiscountController.text),
-                        stock: double.parse(_productStockController.text),
-                        notifySize: double.parse(_productNotifySizeController.text),
-                        productMeasurementUnit: _selectedValue!,
-                        storeId: store!.id,
-                        createdAt: '',
-                        updatedAt: '',
-                        tags: [],
-                        brand: '',
-                        sku: '',
-                        weight: 0,
-                        dimensions: dimensions,
-                        warrantyInformation: '',
-                        shippingInformation: '',
-                        availabilityStatus: '',
-                        reviews: [],
-                        returnPolicy: '',
-                        minimumOrderQuantity: 0,
-                        images: [],
-                        thumbnail: '',
-                        startDiscountDate: '',
-                        endDiscountDate: '',
-                        category: '',
-                      );
-                      if (!appState.isEdit) {
-                        context.read<ProductBloc>().add(CreateProductEvent(product, _image, store));
-                      } else {
-                        context.read<ProductBloc>().add(UpdateProductEvent(product, _image, store));
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.save),
-                  label: const Text('Save'),
-                ),
-              ],
+              actions: _buildCreateEditProductScreenAppBarActions(
+                  context: context, isEdit: appState.isEdit, storeID: appState.storeID!),
             ),
             resizeToAvoidBottomInset: true,
             body: BlocConsumer<ProductBloc, ProductState>(
               listener: (context, state) {
-                if (state is ProductCreated || state is ProductUpdated) {
-                  // Navigate back or show a success message when the product is created
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(!appState.isEdit ? 'Product created successfully' : 'Product updated successfully')));
-                  BlocProvider.of<AppBloc>(context).add(
-                    NavigateToProductListScreen(store),
-                  );
-                } else if (state is ProductError) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
-                }
+                _productBlocListener(
+                    context: context,
+                    state: state,
+                    isEdit: appState.isEdit,
+                    storeID: appState.storeID!);
               },
               builder: (context, state) {
-                if (state is ProductCreating || state is ProductUpdating) {
-                  return const Center(child: CircularProgressIndicator.adaptive());
+                if (appState.isEdit) {
+                  if (state is ProductCreating || state is ProductUpdating) {
+                    return const Center(child: CircularProgressIndicator.adaptive());
+                  } else if (state is StoreCreating || state is StoreUpdating) {
+                    return Container(
+                      width: size.width,
+                      height: ScreenUtil.defaultSize.height,
+                      child: Center(child: CircularProgressIndicator.adaptive()),
+                    );
+                  } else if (state is ProductError) {
+                    return ErrorWidget(state.error);
+                  } else if (state is ProductByIdLoaded) {
+                    return SingleChildScrollView(
+                      child: _buildCreateEditProductFormWidget(
+                          size: size, appState: appState, context: context, product: state.product),
+                    );
+                  }
+                } else {
+                  return SingleChildScrollView(
+                    child: _buildCreateEditProductFormWidget(
+                        size: size, appState: appState, context: context, product: null),
+                  );
                 }
-                return SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: size.width,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            !appState.isEdit
-                                ? Center(
-                                    child: Container(
-                                      width: 150.r,
-                                      height: 150.r,
-                                      margin: EdgeInsets.symmetric(vertical: 30.r),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(10.r),
-                                        child: _image == null
-                                            ? Image.asset(Assets.imagesImageBg)
-                                            : Image.file(
-                                                _image!,
-                                                fit: BoxFit.cover,
-                                                width: 100.r,
-                                              ),
-                                      ),
-                                    ),
-                                  )
-                                : image != null
-                                    ? Container(
-                                        width: 150.r,
-                                        height: 150.r,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(10.r),
-                                          image: DecorationImage(
-                                            image: NetworkImage(image!),
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      )
-                                    : Container(
-                                        width: 150.r,
-                                        height: 150.r,
-                                        margin: EdgeInsets.symmetric(vertical: 30.r),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(10.r),
-                                          child: Image.asset(Assets.imagesImageBg),
-                                        ),
-                                      ),
-                            SizedBox(height: 20.h),
-                            SizedBox(
-                              width: size.width,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  StoreButton(
-                                    title: 'Pick an Image',
-                                    icon: Icons.image,
-                                    onPressed: () {
-                                      Platform.isIOS ? _cupertinoStyleGalleryImageUpload() : _uploadingPictureFromTheGalleryInMaterialStyle();
-                                    },
-                                  ),
-                                  StoreButton(
-                                    title: 'Take a Photo',
-                                    icon: Icons.camera_alt,
-                                    onPressed: () {
-                                      Platform.isIOS ? _cupertinoStyleCameraCapture() : _takingPictureWithACameraInMaterialStyle();
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 10.w),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              StoreTextField(
-                                hintText: 'Maxsulot nomi',
-                                icon: Icons.text_fields,
-                                textEditingController: _productNameController,
-                              ),
-                              Row(
-                                children: [
-                                  Flexible(
-                                    flex: 15,
-                                    child: StoreTextField(
-                                      hintText: 'Maxsulot Barcode',
-                                      textEditingController: _productBarcodeController,
-                                      icon: Icons.qr_code_2,
-                                      onTap: () => BlocProvider.of<AppBloc>(context).add(
-                                        NavigateToBarcodeScannerScreen(),
-                                      ),
-                                    ),
-                                  ),
-                                  const Flexible(
-                                    flex: 2,
-                                    child: Center(child: Icon(Icons.qr_code)),
-                                  ),
-                                ],
-                              ),
-                              StoreTextField(
-                                hintText: 'Maxsulot tavsifi',
-                                icon: Icons.description,
-                                textEditingController: _productDescriptionController,
-                              ),
-                              StoreTextField(
-                                hintText: 'Maxsulot Sotuvchi korxona',
-                                icon: Icons.corporate_fare,
-                                textEditingController: _productVendorController,
-                              ),
-                              StoreTextField(
-                                hintText: 'Narxi',
-                                textInputType: TextInputType.number,
-                                icon: Icons.price_check,
-                                textEditingController: _productPriceController,
-                              ),
-                              StoreTextField(
-                                hintText: 'Asl narxi',
-                                textInputType: TextInputType.number,
-                                icon: Icons.price_check,
-                                textEditingController: _productCostController,
-                              ),
-                              StoreTextField(
-                                hintText: 'Chegirma %',
-                                textInputType: TextInputType.number,
-                                icon: Icons.discount,
-                                textEditingController: _productDiscountController,
-                              ),
-                              StoreTextField(
-                                hintText: 'Chegirma boshlanish vaqti',
-                                textInputType: TextInputType.number,
-                                icon: Icons.discount,
-                                textEditingController: _productDiscountController,
-                              ),
-                              StoreTextField(
-                                hintText: 'Chegirma tugash vaqti',
-                                textInputType: TextInputType.number,
-                                icon: Icons.discount,
-                                textEditingController: _productDiscountController,
-                              ),
-                              StoreTextField(
-                                hintText: 'Miqdor',
-                                textInputType: TextInputType.number,
-                                icon: Icons.notifications,
-                                textEditingController: _productStockController,
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Flexible(
-                                    child: SizedBox(),
-                                    flex: 1,
-                                  ),
-                                  Flexible(
-                                    flex: 9,
-                                    fit: FlexFit.tight,
-                                    child: DropdownButtonFormField<String>(
-                                      decoration: InputDecoration(
-                                        labelText: 'O\'lchov birligi',
-                                      ),
-                                      value: _selectedValue,
-                                      items: productMeasurementTypes.map<DropdownMenuItem<String>>(
-                                        (String value) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          );
-                                        },
-                                      ).toList(),
-                                      onChanged: (String? newValue) {
-                                        setState(() {
-                                          _selectedValue = newValue;
-                                        });
-                                      },
-                                      validator: (value) {
-                                        if (value == null) {
-                                          return 'Please select an option';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 12.h),
-                              StoreTextField(
-                                hintText: 'Ogohlantiruvchi miqdor',
-                                textInputType: TextInputType.number,
-                                icon: Icons.notifications,
-                                textEditingController: _productNotifySizeController,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
+                return Container();
               },
             ),
           ),
@@ -524,5 +283,225 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     );
   }
 
-  List<String> productMeasurementTypes = ProductMeasurementUnit.values.map((value) => value.name).toList();
+  Column _buildCreateEditProductFormWidget({
+    required Size size,
+    required AppState appState,
+    required BuildContext context,
+    required ProductModel? product,
+  }) {
+    return Column(
+      children: [
+        SizedBox(
+          width: size.width,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              !appState.isEdit
+                  ? Center(
+                      child: Container(
+                        width: 200.r,
+                        height: 200.r,
+                        margin: EdgeInsets.symmetric(vertical: 30.r),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10.r),
+                          child: _thumbnail == null
+                              ? Image.asset(Assets.imagesImageBg)
+                              : Image.file(
+                                  _thumbnail!,
+                                  width: 200.r,
+                                  height: 200.r,
+                                ),
+                        ),
+                      ),
+                    )
+                  : image != null
+                      ? Container(
+                          width: 150.r,
+                          height: 150.r,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.r),
+                            image: DecorationImage(
+                              image: NetworkImage(image!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 150.r,
+                          height: 150.r,
+                          margin: EdgeInsets.symmetric(vertical: 30.r),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10.r),
+                            child: Image.asset(Assets.imagesImageBg),
+                          ),
+                        ),
+              SizedBox(height: 20.h),
+              SizedBox(
+                width: size.width,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    StoreButton(
+                      title: 'Tasvirni tanlang',
+                      icon: Icons.image,
+                      onPressed: () => _uploadingPictureFromTheGalleryInMaterialStyle(),
+                    ),
+                    StoreButton(
+                      title: 'Suratga oling',
+                      icon: Icons.camera_alt,
+                      onPressed: () => _takingPictureWithACameraInMaterialStyle(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.h, vertical: 10.w),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                StoreTextField(
+                  hintText: 'Maxsulot nomi',
+                  icon: Icons.text_fields,
+                  textEditingController: _productNameController,
+                  initialValue: appState.isEdit ? product?.name : null,
+                ),
+                Row(
+                  children: [
+                    Flexible(
+                      flex: 15,
+                      child: StoreTextField(
+                        hintText: 'Maxsulot Barcode',
+                        textEditingController: _productBarcodeController,
+                        initialValue: appState.isEdit ? product?.meta.barcode : null,
+                        icon: Icons.qr_code_2,
+                        onTap: () => BlocProvider.of<AppBloc>(context).add(
+                          NavigateToBarcodeScannerScreen(),
+                        ),
+                      ),
+                    ),
+                    const Flexible(
+                      flex: 2,
+                      child: Center(child: Icon(Icons.qr_code)),
+                    ),
+                  ],
+                ),
+                StoreTextField(
+                  hintText: 'Maxsulot tavsifi',
+                  icon: Icons.description,
+                  textEditingController: _productDescriptionController,
+                  initialValue: product?.description,
+                ),
+                StoreTextField(
+                  hintText: 'Sotiladigan Narx',
+                  textInputType: TextInputType.number,
+                  icon: Icons.price_check,
+                  textEditingController: _productSellingPriceController,
+                  initialValue: appState.isEdit ? product?.sellingPrice.toString() : null,
+                ),
+                StoreTextField(
+                  hintText: 'Asl narxi',
+                  textInputType: TextInputType.number,
+                  icon: Icons.price_check,
+                  textEditingController: _productPurchasingPriceController,
+                  initialValue: appState.isEdit ? product?.purchasePrice.toString() : null,
+                ),
+                StoreTextField(
+                  hintText: 'Chegirma',
+                  textInputType: TextInputType.number,
+                  icon: Icons.discount,
+                  textEditingController: _productDiscountController,
+                  initialValue: appState.isEdit ? product?.discount.toString() : null,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: SizedBox(),
+                      flex: 1,
+                    ),
+                    Flexible(
+                      flex: 9,
+                      fit: FlexFit.tight,
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: 'O\'lchov birligi',
+                        ),
+                        value: _selectedUnit,
+                        items: productMeasurementTypes.map<DropdownMenuItem<String>>(
+                          (String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          },
+                        ).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedUnit = newValue;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Iltimos o\'lchov birligini tanlang';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: SizedBox(),
+                      flex: 1,
+                    ),
+                    Flexible(
+                      flex: 9,
+                      fit: FlexFit.tight,
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: 'Yetkazib beruvchi',
+                        ),
+                        value: _selectedUnit,
+                        items: productMeasurementTypes.map<DropdownMenuItem<String>>(
+                          (String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          },
+                        ).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedUnit = newValue;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Iltimos o\'lchov birligini tanlang';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<String> productMeasurementTypes =
+      ProductMeasurementUnit.values.map((value) => value.name).toList();
 }

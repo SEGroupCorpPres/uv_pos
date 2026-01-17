@@ -1,13 +1,8 @@
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/data/local/models/wrap_button_model.dart';
-import 'package:uv_pos/features/presentation/widgets/search_dialog.dart';
-import 'package:uv_pos/features/presentation/widgets/search_dialog_field.dart';
+import 'report.dart';
+
 
 class ReportByDatesScreen extends StatefulWidget {
   const ReportByDatesScreen({super.key});
@@ -60,7 +55,7 @@ class _ReportByDatesScreenState extends State<ReportByDatesScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      onPopInvokedWithResult: (bool didPop, result) {
         context.read<AppBloc>().add(
            NavigateToReportsScreen(),
         );

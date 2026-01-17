@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+
+import 'data_sources.dart';
 
 List<PopupMenuEntry<Widget>> popupMenuList(BuildContext context) => [
       const PopupMenuItem(
@@ -147,7 +146,8 @@ AlertDialog buildAlertDialog(BuildContext context) {
         children: [
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.grey, minimumSize: Size(100.w, 40.h)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey, minimumSize: Size(100.w, 40.h)),
             child: const Text(
               'Cancel',
               style: TextStyle(color: Colors.white),

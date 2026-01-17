@@ -21,13 +21,13 @@ class LoadOrdersEvent extends OrderEvent {
 
 class CreateOrderEvent extends OrderEvent {
   final OrderModel order;
-  final StoreModel store;
-  final UserModel user;
+  final String storeID;
+  final String uid;
 
-  const CreateOrderEvent(this.order, this.store, this.user);
+  const CreateOrderEvent(this.order, this.storeID, this.uid);
 
   @override
-  List<Object?> get props => [order, store, user];
+  List<Object?> get props => [order, storeID, uid];
 }
 
 class UpdateOrderEvent extends OrderEvent {
@@ -58,6 +58,29 @@ class FetchOrderByIdEvent extends OrderEvent {
 
   @override
   List<Object?> get props => [order, date];
+}
+
+class FetchOrdersByDatesEvent extends OrderEvent {
+  final DateTime startDate;
+  final DateTime endDate;
+  final String storeID;
+
+  FetchOrdersByDatesEvent({required this.startDate, required this.endDate, required this.storeID});
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [storeID, startDate, endDate];
+}
+
+class FetchOrdersByCustomerNameEvent extends OrderEvent {
+  final String customerName;
+  final String storeID;
+
+  FetchOrdersByCustomerNameEvent({required this.customerName, required this.storeID});
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [storeID, customerName];
 }
 
 class AddProduct extends OrderEvent {

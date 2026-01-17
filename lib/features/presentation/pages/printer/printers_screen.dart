@@ -1,18 +1,11 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
+import 'printer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
+
 
 class PrintersScreen extends StatefulWidget {
   const PrintersScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: PrintersScreen(),
-        )
-      : const MaterialPage(
+  static Page page() => const MaterialPage(
           child: PrintersScreen(),
         );
 
@@ -25,7 +18,7 @@ class _PrintersScreenState extends State<PrintersScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) {
+      onPopInvokedWithResult: (bool didPop, result) {
         context.read<AppBloc>().add(
               const NavigateToHomeScreen(),
             );

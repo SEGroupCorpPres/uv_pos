@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:uv_pos/features/data/remote/models/product_model.dart';
+import 'model.dart';
 class ProductListModel {
   final List<ProductModel> products;
   final int total;

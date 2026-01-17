@@ -1,4 +1,4 @@
-import 'package:equatable/equatable.dart';
+import 'model.dart';
 
 class OrderProductModel extends Equatable {
   final String id;

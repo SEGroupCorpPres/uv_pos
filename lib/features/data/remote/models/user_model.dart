@@ -1,6 +1,4 @@
-import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
+import 'model.dart';
 
 class UserModel extends Equatable {
   final String uid;
@@ -22,17 +20,6 @@ class UserModel extends Equatable {
   @override
   List<Object?> get props => [uid, email, password, displayName, phoneNumber, photoUrl];
 
-  // Create a User instance from FirebaseUser
-  factory UserModel.fromFirebaseUser(UserCredential userCredential) {
-    final firebaseUser = userCredential.user!;
-    return UserModel(
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName: firebaseUser.displayName,
-      phoneNumber: firebaseUser.phoneNumber,
-      photoUrl: firebaseUser.photoURL,
-    );
-  }
 
   // Create a User instance from a map (including stores)
   factory UserModel.fromMap(Map<String, dynamic> data) {

@@ -1,13 +1,6 @@
-import 'dart:io';
+import '../bloc.dart';
 
-import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/core/helpers/image_helper.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/domain/repositories/store_repository.dart';
-
-part 'store_event.dart';
-part 'store_state.dart';
+part 'store_event.dart';part 'store_state.dart';
 
 class StoreBloc extends Bloc<StoreEvent, StoreState> {
   final StoreRepository _storeRepository;
@@ -54,7 +47,8 @@ class StoreBloc extends Bloc<StoreEvent, StoreState> {
       emit(StoreCreating());
       String? imageUrl;
       if (event.imageFile != null) {
-        imageUrl = await ImageHelper().uploadImageToStorage(event.imageFile!, 'stores/${event.store.id}.jpg');
+        imageUrl = await ImageHelper()
+            .uploadImageToStorage(event.imageFile!, 'stores/${event.store.id}.jpg');
         storeModel = event.store.copyWith(imageUrl: imageUrl);
       }
       final storeId = await _storeRepository.createStore(storeModel!);
@@ -78,7 +72,8 @@ class StoreBloc extends Bloc<StoreEvent, StoreState> {
     try {
       emit(StoreUpdating());
       if (event.imageFile != null) {
-        final imageUrl = await ImageHelper().uploadImageToStorage(event.imageFile!, 'stores/${event.store.id}.jpg');
+        final imageUrl = await ImageHelper()
+            .uploadImageToStorage(event.imageFile!, 'stores/${event.store.id}.jpg');
         storeModel = event.store.copyWith(imageUrl: imageUrl);
       }
       await _storeRepository.updateStore(storeModel!);

@@ -1,26 +1,12 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/core/helpers/session_ending.dart';
-import 'package:uv_pos/features/data/local/data_sources/home_menu_list.dart';
-import 'package:uv_pos/features/data/local/data_sources/popup_menu_list.dart';
-import 'package:uv_pos/features/data/remote/models/store_model.dart';
-import 'package:uv_pos/features/presentation/bloc/store/store_bloc.dart';
+import 'package:uv_pos/features/presentation/pages/home/home.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  static Page page() => Platform.isIOS
-      ? const CupertinoPage(
-          child: HomeScreen(),
-        )
-      : const MaterialPage(
-          child: HomeScreen(),
-        );
+  static Page page() => const MaterialPage(
+        child: HomeScreen(),
+      );
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -29,114 +15,46 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   SessionEnding sessionEnding = SessionEnding();
 
+  void sessionEnd(bool didPop, result) {
+    if (didPop) {
+      return;
+    }
+    sessionEnding.onWillPop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<AppBloc, AppState>(
-      builder: (context, appState) {
+      builder: (BuildContext context, AppState appState) {
         return PopScope(
           canPop: false,
-          onPopInvokedWithResult: (bool didPop, result) {
-            if (didPop) {
-              return;
-            }
-            sessionEnding.onWillPop(context);
-          },
+          onPopInvokedWithResult: sessionEnd,
           child: Scaffold(
             appBar: AppBar(
               automaticallyImplyLeading: false,
-              title: Text('${appState.user!.displayName} (\$0)'),
+              title: BlocBuilder<UserBloc, UserState>(
+                builder: (context, state) {
+                  log(state.toString());
+                  if (state is UserLoadingState) {
+                    return const CircularProgressIndicator();
+                  }
+                  if (state is UserErrorState) {
+                    return Text(state.error);
+                  }
+                  if (state is UserLoadedState) {
+                    return Text('${state.user.displayName} (\$0)');
+                  }
+                  return const Text('Home');
+                },
+              ),
               centerTitle: false,
-              actions: [
-                PopupMenuButton(
-                  itemBuilder: (context) => popupMenuList(context),
-                ),
-              ],
+              actions: homeActions(context),
               bottom: PreferredSize(
                 preferredSize: Size(double.infinity, 60.h),
-                child: BlocBuilder<StoreBloc, StoreState>(
-                  builder: (context, state) {
-                    if (state is StoreLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator.adaptive(),
-                      );
-                    } else if (state is StoreByIdLoaded) {
-                      StoreModel store = state.store;
-                      return ListTile(
-                        title: Text(
-                          store.name,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15.sp,
-                          ),
-                        ),
-                        subtitle: Text(
-                          'Sliver Monthly - 0/3000 - Exp: ${DateTime.now()}',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                        trailing: ElevatedButton(
-                          onPressed: () => BlocProvider.of<AppBloc>(context).add(
-                            NavigateToStoreListScreen(),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.switch_right,
-                                size: 20.sp,
-                              ),
-                              SizedBox(width: 5.w),
-                              Text(
-                                'Switch Store',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    } else if (state is StoreNotFound) {
-                      return ErrorWidget('Store Not found');
-                    } else {
-                      return Container();
-                    }
-                  },
-                ),
+                child: HomeScreenSelectedStoreBuilderWidget(),
               ),
             ),
-            body: BlocBuilder<StoreBloc, StoreState>(
-              builder: (context, state) {
-                if (state is StoreLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator.adaptive(),
-                  );
-                } else if (state is StoreByIdLoaded) {
-                  StoreModel store = state.store;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0).w,
-                    child: SingleChildScrollView(
-                      child: Wrap(
-                        spacing: 10.w,
-                        runSpacing: 10.h,
-                        children: menuList(context, store),
-                      ),
-                    ),
-                  );
-                } else if (state is StoreNotFound) {
-                  return ErrorWidget('Store Not found');
-                } else {
-                  return Container();
-                }
-              },
-            ),
+            body: HomeScreenBodyBuilderWidget(),
           ),
         );
       },

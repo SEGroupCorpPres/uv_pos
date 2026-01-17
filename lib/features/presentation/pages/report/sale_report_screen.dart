@@ -1,19 +1,8 @@
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-// import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/data/remote/models/chart_model.dart';
-import 'package:uv_pos/features/data/remote/models/order_model.dart';
-import 'package:uv_pos/features/presentation/bloc/order/order_bloc.dart';
-import 'package:uv_pos/features/presentation/widgets/chart_item.dart';
-import 'package:uv_pos/features/presentation/widgets/chart_name.dart';
-import 'package:uv_pos/features/presentation/widgets/search_dialog.dart';
-import 'package:uv_pos/features/presentation/widgets/search_dialog_field.dart';
-import 'package:uv_pos/features/presentation/widgets/error_screen.dart';
+import 'report.dart';
+
 
 class SaleReportScreen extends StatefulWidget {
   const SaleReportScreen({super.key});
@@ -59,7 +48,7 @@ class _SaleReportScreenState extends State<SaleReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.sizeOf(context);
+    // final Size size = MediaQuery.sizeOf(context);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, result) {
@@ -183,7 +172,7 @@ class _SaleReportScreenState extends State<SaleReportScreen> {
                 } else if (orderState is OrderError) {
                   return ErrorScreen(
                     message: orderState.error,
-                  );;
+                  );
                 } else {
                   return Container();
                 }

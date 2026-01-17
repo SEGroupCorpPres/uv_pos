@@ -1,0 +1,44 @@
+{
+  "alert": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "auth_page": {
+    "form": {
+      "name_label": "Name",
+      "email_label": "Email",
+      "password_label": "Password",
+      "confirm_password_label": "Confirm Password",
+      "name_helper_text": "Enter Name",
+      "email_helper_text": "Enter Email address.",
+      "password_helper_text": "Enter Password",
+      "confirm_password_helper_text": "8-16 characters",
+      "name_error_text": "Name is required",
+      "email_error_text": "Email is required",
+      "password_error_text": "Password is required",
+      "confirm_password_error_text": "Confirm Password is required",
+      "password_mismatch_error_text": "Password mismatch"
+    },
+    "sign_in": "Sign In",
+    "registration": "Registration",
+    "login": "Enter",
+    "sign_up": "Sign Up",
+    "forgot_password": "Forgot Password",
+    "login_success": "Login Successful",
+    "register_success": "Registration Successful",
+    "login_error": "Login Failed",
+    "register_error": "Registration Failed"
+  },
+  "home_page": {
+    "gallery": "Gallery",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "paint_page": {
+    "title": "New Paint",
+    "title_edit": "Edit"
+  }
+}

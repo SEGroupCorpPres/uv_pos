@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:uv_pos/app/presentation/pages/auth_flow.dart';
+import 'package:uv_pos/core/core.dart';
+
+import 'presentation/pages/pages.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -15,7 +15,7 @@ class _AppState extends State<App> {
     return ScreenUtilInit(
       builder: (context, child) {
         return MaterialApp(
-          // debugShowCheckedModeBanner: false,
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             primaryColor: Colors.deepPurpleAccent,
             iconTheme: const IconThemeData(
@@ -29,6 +29,7 @@ class _AppState extends State<App> {
           home: child,
         );
       },
+      // child: MyApp(),
       child: const AuthFlow(),
     );
   }
