@@ -1,10 +1,10 @@
 import 'package:uv_pos/core/core.dart';
 
 abstract class Failure extends Equatable {
+  const Failure(this.message, [this.code]);
+
   final String message;
   final String? code;
-
-  const Failure(this.message, [this.code]);
 
   @override
   List<Object?> get props => [message, code];
@@ -20,6 +20,11 @@ class NetworkFailure extends Failure {
 
 class CacheFailure extends Failure {
   const CacheFailure(super.message);
+}
+
+/// Authentication failure
+class AuthFailure extends Failure {
+  const AuthFailure(super.message, [super.code = '401']);
 }
 
 class ValidationFailure extends Failure {

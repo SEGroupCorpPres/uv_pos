@@ -1,4 +1,4 @@
-//GENERATED BARREL FILE 
-export './params/parameters.dart'; 
-export './repositories/auth_repository.dart'; 
+//GENERATED BARREL FILE
+export './entities/entities.dart';
+export './params/parameters.dart';
 export './repositories/repository.dart'; 

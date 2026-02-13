@@ -20,9 +20,6 @@ Page<dynamic> _defaultPageBuilder(Widget child, GoRouterState state) {
 }
 
 class AppRouter {
-  static final _rootNavigatorKey = GlobalKey<NavigatorState>();
-  // final AuthBloc authBloc;
-  late final GoRouter router;
 
   AppRouter() {
     router = GoRouter(
@@ -59,6 +56,9 @@ class AppRouter {
       ],
     );
   }
+  static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+  // final AuthBloc authBloc;
+  late final GoRouter router;
 
   // static GoRouter goRouter
   String? _redirect(BuildContext context, GoRouterState state) {
@@ -110,8 +110,8 @@ class GoRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
 
   @override
-  void dispose() {
-    _subscription.cancel();
+  Future<void> dispose() async {
+    await _subscription.cancel();
     super.dispose();
   }
 }

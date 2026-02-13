@@ -1,5 +1,3 @@
-library core.core;
-
 //GENERATED BARREL FILE
 export 'dart:async';
 export 'dart:convert';
@@ -31,6 +29,7 @@ export 'package:flutter_dotenv/flutter_dotenv.dart';
 export 'package:flutter_local_notifications/flutter_local_notifications.dart';
 export 'package:flutter_riverpod/flutter_riverpod.dart' hide AsyncError;
 export 'package:flutter_screenutil/flutter_screenutil.dart';
+export 'package:flutter_secure_storage/flutter_secure_storage.dart';
 export 'package:flutter_slidable/flutter_slidable.dart' hide ConfirmDismissCallback;
 export 'package:flutter_spinkit/flutter_spinkit.dart';
 export 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -98,4 +97,5 @@ export 'network/network.dart';
 export 'router/router.dart';
 export 'services/services.dart';
 export 'styles/app_themes.dart';
+export 'use_cases/use_cases.dart';
 export 'utils/utils.dart';

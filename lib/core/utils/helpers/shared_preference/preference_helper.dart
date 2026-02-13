@@ -1,5 +1,5 @@
 import 'package:uv_pos/core/core.dart';
-import '../encrypt_helper/encrypt_helper.dart';
+
 sealed class PrefHelper {
   static late final SharedPreferences _pref;
 
@@ -7,18 +7,18 @@ sealed class PrefHelper {
     _pref = await SharedPreferences.getInstance();
   }
 
-  static Future<bool> save(String key, dynamic value) async {
-    if (value == null) return false;
-    final String encryptedValue = AppEncryptor.encrypt(value);
-    return await _pref.setString(key, encryptedValue);
+  static Future<bool> save(String key, String value) async {
+    if (value.isEmpty) return false;
+    final encryptedValue = AppEncryptor.encrypt(value);
+    return _pref.setString(key, encryptedValue);
   }
 
   static dynamic get(String key, {bool getValueEncrypted = false}) {
-    final String? encryptedValue = _pref.get(key) as String?;
+    final encryptedValue = _pref.get(key) as String?;
     if (encryptedValue == null) return null;
     if (getValueEncrypted) return encryptedValue;
 
-    final String decryptedValue = AppEncryptor.decrypt(encryptedValue);
+    final decryptedValue = AppEncryptor.decrypt(encryptedValue);
 
     /// Attempt to parse as bool
     if (decryptedValue == 'true' || decryptedValue == 'false') {
@@ -26,7 +26,7 @@ sealed class PrefHelper {
     }
 
     /// Attempt to parse as num
-    final num? parsedNum = num.tryParse(decryptedValue);
+    final parsedNum = num.tryParse(decryptedValue);
     if (parsedNum != null) return parsedNum;
 
     /// Attempt to parse as a list (assuming a comma-separated string)
@@ -49,7 +49,7 @@ sealed class PrefHelper {
     }
 
     /// Attempt to parse as DateTime
-    final DateTime? parsedDateTime = DateTime.tryParse(decryptedValue);
+    final parsedDateTime = DateTime.tryParse(decryptedValue);
     if (parsedDateTime != null) return parsedDateTime;
 
     /// Return as plain string if no other parsing succeeds
@@ -57,28 +57,10 @@ sealed class PrefHelper {
   }
 
   static Future<bool> remove(String key) async {
-    return await _pref.remove(key);
+    return _pref.remove(key);
   }
 
   static Future<bool> clear() async {
-    return await _pref.clear();
+    return _pref.clear();
   }
-
-  /// OLD save without encryption
-// static Future<bool> save(String key, dynamic value) async {
-//   if (value == null) return false;
-//   if (value is String) {
-//     return await _pref.setString(key, value);
-//   } else if (value is int) {
-//     return await _pref.setInt(key, value);
-//   } else if (value is bool) {
-//     return await _pref.setBool(key, value);
-//   } else if (value is double) {
-//     return await _pref.setDouble(key, value);
-//   } else if (value is List<String>) {
-//     return await _pref.setStringList(key, value);
-//   } else {
-//     throw UnsupportedError('Type not supported for SharedPreferences');
-//   }
-// }
 }

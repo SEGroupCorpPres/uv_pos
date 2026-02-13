@@ -71,6 +71,7 @@ dependencies:
   image_cropper: ^11.0.0
   animated_search_bar: ^2.8.0
   flutter_staggered_animations: ^1.1.1
+
   searchfield: ^1.4.0
 
   #restartApp
