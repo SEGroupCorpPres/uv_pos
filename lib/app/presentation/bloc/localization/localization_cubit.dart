@@ -9,6 +9,6 @@ class LocalizationCubit extends Cubit<LocalizationState> {
 
   Future<void> _loadLanguage(BuildContext context) async {
     final languageCode = PrefHelper.get(PrefKeys.currentLanguage) ?? AppStrings.enLanguage;
-    await AppMethods.changeLanguage(context, locale: Locale('uz'));
+    await AppMethods.changeLanguage(context, locale: const Locale('uz'));
   }
 }
