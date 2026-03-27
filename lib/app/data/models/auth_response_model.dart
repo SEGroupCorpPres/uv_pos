@@ -1,6 +1,6 @@
 // lib/app/data/models/auth_response_model.dart
-import 'package:uv_pos/app/app_barrel.dart';
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/app/app_barrel.dart';
+import 'package:future_pos/core/core.dart';
 
 part 'auth_response_model.freezed.dart';
 part 'auth_response_model.g.dart';

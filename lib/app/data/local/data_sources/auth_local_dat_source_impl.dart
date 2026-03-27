@@ -1,5 +1,5 @@
-import 'package:uv_pos/app/data/data.dart';
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/app/data/data.dart';
+import 'package:future_pos/core/core.dart';
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   AuthLocalDataSourceImpl({
@@ -62,7 +62,8 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       // PrefHelper handles encryption and string conversion internally
       final userJson = jsonEncode(user.toJson());
       await PrefHelper.save(_userKey, userJson);
-      await PrefHelper.save(_isLoggedInKey, 'true'); // Saved as string for PrefHelper parsing
+      await PrefHelper.save(
+          _isLoggedInKey, 'true'); // Saved as string for PrefHelper parsing
     } catch (e) {
       throw CacheException('Failed to save user: $e');
     }
@@ -104,6 +105,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<bool> isLoggedIn() async {
     final loggedIn = PrefHelper.get(_isLoggedInKey);
-    return loggedIn == true; // PrefHelper parses 'true' string to bool automatically
+    return loggedIn ==
+        true; // PrefHelper parses 'true' string to bool automatically
   }
 }

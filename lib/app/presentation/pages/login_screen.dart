@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:social_auth_buttons/social_auth_buttons.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
+import 'package:future_pos/app/presentation/bloc/auth/auth_bloc.dart';
+import 'package:future_pos/app/presentation/widgets/store_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,8 +26,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'loginFormKey');
-  late AppBloc authBloc;
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>(debugLabel: 'loginFormKey');
+  late AuthBloc authBloc;
 
   @override
   void initState() {
@@ -39,7 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       final email = _loginController.text;
       final password = _passwordController.text;
-      context.read<AppBloc>().add(AuthLoggedIn(email: email,password:  password));
+      context
+          .read<AuthBloc>()
+          .add(AuthSignInWithEmailRequested(email: email, password: password));
     }
   }
 
@@ -115,12 +118,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {
-                      BlocProvider.of<AppBloc>(context).add(
-                        NavigateToRegistrationScreen(),
-                      );
-                    },
-                    child: const Text('Register', style: TextStyle(color: Colors.blue)),
+                    onPressed: () {},
+                    child: const Text('Register',
+                        style: TextStyle(color: Colors.blue)),
                   ),
                   const Text('Or'),
                   SizedBox(
@@ -129,11 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   GoogleAuthButton(
                     borderRadius: 30.r,
                     borderColor: Colors.transparent,
-                    onPressed: () {
-                      BlocProvider.of<AppBloc>(context).add(
-                        AuthGoogleSignInRequested(),
-                      );
-                    },
+                    onPressed: () {},
                     darkMode: false,
                   ),
                 ],

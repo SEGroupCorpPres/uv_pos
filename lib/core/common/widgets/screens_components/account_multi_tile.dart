@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class AccountMultiTile extends StatelessWidget {
   const AccountMultiTile({super.key, required this.items});

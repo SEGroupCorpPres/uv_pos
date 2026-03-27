@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class SecondaryButton extends StatelessWidget {
   const SecondaryButton({
@@ -66,7 +66,8 @@ class SecondaryButton extends StatelessWidget {
       style: buildButtonStyleFrom(),
       onPressed: isLoading ? () {} : onPressed,
       child: isLoading
-          ? const Center(child: SpinKitThreeBounce(color: AppColors.mainColor, size: 35))
+          ? const Center(
+              child: SpinKitThreeBounce(color: AppColors.mainColor, size: 35))
           : Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -74,7 +75,8 @@ class SecondaryButton extends StatelessWidget {
                 AppText(
                   text,
                   style: textStyle ??
-                      AppTextStyle.style18Medium.copyWith(color: textColor ?? AppColors.zn25),
+                      AppTextStyle.style18Medium
+                          .copyWith(color: textColor ?? AppColors.zn25),
                 ),
                 Visibility(
                   visible: svgIconPath != null,
@@ -103,7 +105,8 @@ class SecondaryButton extends StatelessWidget {
       disabledForegroundColor: foregroundColor,
       shadowColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: borderRadius ?? AppUtilConstants.borderRadiusCircularButton,
+        borderRadius:
+            borderRadius ?? AppUtilConstants.borderRadiusCircularButton,
         side: BorderSide(color: borderColor ?? AppColors.mainColor, width: 1),
       ),
     );

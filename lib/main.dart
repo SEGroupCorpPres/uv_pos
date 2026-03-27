@@ -1,5 +1,5 @@
-import 'package:uv_pos/app/app.dart';
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/app/app.dart';
+import 'package:future_pos/core/core.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

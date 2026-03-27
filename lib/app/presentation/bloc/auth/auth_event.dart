@@ -45,10 +45,10 @@ class AuthSignUpWithEmailRequested extends AuthEvent {
   List<Object?> get props => [email, password, displayName];
 }
 
-/// Event for Google sign in
-class AuthSignInWithGoogleRequested extends AuthEvent {
-  const AuthSignInWithGoogleRequested();
-}
+// /// Event for Google sign in
+// class AuthSignInWithGoogleRequested extends AuthEvent {
+//   const AuthSignInWithGoogleRequested();
+// }
 
 /// Event for phone OTP request
 class AuthSendPhoneOtpRequested extends AuthEvent {

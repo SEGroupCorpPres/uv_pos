@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class AppScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBar;
@@ -43,8 +43,8 @@ class AppScaffold extends StatelessWidget {
         endDrawer: endDrawer,
         floatingActionButton: floatingActionButton,
         resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-        floatingActionButtonLocation:
-            floatingActionButtonLocation ?? FloatingActionButtonLocation.centerDocked,
+        floatingActionButtonLocation: floatingActionButtonLocation ??
+            FloatingActionButtonLocation.centerDocked,
       );
     }
     return Row(
@@ -72,8 +72,8 @@ class AppScaffold extends StatelessWidget {
             endDrawer: endDrawer,
             floatingActionButton: floatingActionButton,
             resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-            floatingActionButtonLocation:
-                floatingActionButtonLocation ?? FloatingActionButtonLocation.centerDocked,
+            floatingActionButtonLocation: floatingActionButtonLocation ??
+                FloatingActionButtonLocation.centerDocked,
           ),
         ),
       ],

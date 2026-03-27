@@ -1,6 +1,6 @@
 // lib/app/data/datasources/auth_local_datasource.dart
-import 'package:uv_pos/app/data/data.dart';
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/app/data/data.dart';
+import 'package:future_pos/core/core.dart';
 
 abstract class AuthLocalDataSource {
   /// Save token

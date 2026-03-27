@@ -1,6 +1,6 @@
 import 'package:encrypt/encrypt.dart';
-import 'package:uv_pos/core/core.dart' hide Key;
-import 'package:uv_pos/core/utils/helpers/encrypt_helper/load_encrypt_key_and_iv.dart';
+import 'package:future_pos/core/core.dart' hide Key;
+import 'package:future_pos/core/utils/helpers/encrypt_helper/load_encrypt_key_and_iv.dart';
 
 class AppEncryptor {
   static final _key = Key.fromBase64(LoadEncryptKeyAndIV.loadKey());

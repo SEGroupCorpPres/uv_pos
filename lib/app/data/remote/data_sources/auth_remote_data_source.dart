@@ -1,5 +1,5 @@
 // lib/app/data/datasources/auth_remote_datasource.dart
-import 'package:uv_pos/app/app_barrel.dart';
+import 'package:future_pos/app/app_barrel.dart';
 
 abstract class AuthRemoteDataSource {
   /// Sign in with email

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "inc.futuretechnologies.presidentftinc.freelance.flutter" "\0"
-            VALUE "FileDescription", "uv_pos" "\0"
+            VALUE "FileDescription", "future_pos" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "uv_pos" "\0"
+            VALUE "InternalName", "future_pos" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 inc.futuretechnologies.presidentftinc.freelance.flutter. All rights reserved." "\0"
-            VALUE "OriginalFilename", "uv_pos.exe" "\0"
-            VALUE "ProductName", "uv_pos" "\0"
+            VALUE "OriginalFilename", "future_pos.exe" "\0"
+            VALUE "ProductName", "future_pos" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

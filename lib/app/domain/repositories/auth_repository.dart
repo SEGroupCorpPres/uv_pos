@@ -1,6 +1,6 @@
 // lib/app/domain/repositories/auth_repository.dart
-import 'package:uv_pos/app/domain/entities/user_entity.dart';
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/app/domain/entities/user_entity.dart';
+import 'package:future_pos/core/core.dart';
 
 /// Abstract authentication repository
 abstract class AuthRepository {

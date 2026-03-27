@@ -1,4 +1,4 @@
-package inc.futuretechnologies.presidentftinc.freelance.flutter.uv_pos
+package inc.futuretechnologies.presidentftinc.freelance.flutter.future_pos
 
 import io.flutter.embedding.android.FlutterActivity
 

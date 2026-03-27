@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 typedef FutureResult<T> = Future<Result<T, Failure>>;
 
@@ -41,10 +41,11 @@ extension ResultExtensions<T, E> on Result<T, E> {
   void fold({
     required void Function(T data) onSuccess,
     required void Function(E failure) onFailure,
-  }) => switch (this) {
-    ResultSuccess<T, E>(:final value) => onSuccess(value),
-    ResultFailure<T, E>(:final error) => onFailure(error),
-  };
+  }) =>
+      switch (this) {
+        ResultSuccess<T, E>(:final value) => onSuccess(value),
+        ResultFailure<T, E>(:final error) => onFailure(error),
+      };
 
   String get errorMessage {
     return switch (this) {

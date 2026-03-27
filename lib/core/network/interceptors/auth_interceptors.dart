@@ -1,5 +1,5 @@
 // lib/core/network/interceptors/auth_interceptor.dart
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 /// Auth Interceptor - Handles authentication tokens
 class AuthInterceptor extends Interceptor {
@@ -58,7 +58,8 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
-  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+      DioException err, ErrorInterceptorHandler handler) async {
     // Handle 401 Unauthorized - Token expired or invalid
     if (err.response?.statusCode == 401) {
       try {

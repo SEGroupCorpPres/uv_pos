@@ -1,6 +1,6 @@
 // lib/app/data/models/user_model.dart
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:uv_pos/app/domain/entities/user_entity.dart';
+import 'package:future_pos/app/domain/entities/user_entity.dart';
 
 part 'user_model.freezed.dart';
 part 'user_model.g.dart';
@@ -23,7 +23,8 @@ abstract class UserModel with _$UserModel {
 
   const UserModel._();
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
+  factory UserModel.fromJson(Map<String, dynamic> json) =>
+      _$UserModelFromJson(json);
 
   factory UserModel.fromEntity(UserEntity entity) {
     return UserModel(

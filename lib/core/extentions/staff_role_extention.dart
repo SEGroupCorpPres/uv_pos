@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 extension StaffRoleX on StaffRole {
   bool get canManageStaff => this == StaffRole.owner || this == StaffRole.admin;

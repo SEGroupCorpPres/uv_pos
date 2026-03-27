@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 part 'localization_state.dart';
 
@@ -8,7 +8,8 @@ class LocalizationCubit extends Cubit<LocalizationState> {
   }
 
   Future<void> _loadLanguage(BuildContext context) async {
-    final languageCode = PrefHelper.get(PrefKeys.currentLanguage) ?? AppStrings.enLanguage;
+    final languageCode =
+        PrefHelper.get(PrefKeys.currentLanguage) ?? AppStrings.enLanguage;
     await AppMethods.changeLanguage(context, locale: const Locale('uz'));
   }
 }

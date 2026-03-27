@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class WorkoutSetsItem extends StatelessWidget {
   const WorkoutSetsItem({super.key, required this.title});

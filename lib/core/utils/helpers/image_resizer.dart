@@ -1,5 +1,5 @@
 import 'package:image/image.dart' as img;
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 File resizeImage(File file, int width, int height) {
   final image = img.decodeImage(file.readAsBytesSync())!;

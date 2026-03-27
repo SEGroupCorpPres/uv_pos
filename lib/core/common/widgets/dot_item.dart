@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class DotItem extends StatelessWidget {
   const DotItem({super.key, this.isActive = false});

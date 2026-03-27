@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class CustomFlutterErrorWidget extends StatelessWidget {
   const CustomFlutterErrorWidget({super.key, required this.errorDetails});
@@ -19,7 +19,9 @@ class CustomFlutterErrorWidget extends StatelessWidget {
             ),
             const VerticalSpace(16),
             AppText(
-              kDebugMode ? errorDetails.summary.toString() : 'Oops! Something went wrong!',
+              kDebugMode
+                  ? errorDetails.summary.toString()
+                  : 'Oops! Something went wrong!',
               style: AppTextStyle.style18SemiBold,
               maxLines: 30,
             ),

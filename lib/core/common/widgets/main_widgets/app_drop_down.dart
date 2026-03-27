@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 /// TODO: COLORS AND TEXT SIZE
 class AppDropDown<T> extends StatelessWidget {

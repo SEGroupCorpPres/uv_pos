@@ -1,5 +1,4 @@
-import 'package:uv_pos/core/core.dart';
-
+import 'package:future_pos/core/core.dart';
 
 class AppBlocObserver extends BlocObserver {
   @override
@@ -30,7 +29,8 @@ class AppBlocObserver extends BlocObserver {
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     super.onError(bloc, error, stackTrace);
     if (kDebugMode) {
-      logger.e('❌ Error in Bloc: $bloc\nError: $error', error: error, stackTrace: stackTrace);
+      logger.e('❌ Error in Bloc: $bloc\nError: $error',
+          error: error, stackTrace: stackTrace);
     }
   }
 

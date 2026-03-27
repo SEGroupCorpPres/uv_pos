@@ -7,7 +7,14 @@ export 'dart:io';
 export 'dart:math' hide log;
 export 'dart:typed_data';
 export 'dart:ui'
-    hide Codec, Gradient, decodeImageFromList, ImageDecoderCallback, StrutStyle, TextStyle, Image;
+    hide
+        Codec,
+        Gradient,
+        decodeImageFromList,
+        ImageDecoderCallback,
+        StrutStyle,
+        TextStyle,
+        Image;
 
 export 'package:adaptive_number/adaptive_number.dart';
 export 'package:animated_search_bar/animated_search_bar.dart';
@@ -30,7 +37,8 @@ export 'package:flutter_local_notifications/flutter_local_notifications.dart';
 export 'package:flutter_riverpod/flutter_riverpod.dart' hide AsyncError;
 export 'package:flutter_screenutil/flutter_screenutil.dart';
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
-export 'package:flutter_slidable/flutter_slidable.dart' hide ConfirmDismissCallback;
+export 'package:flutter_slidable/flutter_slidable.dart'
+    hide ConfirmDismissCallback;
 export 'package:flutter_spinkit/flutter_spinkit.dart';
 export 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 export 'package:flutter_svg/flutter_svg.dart';
@@ -87,7 +95,7 @@ export 'package:talker_grpc_logger/talker_grpc_logger.dart';
 export 'package:talker_logger/talker_logger.dart';
 export 'package:toastification/toastification.dart';
 export 'package:uuid/uuid.dart';
-export 'package:uv_pos/generated/assets.dart';
+export 'package:future_pos/generated/assets.dart';
 
 export 'common/common.dart';
 export 'config/app_config.dart';

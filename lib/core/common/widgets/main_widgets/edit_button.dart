@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class EditButton extends StatelessWidget {
   const EditButton({super.key, this.onTap});

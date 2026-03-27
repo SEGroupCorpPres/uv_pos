@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class AppTextField extends StatelessWidget {
   const AppTextField({
@@ -80,7 +80,8 @@ class AppTextField extends StatelessWidget {
       },
       decoration: InputDecoration(
         hintText: required ? '$hint*' : hint,
-        hintStyle: hintStyle ?? AppTextStyle.style12Medium.copyWith(color: AppColors.hintColor),
+        hintStyle: hintStyle ??
+            AppTextStyle.style12Medium.copyWith(color: AppColors.hintColor),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 24,
           vertical: 16,
@@ -91,18 +92,21 @@ class AppTextField extends StatelessWidget {
         suffixIcon: suffixIcon,
         prefixIcon: prefixIcon,
         border: OutlineInputBorder(
-          borderSide:
-              needBorder ? BorderSide.none : const BorderSide(color: AppColors.textFieldBorder),
+          borderSide: needBorder
+              ? BorderSide.none
+              : const BorderSide(color: AppColors.textFieldBorder),
           borderRadius: AppUtilConstants.textFormBorderRadius,
         ),
         enabledBorder: OutlineInputBorder(
-          borderSide:
-              needBorder ? const BorderSide(color: AppColors.textFieldBorder) : BorderSide.none,
+          borderSide: needBorder
+              ? const BorderSide(color: AppColors.textFieldBorder)
+              : BorderSide.none,
           borderRadius: AppUtilConstants.textFormBorderRadius,
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide:
-              needBorder ? const BorderSide(color: AppColors.textFieldBorder) : BorderSide.none,
+          borderSide: needBorder
+              ? const BorderSide(color: AppColors.textFieldBorder)
+              : BorderSide.none,
           borderRadius: AppUtilConstants.textFormBorderRadius,
         ),
         disabledBorder: OutlineInputBorder(

@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -58,7 +58,8 @@ class AppButton extends StatelessWidget {
                 disabledBackgroundColor: backgroundColor ?? AppColors.blue,
                 disabledForegroundColor: foregroundColor ?? Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: borderRadius ?? AppUtilConstants.borderRadiusCircular,
+                  borderRadius:
+                      borderRadius ?? AppUtilConstants.borderRadiusCircular,
                 ),
               ),
               onPressed: isLoading ? () {} : onPressed,

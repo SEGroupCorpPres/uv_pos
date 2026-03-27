@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class AppErrorWidget extends StatelessWidget {
   const AppErrorWidget({
@@ -27,9 +27,12 @@ class AppErrorWidget extends StatelessWidget {
             (image != null)
                 ? image!
                 : (isEmpty)
-                    ? AppAssetsImage(Assets.iconsErrorcircle, fit: BoxFit.contain)
+                    ? AppAssetsImage(Assets.iconsErrorcircle,
+                        fit: BoxFit.contain)
                     : AppAssetsImage(
-                        failure?.code == '404' ? Assets.iconsErrorcircle : Assets.iconsErrorcircle,
+                        failure?.code == '404'
+                            ? Assets.iconsErrorcircle
+                            : Assets.iconsErrorcircle,
                         fit: BoxFit.contain,
                       ),
             const Gap(10),
@@ -46,7 +49,8 @@ class AppErrorWidget extends StatelessWidget {
           Visibility(
             visible: false,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSizesConstants.defaultHorizontalP.w),
+              padding: EdgeInsets.symmetric(
+                  horizontal: AppSizesConstants.defaultHorizontalP.w),
               child: PrimaryButton.expand(
                 text: errorButtonMessage ?? 'Reload Screen',
                 onPressed: () {},
@@ -57,7 +61,8 @@ class AppErrorWidget extends StatelessWidget {
           Column(
             children: [
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSizesConstants.defaultHorizontalP.w),
+                padding: EdgeInsets.symmetric(
+                    horizontal: AppSizesConstants.defaultHorizontalP.w),
                 child: PrimaryButton.expand(
                   text: errorButtonMessage ?? 'Reload Screen',
                   onPressed: onPressed,

@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class GetUserParameters extends Equatable {
   const GetUserParameters({required this.uid});

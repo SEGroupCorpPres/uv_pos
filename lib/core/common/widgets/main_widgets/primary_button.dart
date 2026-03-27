@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
@@ -102,7 +102,8 @@ class PrimaryButton extends StatelessWidget {
       disabledBackgroundColor: backgroundColor ?? AppColors.zn300,
       disabledForegroundColor: foregroundColor,
       shape: RoundedRectangleBorder(
-        borderRadius: borderRadius ?? AppUtilConstants.borderRadiusCircularButton,
+        borderRadius:
+            borderRadius ?? AppUtilConstants.borderRadiusCircularButton,
       ),
     );
   }

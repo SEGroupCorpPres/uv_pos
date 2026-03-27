@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class AuthService extends ChangeNotifier {
   bool _isLoggedIn = false;

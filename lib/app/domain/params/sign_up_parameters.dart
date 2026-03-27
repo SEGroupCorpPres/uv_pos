@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class SignUpParameters extends Equatable {
   const SignUpParameters({required this.email, required this.password});

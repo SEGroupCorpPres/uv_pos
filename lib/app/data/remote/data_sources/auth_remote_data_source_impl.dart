@@ -1,5 +1,5 @@
-import 'package:uv_pos/app/data/data.dart';
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/app/data/data.dart';
+import 'package:future_pos/core/core.dart';
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({
@@ -399,7 +399,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode ?? 500;
-        final message = e.response?.data['message'] as String? ?? 'Server error occurred';
+        final message =
+            e.response?.data['message'] as String? ?? 'Server error occurred';
         return ServerException(message, statusCode);
       case DioExceptionType.cancel:
         return const ServerException(

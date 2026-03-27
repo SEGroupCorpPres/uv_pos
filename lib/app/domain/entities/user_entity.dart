@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class UserEntity extends Equatable {
   const UserEntity({
@@ -79,7 +79,9 @@ class UserEntity extends Equatable {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UserEntity && runtimeType == other.runtimeType && uid == other.uid;
+      other is UserEntity &&
+          runtimeType == other.runtimeType &&
+          uid == other.uid;
 
   @override
   int get hashCode => uid.hashCode;

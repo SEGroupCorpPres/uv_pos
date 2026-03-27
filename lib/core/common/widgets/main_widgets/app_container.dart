@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 class AppContainer extends StatelessWidget {
   const AppContainer({
@@ -41,10 +41,12 @@ class AppContainer extends StatelessWidget {
             child: Container(
               width: width,
               height: height,
-              padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: padding ??
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               constraints: constraints,
               decoration: BoxDecoration(
-                borderRadius: borderRadius ?? AppUtilConstants.borderRadiusCircular,
+                borderRadius:
+                    borderRadius ?? AppUtilConstants.borderRadiusCircular,
                 border: border,
               ),
               child: child,

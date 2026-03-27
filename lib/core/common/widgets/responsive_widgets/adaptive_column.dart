@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uv_pos/core/utils/screen_size_utils.dart';
+import 'package:future_pos/core/utils/screen_size_utils.dart';
 
 /// A column that adapts its layout based on screen size
 class AdaptiveColumn extends StatelessWidget {
@@ -79,10 +79,10 @@ class AdaptiveColumn extends StatelessWidget {
 
   // Helper method to add spacing between items
   List<Widget> _addSpacingBetweenItems(
-      List<Widget> items,
-      double spacing, {
-        required bool isRow,
-      }) {
+    List<Widget> items,
+    double spacing, {
+    required bool isRow,
+  }) {
     if (items.isEmpty) return [];
     if (items.length == 1) return items;
 

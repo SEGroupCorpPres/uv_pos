@@ -1,7 +1,7 @@
 // lib/core/network/interceptors/logger_interceptor.dart
 import 'dart:developer' as dev;
 
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 /// Logger Interceptor - Logs requests and responses
 class LoggerInterceptor extends Interceptor {

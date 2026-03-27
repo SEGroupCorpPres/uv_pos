@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 sealed class AppLogger {
   static final logger = Talker(
@@ -15,11 +15,13 @@ sealed class AppLogger {
     ),
   );
 
-  static void info(String message, {Object? exception, StackTrace? stackTrace}) {
+  static void info(String message,
+      {Object? exception, StackTrace? stackTrace}) {
     return logger.info(message, exception, stackTrace);
   }
 
-  static void warning(String message, {Object? exception, StackTrace? stackTrace}) {
+  static void warning(String message,
+      {Object? exception, StackTrace? stackTrace}) {
     return logger.warning(message, exception, stackTrace);
   }
 
@@ -27,7 +29,8 @@ sealed class AppLogger {
     return logger.error(failure.message, failure, stacktrace);
   }
 
-  static void critical(String message, {Object? exception, StackTrace? stackTrace}) {
+  static void critical(String message,
+      {Object? exception, StackTrace? stackTrace}) {
     return logger.critical(message, exception, stackTrace);
   }
 

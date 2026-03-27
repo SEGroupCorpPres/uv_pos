@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 sealed class AppDarkThemes {
   static ThemeData call() {
@@ -11,7 +11,7 @@ sealed class AppDarkThemes {
         builders: {TargetPlatform.android: CupertinoPageTransitionsBuilder()},
       ),
       appBarTheme: AppBarTheme(
-        color: AppColors.appbarBackground,
+        backgroundColor: AppColors.appbarBackground,
         titleTextStyle: AppTextStyle.style24SemiBold,
         centerTitle: true,
         scrolledUnderElevation: 0,
@@ -35,10 +35,8 @@ sealed class AppDarkThemes {
         splashFactory: InkRipple.splashFactory,
       ),
       colorScheme: const ColorScheme.dark(
-        brightness: Brightness.dark,
         primary: AppColors.primary,
         onPrimary: AppColors.white,
-        onSurface: AppColors.white,
       ),
       switchTheme: SwitchThemeData(
         thumbIcon: WidgetStateProperty.resolveWith(
@@ -47,13 +45,18 @@ sealed class AppDarkThemes {
               : const Icon(Icons.close, size: 20),
         ),
         trackColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? AppColors.primary : AppColors.white,
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : AppColors.white,
         ),
         thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? AppColors.white : AppColors.primary,
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.white
+              : AppColors.primary,
         ),
         trackOutlineColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? null : AppColors.primary,
+          (states) =>
+              states.contains(WidgetState.selected) ? null : AppColors.primary,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -62,7 +65,7 @@ sealed class AppDarkThemes {
           foregroundColor: AppColors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppUtilConstants.borderRadius),
-            side: const BorderSide(color: AppColors.primary, width: 1),
+            side: const BorderSide(color: AppColors.primary),
           ),
         ),
       ),

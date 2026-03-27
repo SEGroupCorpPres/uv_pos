@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 extension MediaQueryValues on BuildContext {
   double get height => MediaQuery.sizeOf(this).height;
@@ -17,11 +17,14 @@ extension MediaQueryValues on BuildContext {
 }
 
 extension AppLocaization on BuildContext {
-  bool get isArabic => EasyLocalization.of(this)?.currentLocale == AppLocalization.arLocal;
+  bool get isArabic =>
+      EasyLocalization.of(this)?.currentLocale == AppLocalization.arLocal;
 
-  Future<void>? get setLocale async => await EasyLocalization.of(this)?.setLocale(locale);
+  Future<void>? get setLocale async =>
+      await EasyLocalization.of(this)?.setLocale(locale);
 
-  Locale get currentLocale => EasyLocalization.of(this)?.currentLocale ?? AppLocalization.enLocal;
+  Locale get currentLocale =>
+      EasyLocalization.of(this)?.currentLocale ?? AppLocalization.enLocal;
 }
 
 extension AppTheme on BuildContext {

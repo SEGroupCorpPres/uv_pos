@@ -1,5 +1,6 @@
 # Miscellaneous
-*.env
+/assets/config/*.env
+/assets/config/*.env.override
 *.class
 *.log
 *.pyc

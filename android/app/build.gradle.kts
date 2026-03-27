@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "inc.futuretechnologies.presidentftinc.freelance.flutter.uv_pos"
+    namespace = "inc.futuretechnologies.presidentftinc.freelance.flutter.future_pos"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.2.12479018"
 
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "inc.futuretechnologies.presidentftinc.freelance.flutter.uv_pos"
+        applicationId = "inc.futuretechnologies.presidentftinc.freelance.flutter.future_pos"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

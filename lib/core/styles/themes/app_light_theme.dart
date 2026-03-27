@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 sealed class AppLightThemes {
   static ThemeData call() {
@@ -31,13 +31,19 @@ sealed class AppLightThemes {
                 ),
         ),
         trackColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? AppColors.mainColor : AppColors.white,
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.mainColor
+              : AppColors.white,
         ),
         thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? AppColors.white : AppColors.mainColor,
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.white
+              : AppColors.mainColor,
         ),
         trackOutlineColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? null : AppColors.mainColor,
+          (states) => states.contains(WidgetState.selected)
+              ? null
+              : AppColors.mainColor,
         ),
       ),
       badgeTheme: const BadgeThemeData(

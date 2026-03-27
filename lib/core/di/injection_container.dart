@@ -1,5 +1,5 @@
 // lib/core/di/injection_container.dart
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 final GetIt sl = GetIt.instance;
 

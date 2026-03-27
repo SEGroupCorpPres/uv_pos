@@ -1,6 +1,6 @@
 // lib/app/data/repositories/auth_repository_impl.dart
-import 'package:uv_pos/app/app_barrel.dart';
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/app/app_barrel.dart';
+import 'package:future_pos/core/core.dart';
 
 /// Implementation of AuthRepository
 class AuthRepositoryImpl implements AuthRepository {

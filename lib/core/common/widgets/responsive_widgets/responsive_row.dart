@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uv_pos/core/utils/screen_size_utils.dart';
+import 'package:future_pos/core/utils/screen_size_utils.dart';
 
 /// A responsive row that adapts its layout based on screen size
 class ResponsiveRow extends StatelessWidget {

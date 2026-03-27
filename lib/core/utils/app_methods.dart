@@ -1,6 +1,6 @@
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 sealed class AppMethods {
   /// todo; use global key context
@@ -123,7 +123,8 @@ sealed class AppMethods {
       final bool jailBroken = allSafeDeviceChecks[0];
       final bool realDevice = allSafeDeviceChecks[1];
       final bool mockLocation = allSafeDeviceChecks[2];
-      final bool onExternalStorage = Platform.isAndroid ? allSafeDeviceChecks[3] : false;
+      final bool onExternalStorage =
+          Platform.isAndroid ? allSafeDeviceChecks[3] : false;
       AppLogger.info(
         '\n'
         'Real Device: $realDevice\n'

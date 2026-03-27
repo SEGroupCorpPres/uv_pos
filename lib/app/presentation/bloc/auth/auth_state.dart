@@ -88,7 +88,7 @@ class AuthError extends AuthState {
   });
 
   final String message;
-  final int? statusCode;
+  final String? statusCode;
 
   @override
   List<Object?> get props => [message, statusCode];

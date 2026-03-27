@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'pages.dart';
 
@@ -21,7 +22,8 @@ class VerifyAuthScreen extends StatefulWidget {
 
 class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
   final TextEditingController verifyController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'verifyAuthFormKey');
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>(debugLabel: 'verifyAuthFormKey');
   OtpFieldControllerV2 otpController = OtpFieldControllerV2();
 
   late String otpCode;
@@ -45,7 +47,7 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
       body: Card(
         child: Padding(
           padding: const EdgeInsets.all(20.0).r,
-          child: BlocBuilder<AppBloc, AppState>(
+          child: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               return Form(
                 key: _formKey,
@@ -56,7 +58,8 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
                     SizedBox(height: 200.h),
                     const Text(
                       'UV POS',
-                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
+                      style:
+                          TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
                     ),
                     SizedBox(height: 20.h),
                     Row(
@@ -64,7 +67,8 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
                         SizedBox(width: 5.w),
                         const Text(
                           'OTP codni kiriting',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w600),
                           textAlign: TextAlign.left,
                         ),
                       ],
@@ -93,9 +97,12 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
                         }
                         if (_formKey.currentState!.validate()) {
                           final otp = otpCode;
-                          BlocProvider.of<AppBloc>(context).add(
-                            AuthPhoneOTPVerified(verificationId: widget.verificationId, otp: otp),
-                          );
+                          context.read<AuthBloc>().add(
+                                AuthVerifyPhoneOtpRequested(
+                                  phoneNumber: 'phoneNumber',
+                                  otp: otp,
+                                ),
+                              );
                         }
                       },
                     ),
@@ -105,11 +112,13 @@ class _VerifyAuthScreenState extends State<VerifyAuthScreen> {
                         SizedBox(width: 5.w),
                         const Text(
                           'OTP codni qaytadan jo\'natish',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w600),
                           textAlign: TextAlign.left,
                         ),
                         const Spacer(),
-                        TextButton(onPressed: () {}, child: const Text('Resend'))
+                        TextButton(
+                            onPressed: () {}, child: const Text('Resend'))
                       ],
                     ),
                   ],

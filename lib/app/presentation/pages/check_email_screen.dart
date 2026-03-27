@@ -2,11 +2,12 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:future_pos/app/presentation/bloc/auth/auth_bloc.dart';
 
 class CheckEmailScreen extends StatelessWidget {
+  const CheckEmailScreen({super.key, required this.email});
   final String email;
 
   static Page page(String email) => Platform.isIOS
@@ -16,8 +17,6 @@ class CheckEmailScreen extends StatelessWidget {
       : MaterialPage(
           child: CheckEmailScreen(email: email),
         );
-
-  const CheckEmailScreen({super.key, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +37,9 @@ class CheckEmailScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                BlocProvider.of<AppBloc>(context).add(
-                  NavigateToLoginScreen(),
-                );
+                context.read<AuthBloc>().add(
+                      const AuthSendEmailVerificationRequested(),
+                    );
               },
               child: const Text('Return to Login'),
             ),

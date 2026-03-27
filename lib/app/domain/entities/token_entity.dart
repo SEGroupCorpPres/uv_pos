@@ -1,5 +1,4 @@
-
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 /// Token entity
 class TokenEntity extends Equatable {
@@ -24,7 +23,9 @@ class TokenEntity extends Equatable {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TokenEntity && runtimeType == other.runtimeType && accessToken == other.accessToken;
+      other is TokenEntity &&
+          runtimeType == other.runtimeType &&
+          accessToken == other.accessToken;
 
   @override
   int get hashCode => accessToken.hashCode;

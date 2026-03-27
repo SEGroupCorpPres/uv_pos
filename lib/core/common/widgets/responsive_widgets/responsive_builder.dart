@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uv_pos/core/utils/screen_size_utils.dart';
+import 'package:future_pos/core/utils/screen_size_utils.dart';
 
 /// A builder that returns different widgets based on screen size
 class ResponsiveBuilder extends StatelessWidget {

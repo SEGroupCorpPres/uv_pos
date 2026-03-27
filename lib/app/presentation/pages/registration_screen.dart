@@ -4,8 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:uv_pos/app/presentation/bloc/auth/app_bloc.dart';
-import 'package:uv_pos/features/presentation/widgets/store/store_text_field.dart';
+import 'package:future_pos/app/presentation/bloc/auth/auth_bloc.dart';
+import 'package:future_pos/app/presentation/widgets/store_text_field.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -28,9 +28,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _phoneController = TextEditingController();
 
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'registrationFormKey');
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>(debugLabel: 'registrationFormKey');
 
   @override
   void initState() {
@@ -41,12 +43,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void _onRegisterPressed() {
     if (_formKey.currentState!.validate()) {
       // Trigger the registration event in AuthBloc
-      context.read<AppBloc>().add(
-            AuthRegister(
+      context.read<AuthBloc>().add(
+            AuthSignUpWithEmailRequested(
               email: _emailController.text,
               password: _passwordController.text,
-              phoneNumber: _phoneController.text,
-              name: _nameController.text,
+              displayName: _nameController.text,
             ),
           );
     }
@@ -79,7 +80,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 children: [
                   SizedBox(height: 100.h),
                   const Text(
-                    'UV POS',
+                    'Future POS',
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
                   ),
                   StoreTextField(
@@ -100,7 +101,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
-                      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                          .hasMatch(value)) {
                         return 'Please enter a valid email address';
                       }
                       return null;
@@ -113,7 +115,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your phone number';
-                      } else if (!RegExp(r'^\+?[1-9]\d{1,14}$').hasMatch(value)) {
+                      } else if (!RegExp(r'^\+?[1-9]\d{1,14}$')
+                          .hasMatch(value)) {
                         return 'Please enter a valid phone number';
                       }
                       return null;
@@ -164,10 +167,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {
-                      BlocProvider.of<AppBloc>(context).add(NavigateToLoginScreen());
-                    },
-                    child: const Text('Login', style: TextStyle(color: Colors.blue)),
+                    onPressed: () {},
+                    child: const Text('Login',
+                        style: TextStyle(color: Colors.blue)),
                   ),
                 ],
               ),

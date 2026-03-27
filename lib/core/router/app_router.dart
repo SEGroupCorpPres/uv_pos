@@ -1,6 +1,5 @@
-
-import 'package:uv_pos/core/core.dart';
-import 'package:uv_pos/features/features.dart';
+import 'package:future_pos/core/core.dart';
+import 'package:future_pos/features/features.dart';
 
 Page<dynamic> _defaultPageBuilder(Widget child, GoRouterState state) {
   return CustomTransitionPage(
@@ -11,7 +10,8 @@ Page<dynamic> _defaultPageBuilder(Widget child, GoRouterState state) {
       const end = Offset.zero;
       const curve = Curves.easeInOut;
 
-      final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      final tween =
+          Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
       final offsetAnimation = animation.drive(tween);
 
       return SlideTransition(position: offsetAnimation, child: child);
@@ -20,7 +20,6 @@ Page<dynamic> _defaultPageBuilder(Widget child, GoRouterState state) {
 }
 
 class AppRouter {
-
   AppRouter() {
     router = GoRouter(
       navigatorKey: _rootNavigatorKey,
@@ -104,7 +103,8 @@ class AppRouter {
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
-    _subscription = stream.asBroadcastStream().listen((dynamic _) => notifyListeners());
+    _subscription =
+        stream.asBroadcastStream().listen((dynamic _) => notifyListeners());
   }
 
   late final StreamSubscription<dynamic> _subscription;

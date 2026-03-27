@@ -1,5 +1,5 @@
 // lib/core/network/interceptors/error_interceptor.dart
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 /// Error Interceptor - Handles and maps errors
 class ErrorInterceptor extends Interceptor {
@@ -99,14 +99,18 @@ class ErrorInterceptor extends Interceptor {
       // 401 - Unauthorized
       case 401:
         return AuthException(
-          message.isNotEmpty ? message : 'Authentication failed. Please login again.',
+          message.isNotEmpty
+              ? message
+              : 'Authentication failed. Please login again.',
           statusCode,
         );
 
       // 403 - Forbidden
       case 403:
         return AuthException(
-          message.isNotEmpty ? message : "Access denied. You don't have permission.",
+          message.isNotEmpty
+              ? message
+              : "Access denied. You don't have permission.",
           statusCode,
         );
 
@@ -141,14 +145,18 @@ class ErrorInterceptor extends Interceptor {
       // 429 - Too Many Requests
       case 429:
         return ServerException(
-          message.isNotEmpty ? message : 'Too many requests. Please try again later.',
+          message.isNotEmpty
+              ? message
+              : 'Too many requests. Please try again later.',
           statusCode,
         );
 
       // 500 - Internal Server Error
       case 500:
         return ServerException(
-          message.isNotEmpty ? message : 'Server error. Please try again later.',
+          message.isNotEmpty
+              ? message
+              : 'Server error. Please try again later.',
           statusCode,
         );
 

@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart' hide Key;
+import 'package:future_pos/core/core.dart' hide Key;
 
 sealed class LoadEncryptKeyAndIV {
   static String loadKey() {

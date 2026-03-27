@@ -1,6 +1,6 @@
 // lib/app/data/models/token_model.dart
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:uv_pos/app/domain/entities/token_entity.dart';
+import 'package:future_pos/app/domain/entities/token_entity.dart';
 
 part 'token_model.freezed.dart';
 part 'token_model.g.dart';
@@ -16,7 +16,8 @@ abstract class TokenModel with _$TokenModel {
 
   const TokenModel._();
 
-  factory TokenModel.fromJson(Map<String, dynamic> json) => _$TokenModelFromJson(json);
+  factory TokenModel.fromJson(Map<String, dynamic> json) =>
+      _$TokenModelFromJson(json);
 
   factory TokenModel.fromEntity(TokenEntity entity) {
     return TokenModel(

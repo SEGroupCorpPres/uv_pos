@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 abstract class Failure extends Equatable {
   const Failure(this.message, [this.code]);

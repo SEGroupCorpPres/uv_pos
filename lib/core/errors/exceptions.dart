@@ -1,4 +1,4 @@
-import 'package:uv_pos/core/core.dart';
+import 'package:future_pos/core/core.dart';
 
 abstract class AppException extends Equatable implements Exception {
   const AppException(this.message, [this.code, this.stackTrace]);
@@ -8,8 +8,10 @@ abstract class AppException extends Equatable implements Exception {
   final StackTrace? stackTrace;
 }
 
-abstract class AppExceptionWithStacktrace extends Equatable implements Exception {
-  const AppExceptionWithStacktrace(this.message, [this.exception, this.stackTrace]);
+abstract class AppExceptionWithStacktrace extends Equatable
+    implements Exception {
+  const AppExceptionWithStacktrace(this.message,
+      [this.exception, this.stackTrace]);
 
   final String message;
   final Object? exception;
